@@ -1,2 +1,37 @@
-<h2>Calculator Component</h2>
-<p>{{ message }}</p>
+<mat-card>
+  <mat-card-title>3D Print Cost Calculator</mat-card-title>
+
+  <input
+    type="file"
+    accept=".stl"
+    (change)="onFileSelected($event)"
+  />
+
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="uploadAndCalculate()"
+    [disabled]="!file || loading"
+  >
+    {{ loading ? 'Calculating...' : 'Calculate' }}
+  </button>
+
+  <mat-progress-spinner
+    *ngIf="loading"
+    diameter="30"
+    mode="indeterminate"
+  ></mat-progress-spinner>
+
+  <p *ngIf="error" class="error">{{ error }}</p>
+
+  <div *ngIf="results">
+    <p>Volume STL: {{ results.stl_volume_mm3 }} mm³</p>
+    <p>Superficie: {{ results.surface_area_mm2 }} mm²</p>
+    <p>Volume pareti: {{ results.wall_volume_mm3 }} mm³</p>
+    <p>Volume infill: {{ results.infill_volume_mm3 }} mm³</p>
+    <p>Volume stampa: {{ results.print_volume_mm3 }} mm³</p>
+    <p>Peso stimato: {{ results.weight_g }} g</p>
+    <p>Costo stimato: CHF {{ results.cost_chf }}</p>
+    <p>Tempo stimato: {{ results.time_min }} min</p>
+  </div>
+</mat-card>

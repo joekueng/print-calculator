@@ -47,16 +47,14 @@ describe('QuoteEstimatorService', () => {
       },
     });
 
-    httpTesting
-      .expectOne(`${environment.apiUrl}/api/quote-sessions`)
-      .flush(
-        {
-          status: 429,
-          error: 'Too Many Requests',
-          path: '/api/quote-sessions',
-        },
-        { status: 429, statusText: 'Too Many Requests' },
-      );
+    httpTesting.expectOne(`${environment.apiUrl}/api/quote-sessions`).flush(
+      {
+        status: 429,
+        error: 'Too Many Requests',
+        path: '/api/quote-sessions',
+      },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
 
     expect(failure).toEqual(
       jasmine.objectContaining({

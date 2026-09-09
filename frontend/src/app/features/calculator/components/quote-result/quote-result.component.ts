@@ -295,7 +295,7 @@ export class QuoteResultComponent {
                     : this.formatOptionValue('off')
                   : rawValue.toUpperCase(),
               valueKey:
-                (typeof item.supportEnabled === 'boolean'
+                typeof item.supportEnabled === 'boolean'
                   ? item.supportEnabled
                     ? 'CALC.VALUE_ON'
                     : 'CALC.VALUE_OFF'
@@ -303,7 +303,7 @@ export class QuoteResultComponent {
                     ? 'CALC.VALUE_ON'
                     : rawValue.toLowerCase() === 'off'
                       ? 'CALC.VALUE_OFF'
-                      : undefined),
+                      : undefined,
             };
           default:
             return null;

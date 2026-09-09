@@ -386,9 +386,7 @@ export class QuoteEstimatorService {
                               code:
                                 responseItem?.pricingBreakdown?.errorCode ||
                                 'QUOTE_ITEM_PROCESSING_FAILED',
-                              message:
-                                responseItem?.errorMessage ||
-                                '',
+                              message: responseItem?.errorMessage || '',
                             },
                           };
                       completed += 1;

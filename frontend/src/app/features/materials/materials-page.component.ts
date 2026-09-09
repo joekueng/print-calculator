@@ -240,6 +240,27 @@ const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
     ],
   },
   {
+    id: 'petg-extrudr',
+    metrics: {
+      priceChfKg: 35,
+      densityGcm3: 1.27,
+      tensileMpa: 50,
+      modulusGpa: 2.1,
+      elongationPct: 18,
+      hdtC: 80,
+      extrusionC: '210 - 230',
+      printability: 88,
+      layerRangeMm: '0.12 - 0.28',
+    },
+    sources: [
+      {
+        id: 'extrudr-petg-white',
+        kindId: 'product-sheet',
+        url: 'https://www.3djake.ch/en-CH/extrudr/mf-petg-white?sai=768',
+      },
+    ],
+  },
+  {
     id: 'pet-cf',
     metrics: {
       priceChfKg: 83,
@@ -249,7 +270,7 @@ const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
       elongationPct: 4,
       hdtC: 205,
       extrusionC: '260 - 290',
-      printability: 39,
+      printability: 70,
       layerRangeMm: '0.20 - 0.28',
     },
     sources: [

@@ -536,6 +536,32 @@
           }
         }
       },
+      "petg-extrudr": {
+        "NAME": "Extrudr PETG",
+        "SUMMARY": "Versatile, durable PETG also used for projects involving limited food contact. The supplier declares the filament suitable, but the finished FDM part is not certified as food safe.",
+        "QUALITY_TIPS": [
+          "Use a heated bed and a clean surface for reliable adhesion.",
+          "For food-contact requests, we assess the food, temperature, contact duration and cleaning method in writing."
+        ],
+        "PROS": [
+          "Good mechanical strength, layer adhesion and heat resistance up to approximately 90 °C.",
+          "Suitable for functional parts and 100% recyclable according to the product page."
+        ],
+        "CONS": [
+          "FDM layer lines and micro-gaps make cleaning and disinfection less straightforward.",
+          "The printed product is not certified as food safe for continuous or prolonged professional use."
+        ],
+        "IDEAL_FOR": [
+          "Functional parts",
+          "Brief, occasional contact with cold or room-temperature food, subject to assessment",
+          "Non-professional kitchen utensils and accessories"
+        ],
+        "SOURCES": {
+          "extrudr-petg-white": {
+            "LABEL": "3DJake - Extrudr PETG White"
+          }
+        }
+      },
       "pet-cf": {
         "NAME": "PET-CF",
         "SUMMARY": "Rigid technical material with carbon fiber, very stable on precision parts.",
@@ -664,7 +690,7 @@
     "SUPPORT": "Supports",
     "SUPPORT_DESC": "Enable supports for overhangs",
     "SPLIT_ACCEPT_LABEL": "I accept that oversized models may be split for printing",
-    "SPLIT_RESULT_NOTE": "This quote includes setup for preparing oversized models to be split for printing. The original file remains attached to the order.",
+    "SPLIT_RESULT_NOTE": "This quote includes the CHF 10 supplement for splitting oversized models. The original file remains attached to the order.",
     "CALCULATE": "Calculate Quote",
     "RESULT": "Estimated Quote",
     "TIME": "Print Time",
@@ -673,6 +699,10 @@
     "ORDER": "Order Now",
     "CONSULT": "Request Consultation",
     "ERROR_GENERIC": "An error occurred while calculating the quote.",
+    "ERROR_RATE_LIMIT": "Too many attempts were made in a short time. The calculator is working correctly: wait at least 60 seconds without retrying, then calculate the quote again.",
+    "ERROR_SESSION_INIT": "The quote calculation could not be started. Please try again.",
+    "ERROR_FINALIZATION": "The calculation finished, but the final quote could not be loaded. Please try again.",
+    "ERROR_ITEM_PROCESSING": "The file could not be processed.",
     "NEW_QUOTE": "Calculate New Quote",
     "ORDER_SUCCESS_TITLE": "Order Submitted Successfully",
     "ORDER_SUCCESS_DESC": "We have received your order details. You will receive a confirmation email shortly with the payment details.",
@@ -693,6 +723,37 @@
     "ANALYZING_TEXT": "We are analyzing the geometry and calculating the toolpath.",
     "QTY_SHORT": "QTY",
     "COLOR_LABEL": "COLOR",
+    "SAME_SETTINGS_ALL": "Same settings for all files",
+    "COLOR_EXCLUDED": "Color excluded",
+    "GLOBAL_SETTINGS": "Global settings",
+    "FILE_SETTINGS": "Settings for {{fileName}}",
+    "OPTION_STANDARD": "Standard",
+    "OPTION_FLEXIBLE": "Flexible",
+    "OPTION_TECHNICAL": "Technical",
+    "NOT_AVAILABLE": "N/A",
+    "VALUE_ON": "Enabled",
+    "VALUE_OFF": "Disabled",
+    "QUALITY_OPTIONS": {
+      "DRAFT": "Draft",
+      "STANDARD": "Standard",
+      "EXTRA_FINE": "High definition"
+    },
+    "INFILL_PATTERNS": {
+      "GRID": "Grid",
+      "GYROID": "Gyroid",
+      "CUBIC": "Cubic"
+    },
+    "CONSULTATION": {
+      "TITLE": "Quote request",
+      "MATERIAL": "Material",
+      "QUALITY": "Quality",
+      "FILES": "Files",
+      "QUANTITY": "Quantity",
+      "COLOR": "Color",
+      "INFILL": "Infill",
+      "MANUAL_REVIEW": "The model requires manual review. Any splitting, the final price and approval will be agreed by email.",
+      "NOTES": "Notes"
+    },
     "ADD_FILES": "Add files",
     "UPLOADING": "Uploading...",
     "PROCESSING": "Processing...",
@@ -704,7 +765,15 @@
     "ZERO_RESULT_TITLE": "Invalid Result",
     "ZERO_RESULT_HELP": "The calculation returned invalid zero values. Try another file format or contact us directly via Request Consultation.",
     "CUSTOM_QUOTE_TITLE": "Custom quote required",
-    "CUSTOM_QUOTE_HELP": "This model is too large for the automatic estimate, even with split printing accepted. Send a custom quote request with the file attached."
+    "CUSTOM_QUOTE_HELP": "The file remains saved and requires manual review. Contact us: we will agree any splitting, final price and your approval by email before proceeding.",
+    "SPLIT_REVIEW_TITLE": "This model needs to be split",
+    "SPLIT_REVIEW_HELP": "The model is larger than the available print volume. The file remains saved: request a consultation and we will agree by email how to split it, the final price and your approval.",
+    "SPLIT_REQUEST_ACTION": "Request model splitting",
+    "REVIEW_OUT_OF_VOLUME": "The model exceeds the available print volume.",
+    "REVIEW_PROCESSING_FAILED": "The file could not be analysed automatically. It remains saved for manual review.",
+    "REVIEW_PARTIAL_SINGLE": "{{fileName}} requires manual review and is not included in the total. {{reason}}",
+    "REVIEW_PARTIAL_MULTIPLE": "{{count}} files require manual review and are not included in the total: {{fileNames}}. {{reason}}",
+    "FILE_REVIEW_REQUIRED": "Review required"
   },
   "SHOP": {
     "TITLE": "Technical solutions",

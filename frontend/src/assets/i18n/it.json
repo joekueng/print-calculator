@@ -509,6 +509,32 @@
           }
         }
       },
+      "petg-extrudr": {
+        "NAME": "PETG Extrudr",
+        "SUMMARY": "PETG versatile e resistente, usato anche per progetti con contatto alimentare limitato. Il filamento è dichiarato adatto dal fornitore, ma il pezzo FDM finito non è certificato food safe.",
+        "QUALITY_TIPS": [
+          "Usare piano riscaldato e una superficie pulita per una buona adesione.",
+          "Per richieste alimentari valutiamo per iscritto alimento, temperatura, durata del contatto e modalità di pulizia."
+        ],
+        "PROS": [
+          "Buona resistenza meccanica, adesione tra layer e resistenza termica fino a circa 90 °C.",
+          "Adatto a parti funzionali e 100% riciclabile secondo la scheda prodotto."
+        ],
+        "CONS": [
+          "Le linee e microfessure della stampa FDM rendono pulizia e disinfezione meno semplici.",
+          "Il prodotto stampato non è certificato food safe per uso professionale continuo o prolungato."
+        ],
+        "IDEAL_FOR": [
+          "Parti funzionali",
+          "Contatto breve e occasionale con alimenti freddi o a temperatura ambiente, previa valutazione",
+          "Utensili e accessori da cucina non professionali"
+        ],
+        "SOURCES": {
+          "extrudr-petg-white": {
+            "LABEL": "3DJake - Extrudr PETG White"
+          }
+        }
+      },
       "pet-cf": {
         "NAME": "PET-CF",
         "SUMMARY": "Materiale tecnico rigido con fibra di carbonio, molto stabile su pezzi di precisione.",
@@ -704,7 +730,7 @@
     "SUPPORT": "Supporti",
     "SUPPORT_DESC": "Abilita supporti per sporgenze",
     "SPLIT_ACCEPT_LABEL": "Accetto che i modelli troppo grandi vengano suddivisi per la stampa",
-    "SPLIT_RESULT_NOTE": "Il preventivo include il setup per preparare la suddivisione dei modelli troppo grandi. Il file originale resta associato all'ordine.",
+    "SPLIT_RESULT_NOTE": "Il preventivo include il supplemento di CHF 10 per suddividere i modelli troppo grandi. Il file originale resta associato all'ordine.",
     "CALCULATE": "Calcola Preventivo",
     "RESULT": "Preventivo Stimato",
     "TIME": "Tempo Stampa",
@@ -713,6 +739,10 @@
     "ORDER": "Ordina Ora",
     "CONSULT": "Richiedi Consulenza",
     "ERROR_GENERIC": "Si è verificato un errore durante il calcolo del preventivo.",
+    "ERROR_RATE_LIMIT": "Sono stati effettuati troppi tentativi in poco tempo. Il calcolatore funziona correttamente: attendi almeno 60 secondi senza riprovare, poi calcola nuovamente il preventivo.",
+    "ERROR_SESSION_INIT": "Non è stato possibile avviare il calcolo del preventivo. Riprova.",
+    "ERROR_FINALIZATION": "Il calcolo è terminato, ma non è stato possibile caricare il preventivo finale. Riprova.",
+    "ERROR_ITEM_PROCESSING": "Non è stato possibile elaborare il file.",
     "NEW_QUOTE": "Calcola Nuovo Preventivo",
     "ORDER_SUCCESS_TITLE": "Ordine Inviato con Successo",
     "ORDER_SUCCESS_DESC": "Abbiamo ricevuto i dettagli del tuo ordine. Riceverai a breve una email di conferma con i dettagli per il pagamento.",
@@ -725,6 +755,37 @@
     "ANALYZING_TEXT": "Stiamo analizzando la geometria e calcolando il percorso utensile.",
     "QTY_SHORT": "QTÀ",
     "COLOR_LABEL": "COLORE",
+    "SAME_SETTINGS_ALL": "Stesse impostazioni per tutti i file",
+    "COLOR_EXCLUDED": "Colore escluso",
+    "GLOBAL_SETTINGS": "Impostazioni globali",
+    "FILE_SETTINGS": "Impostazioni per {{fileName}}",
+    "OPTION_STANDARD": "Standard",
+    "OPTION_FLEXIBLE": "Flessibile",
+    "OPTION_TECHNICAL": "Tecnico",
+    "NOT_AVAILABLE": "N/D",
+    "VALUE_ON": "Attivi",
+    "VALUE_OFF": "Disattivati",
+    "QUALITY_OPTIONS": {
+      "DRAFT": "Bozza",
+      "STANDARD": "Standard",
+      "EXTRA_FINE": "Alta definizione"
+    },
+    "INFILL_PATTERNS": {
+      "GRID": "Griglia",
+      "GYROID": "Giroide",
+      "CUBIC": "Cubico"
+    },
+    "CONSULTATION": {
+      "TITLE": "Richiesta preventivo",
+      "MATERIAL": "Materiale",
+      "QUALITY": "Qualità",
+      "FILES": "File",
+      "QUANTITY": "Quantità",
+      "COLOR": "Colore",
+      "INFILL": "Riempimento",
+      "MANUAL_REVIEW": "Il modello richiede una valutazione manuale. Eventuale suddivisione, prezzo definitivo e approvazione saranno concordati via email.",
+      "NOTES": "Note"
+    },
     "ADD_FILES": "Aggiungi file",
     "UPLOADING": "Caricamento...",
     "PROCESSING": "Elaborazione...",
@@ -742,7 +803,15 @@
     "ZERO_RESULT_TITLE": "Risultato non valido",
     "ZERO_RESULT_HELP": "Il calcolo ha restituito valori non validi (0). Prova con un altro formato file oppure contattaci direttamente con Richiedi Consulenza.",
     "CUSTOM_QUOTE_TITLE": "Serve un preventivo personalizzato",
-    "CUSTOM_QUOTE_HELP": "Questo modello è troppo grande per la stima automatica, anche accettando la suddivisione. Invia una richiesta custom quote con il file allegato."
+    "CUSTOM_QUOTE_HELP": "Il file resta salvato e richiede una valutazione manuale. Contattaci: concorderemo via email l'eventuale suddivisione, il prezzo definitivo e la tua approvazione prima di procedere.",
+    "SPLIT_REVIEW_TITLE": "Il modello richiede una suddivisione",
+    "SPLIT_REVIEW_HELP": "Il modello è più grande del volume di stampa disponibile. Il file resta salvato: richiedi una consulenza e concorderemo con te via email come suddividerlo, il prezzo definitivo e la tua approvazione.",
+    "SPLIT_REQUEST_ACTION": "Richiedi la suddivisione",
+    "REVIEW_OUT_OF_VOLUME": "Il modello supera il volume di stampa disponibile.",
+    "REVIEW_PROCESSING_FAILED": "Non è stato possibile analizzare automaticamente il file. Il file resta salvato per una valutazione manuale.",
+    "REVIEW_PARTIAL_SINGLE": "{{fileName}} richiede una valutazione manuale e non è incluso nel totale. {{reason}}",
+    "REVIEW_PARTIAL_MULTIPLE": "{{count}} file richiedono una valutazione manuale e non sono inclusi nel totale: {{fileNames}}. {{reason}}",
+    "FILE_REVIEW_REQUIRED": "Richiede valutazione"
   },
   "QUOTE": {
     "PROCEED_ORDER": "Procedi con l'ordine",

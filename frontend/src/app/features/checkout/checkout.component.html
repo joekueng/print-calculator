@@ -279,7 +279,10 @@
             class="summary-items"
             *ngIf="!loading && quoteSession() as session"
           >
-            <div class="summary-item" *ngFor="let item of session.items">
+            <div
+              class="summary-item"
+              *ngFor="let item of orderableItems(session)"
+            >
               <div class="item-details">
                 <span class="item-name">{{ itemDisplayName(item) }}</span>
                 <div class="item-specs">

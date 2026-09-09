@@ -84,6 +84,12 @@ public class OrderService {
         }
 
         List<QuoteLineItem> quoteItems = quoteLineItemRepo.findByQuoteSessionId(quoteSessionId);
+        quoteItems = quoteItems.stream()
+                .filter(item -> !"REVIEW_REQUIRED".equalsIgnoreCase(item.getStatus()))
+                .toList();
+        if (quoteItems.isEmpty() && quoteSessionTotalsService.calculateCadTotal(session).compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Quote session has no orderable items");
+        }
         quoteItems.stream()
                 .filter(item -> !SHOP_LINE_ITEM_TYPE.equals(item.getLineItemType()))
                 .forEach(item -> materialPrintCompatibilityService.validate(

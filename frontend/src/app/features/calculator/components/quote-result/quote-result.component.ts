@@ -18,6 +18,13 @@ import {
 } from '../../../../shared/components/price-breakdown/price-breakdown.component';
 import { QuoteResult, QuoteItem } from '../../services/quote-estimator.service';
 
+interface ItemSettingDetail {
+  key: string;
+  labelKey: string;
+  value: string;
+  valueKey?: string;
+}
+
 @Component({
   selector: 'app-quote-result',
   standalone: true,
@@ -225,30 +232,157 @@ export class QuoteResultComponent {
     return Math.min(qty, this.maxInputQuantity);
   }
 
-  getItemDifferenceLabel(fileName: string, materialCode?: string): string {
-    const differences =
-      this.itemSettingsDiffByFileName()[fileName]?.differences || [];
-    if (differences.length === 0) return '';
+  getItemSettingDetails(item: QuoteItem): ItemSettingDetail[] {
+    const emittedDifferences =
+      this.itemSettingsDiffByFileName()[item.fileName]?.differences || [];
+    const hasCalculatedSettings =
+      item.material != null ||
+      item.quality != null ||
+      item.nozzleDiameter != null ||
+      item.layerHeight != null ||
+      item.infillDensity != null ||
+      item.infillPattern != null ||
+      item.supportEnabled != null;
+    const differences = hasCalculatedSettings
+      ? this.getDifferencesFromStandard(item)
+      : emittedDifferences;
 
-    const normalizedMaterial = String(materialCode || '')
-      .trim()
-      .toLowerCase();
+    return differences
+      .map((difference): ItemSettingDetail | null => {
+        const separatorIndex = difference.indexOf(':');
 
-    const filtered = differences.filter((entry) => {
-      const normalized = String(entry || '')
-        .trim()
-        .toLowerCase();
-      const isMaterialOnly = !normalized.includes(':');
-      return !(isMaterialOnly && normalized === normalizedMaterial);
-    });
+        if (separatorIndex < 0) {
+          return {
+            key: 'material',
+            labelKey: 'CALC.MATERIAL',
+            value: String(item.material || difference).toUpperCase(),
+          };
+        }
 
-    if (filtered.length === 0) {
-      return '';
+        const key = difference.slice(0, separatorIndex);
+        const rawValue = difference.slice(separatorIndex + 1);
+
+        switch (key) {
+          case 'quality':
+            return {
+              key,
+              labelKey: 'CALC.QUALITY',
+              value: this.formatOptionValue(item.quality || rawValue),
+              valueKey: this.optionValueKey(
+                'QUALITY_OPTIONS',
+                item.quality || rawValue,
+              ),
+            };
+          case 'nozzle':
+            return {
+              key,
+              labelKey: 'CALC.NOZZLE',
+              value: `${item.nozzleDiameter ?? rawValue} mm`,
+            };
+          case 'layer':
+            return {
+              key,
+              labelKey: 'CALC.LAYER_HEIGHT',
+              value: `${item.layerHeight ?? rawValue} mm`,
+            };
+          case 'infill':
+            return {
+              key,
+              labelKey: 'CALC.INFILL',
+              value: `${item.infillDensity ?? rawValue.replace(/%/g, '')}%`,
+            };
+          case 'pattern':
+            return {
+              key,
+              labelKey: 'CALC.PATTERN',
+              value: this.formatOptionValue(item.infillPattern || rawValue),
+              valueKey: this.optionValueKey(
+                'INFILL_PATTERNS',
+                item.infillPattern || rawValue,
+              ),
+            };
+          case 'support':
+            return {
+              key,
+              labelKey: 'CALC.SUPPORT',
+              value:
+                typeof item.supportEnabled === 'boolean'
+                  ? item.supportEnabled
+                    ? this.formatOptionValue('on')
+                    : this.formatOptionValue('off')
+                  : rawValue.toUpperCase(),
+              valueKey:
+                typeof item.supportEnabled === 'boolean'
+                  ? item.supportEnabled
+                    ? 'CALC.VALUE_ON'
+                    : 'CALC.VALUE_OFF'
+                  : rawValue.toLowerCase() === 'on'
+                    ? 'CALC.VALUE_ON'
+                    : rawValue.toLowerCase() === 'off'
+                      ? 'CALC.VALUE_OFF'
+                      : undefined,
+            };
+          default:
+            return null;
+        }
+      })
+      .filter((detail): detail is ItemSettingDetail => detail !== null);
+  }
+
+  private getDifferencesFromStandard(item: QuoteItem): string[] {
+    const differences: string[] = [];
+
+    if (item.material && item.material.trim().toUpperCase() !== 'PLA') {
+      differences.push(item.material);
+    }
+    if (item.quality && item.quality.trim().toLowerCase() !== 'standard') {
+      differences.push(`quality:${item.quality}`);
+    }
+    if (
+      item.nozzleDiameter != null &&
+      Math.abs(item.nozzleDiameter - 0.4) > 0.0001
+    ) {
+      differences.push(`nozzle:${item.nozzleDiameter}`);
+    }
+    if (item.layerHeight != null && Math.abs(item.layerHeight - 0.2) > 0.0001) {
+      differences.push(`layer:${item.layerHeight}`);
+    }
+    if (
+      item.infillDensity != null &&
+      Math.abs(item.infillDensity - 15) > 0.0001
+    ) {
+      differences.push(`infill:${item.infillDensity}%`);
+    }
+    if (
+      item.infillPattern &&
+      item.infillPattern.trim().toLowerCase() !== 'grid'
+    ) {
+      differences.push(`pattern:${item.infillPattern}`);
+    }
+    if (item.supportEnabled === false) {
+      differences.push('support:off');
     }
 
-    const materialOnly = filtered.find(
-      (entry) => !entry.includes(':') && entry.trim().length > 0,
-    );
-    return materialOnly || filtered.join(' | ');
+    return differences;
+  }
+
+  private formatOptionValue(value: string): string {
+    return String(value || '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\b\w/g, (character) => character.toUpperCase());
+  }
+
+  private optionValueKey(group: string, value: string): string | undefined {
+    const normalized = String(value || '')
+      .trim()
+      .replace(/[-\s]+/g, '_')
+      .toUpperCase();
+    const supportedValues: Record<string, readonly string[]> = {
+      QUALITY_OPTIONS: ['DRAFT', 'STANDARD', 'EXTRA_FINE'],
+      INFILL_PATTERNS: ['GRID', 'GYROID', 'CUBIC'],
+    };
+    return supportedValues[group]?.includes(normalized)
+      ? `CALC.${group}.${normalized}`
+      : undefined;
   }
 }

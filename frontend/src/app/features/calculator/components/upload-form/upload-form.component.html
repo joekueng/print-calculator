@@ -33,13 +33,24 @@
           <div
             class="file-card"
             [class.active]="item.file === selectedFile()"
+            [class.has-warning]="item.reviewLevel === 'warning'"
+            [class.has-error]="item.reviewLevel === 'error'"
             (click)="selectFile(item.file)"
           >
             <div class="card-header">
               <span class="file-name" [title]="item.file.name">{{
                 item.file.name
               }}</span>
+              @if (item.reviewLevel) {
+                <span class="review-badge">
+                  {{ "CALC.FILE_REVIEW_REQUIRED" | translate }}
+                </span>
+              }
             </div>
+
+            @if (item.reviewMessage) {
+              <p class="review-message">{{ item.reviewMessage }}</p>
+            }
 
             <div class="card-body">
               <div class="card-controls">
@@ -150,16 +161,20 @@
             />
             <span class="sync-settings-copy">
               <span class="sync-settings-title">
-                Stesse impostazioni per tutti i file
+                {{ "CALC.SAME_SETTINGS_ALL" | translate }}
               </span>
-              <span class="sync-settings-subtitle">Colore escluso</span>
+              <span class="sync-settings-subtitle">
+                {{ "CALC.COLOR_EXCLUDED" | translate }}
+              </span>
             </span>
           </label>
         </div>
 
         @if (sameSettingsForAll()) {
           <div class="item-settings-panel">
-            <h4 class="item-settings-title">Impostazioni globali</h4>
+            <h4 class="item-settings-title">
+              {{ "CALC.GLOBAL_SETTINGS" | translate }}
+            </h4>
 
             <div class="item-settings-grid">
               <label>
@@ -222,7 +237,10 @@
           @if (getSelectedItem(); as selectedItem) {
             <div class="item-settings-panel">
               <h4 class="item-settings-title">
-                Impostazioni file: {{ selectedItem.file.name }}
+                {{
+                  "CALC.FILE_SETTINGS"
+                    | translate: { fileName: selectedItem.file.name }
+                }}
               </h4>
 
               <div class="item-settings-grid">

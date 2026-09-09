@@ -501,6 +501,7 @@ class OrderServiceTest {
         when(quoteSessionRepo.findById(id)).thenReturn(Optional.of(session));
         when(customerRepo.findByEmail("buyer@example.com")).thenReturn(Optional.of(customer));
         when(quoteLineItemRepo.findByQuoteSessionId(id)).thenReturn(List.of());
+        when(quoteSessionTotalsService.calculateCadTotal(session)).thenReturn(BigDecimal.ONE);
         var shipping = new ShippingQuoteService.ShippingQuote(status, BigDecimal.valueOf(9),null,null,3,List.of());
         when(quoteSessionTotalsService.compute(session,List.of())).thenReturn(
                 new QuoteSessionTotalsService.QuoteSessionTotals(BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,

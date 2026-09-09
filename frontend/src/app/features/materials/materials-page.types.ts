@@ -8,6 +8,7 @@ export type MaterialId =
   | 'asa'
   | 'pc'
   | 'pa12-cf'
+  | 'petg-extrudr'
   | 'pet-cf';
 
 export type MaterialSourceKindId = 'wikipedia' | 'tech-sheet' | 'product-sheet';

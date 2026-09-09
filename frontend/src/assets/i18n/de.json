@@ -549,6 +549,32 @@
           }
         }
       },
+      "petg-extrudr": {
+        "NAME": "Extrudr PETG",
+        "SUMMARY": "Vielseitiges, widerstandsfähiges PETG, das auch für Projekte mit begrenztem Lebensmittelkontakt verwendet wird. Das Filament wird vom Lieferanten als geeignet angegeben, das fertige FDM-Teil ist jedoch nicht als lebensmittelecht zertifiziert.",
+        "QUALITY_TIPS": [
+          "Ein beheiztes Druckbett und eine saubere Oberfläche für zuverlässige Haftung verwenden.",
+          "Bei Anfragen mit Lebensmittelkontakt prüfen wir Lebensmittel, Temperatur, Kontaktdauer und Reinigung schriftlich."
+        ],
+        "PROS": [
+          "Gute mechanische Festigkeit, Layerhaftung und Wärmebeständigkeit bis etwa 90 °C.",
+          "Für Funktionsteile geeignet und laut Produktseite zu 100% recycelbar."
+        ],
+        "CONS": [
+          "FDM-Layerlinien und Mikrospalten erschweren Reinigung und Desinfektion.",
+          "Das Druckteil ist nicht für dauerhafte oder längere professionelle Lebensmittelanwendung zertifiziert."
+        ],
+        "IDEAL_FOR": [
+          "Funktionsteile",
+          "Kurzer, gelegentlicher Kontakt mit kalten oder zimmerwarmen Lebensmitteln nach Prüfung",
+          "Nicht professionelle Küchenutensilien und Zubehör"
+        ],
+        "SOURCES": {
+          "extrudr-petg-white": {
+            "LABEL": "3DJake - Extrudr PETG White"
+          }
+        }
+      },
       "pet-cf": {
         "NAME": "PET-CF",
         "SUMMARY": "Steifes technisches Material mit Carbonfaser, sehr stabil fur Prazisionsteile.",
@@ -677,7 +703,7 @@
     "SUPPORT": "Stützstrukturen",
     "SUPPORT_DESC": "Stützen für Überhänge aktivieren",
     "SPLIT_ACCEPT_LABEL": "Ich akzeptiere, dass zu große Modelle für den Druck geteilt werden",
-    "SPLIT_RESULT_NOTE": "Dieses Angebot enthält den Setup-Aufwand, um zu große Modelle für den Druck vorzubereiten und zu teilen. Die Originaldatei bleibt der Bestellung zugeordnet.",
+    "SPLIT_RESULT_NOTE": "Dieses Angebot enthält den Zuschlag von CHF 10 für die Teilung zu großer Modelle. Die Originaldatei bleibt der Bestellung zugeordnet.",
     "CALCULATE": "Angebot berechnen",
     "RESULT": "Geschätztes Angebot",
     "TIME": "Druckzeit",
@@ -686,6 +712,10 @@
     "ORDER": "Jetzt bestellen",
     "CONSULT": "Beratung anfragen",
     "ERROR_GENERIC": "Bei der Angebotsberechnung ist ein Fehler aufgetreten.",
+    "ERROR_RATE_LIMIT": "In kurzer Zeit wurden zu viele Versuche unternommen. Der Rechner funktioniert korrekt: Warten Sie mindestens 60 Sekunden, ohne es erneut zu versuchen, und berechnen Sie dann das Angebot erneut.",
+    "ERROR_SESSION_INIT": "Die Angebotsberechnung konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
+    "ERROR_FINALIZATION": "Die Berechnung wurde abgeschlossen, das endgültige Angebot konnte jedoch nicht geladen werden. Bitte versuchen Sie es erneut.",
+    "ERROR_ITEM_PROCESSING": "Die Datei konnte nicht verarbeitet werden.",
     "NEW_QUOTE": "Neues Angebot berechnen",
     "ORDER_SUCCESS_TITLE": "Bestellung erfolgreich gesendet",
     "ORDER_SUCCESS_DESC": "Wir haben die Details Ihrer Bestellung erhalten. Sie erhalten in Kürze eine Bestätigungs-E-Mail mit Zahlungsinformationen.",
@@ -706,6 +736,37 @@
     "ANALYZING_TEXT": "Wir analysieren die Geometrie und berechnen den Werkzeugpfad.",
     "QTY_SHORT": "MENGE",
     "COLOR_LABEL": "FARBE",
+    "SAME_SETTINGS_ALL": "Gleiche Einstellungen für alle Dateien",
+    "COLOR_EXCLUDED": "Farbe ausgenommen",
+    "GLOBAL_SETTINGS": "Globale Einstellungen",
+    "FILE_SETTINGS": "Einstellungen für {{fileName}}",
+    "OPTION_STANDARD": "Standard",
+    "OPTION_FLEXIBLE": "Flexibel",
+    "OPTION_TECHNICAL": "Technisch",
+    "NOT_AVAILABLE": "N/V",
+    "VALUE_ON": "Aktiviert",
+    "VALUE_OFF": "Deaktiviert",
+    "QUALITY_OPTIONS": {
+      "DRAFT": "Entwurf",
+      "STANDARD": "Standard",
+      "EXTRA_FINE": "Hohe Auflösung"
+    },
+    "INFILL_PATTERNS": {
+      "GRID": "Gitter",
+      "GYROID": "Gyroid",
+      "CUBIC": "Kubisch"
+    },
+    "CONSULTATION": {
+      "TITLE": "Angebotsanfrage",
+      "MATERIAL": "Material",
+      "QUALITY": "Qualität",
+      "FILES": "Dateien",
+      "QUANTITY": "Menge",
+      "COLOR": "Farbe",
+      "INFILL": "Fülldichte",
+      "MANUAL_REVIEW": "Das Modell muss manuell geprüft werden. Eine mögliche Teilung, der Endpreis und die Freigabe werden per E-Mail vereinbart.",
+      "NOTES": "Hinweise"
+    },
     "ADD_FILES": "Dateien hinzufügen",
     "UPLOADING": "Hochladen...",
     "PROCESSING": "Verarbeitung...",
@@ -717,7 +778,15 @@
     "ZERO_RESULT_TITLE": "Ungültiges Ergebnis",
     "ZERO_RESULT_HELP": "Die Berechnung hat ungültige Werte (0) geliefert. Versuche ein anderes Dateiformat oder kontaktiere uns direkt über \"Beratung anfragen\".",
     "CUSTOM_QUOTE_TITLE": "Individuelles Angebot erforderlich",
-    "CUSTOM_QUOTE_HELP": "Dieses Modell ist zu groß für die automatische Schätzung, auch wenn die Teilung akzeptiert wurde. Senden Sie eine individuelle Anfrage mit der Datei im Anhang."
+    "CUSTOM_QUOTE_HELP": "Die Datei bleibt gespeichert und muss manuell geprüft werden. Kontaktieren Sie uns: Teilung, Endpreis und Ihre Freigabe vereinbaren wir vorab per E-Mail.",
+    "SPLIT_REVIEW_TITLE": "Dieses Modell muss geteilt werden",
+    "SPLIT_REVIEW_HELP": "Das Modell ist größer als der verfügbare Druckraum. Die Datei bleibt gespeichert: Fordern Sie eine Beratung an, damit wir Teilung, Endpreis und Ihre Freigabe per E-Mail abstimmen können.",
+    "SPLIT_REQUEST_ACTION": "Modellteilung anfragen",
+    "REVIEW_OUT_OF_VOLUME": "Das Modell überschreitet den verfügbaren Druckraum.",
+    "REVIEW_PROCESSING_FAILED": "Die Datei konnte nicht automatisch analysiert werden. Sie bleibt für eine manuelle Prüfung gespeichert.",
+    "REVIEW_PARTIAL_SINGLE": "{{fileName}} muss manuell geprüft werden und ist nicht in der Summe enthalten. {{reason}}",
+    "REVIEW_PARTIAL_MULTIPLE": "{{count}} Dateien müssen manuell geprüft werden und sind nicht in der Summe enthalten: {{fileNames}}. {{reason}}",
+    "FILE_REVIEW_REQUIRED": "Prüfung erforderlich"
   },
   "SHOP": {
     "TITLE": "Technische Lösungen",

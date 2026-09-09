@@ -36,6 +36,9 @@ public class QuoteSessionTotalsService {
         BigDecimal totalSeconds = BigDecimal.ZERO;
 
         for (QuoteLineItem item : items) {
+            if (!isOrderable(item)) {
+                continue;
+            }
             int quantity = normalizeQuantity(item.getQuantity());
             BigDecimal unitPrice = item.getUnitPriceChf() != null ? item.getUnitPriceChf() : BigDecimal.ZERO;
             printItemsBaseTotal = printItemsBaseTotal.add(unitPrice.multiply(BigDecimal.valueOf(quantity)));
@@ -53,14 +56,21 @@ public class QuoteSessionTotalsService {
         BigDecimal cadTotal = calculateCadTotal(session);
         BigDecimal itemsTotal = printItemsTotal.add(cadTotal);
 
-        BigDecimal baseSetupFee = hasSplitPrintingItems(items)
+        BigDecimal standardSetupFee = session.getSetupCostChf() != null
+                ? session.getSetupCostChf()
+                : BigDecimal.ZERO;
+        BigDecimal splitSetupFee = hasSplitPrintingItems(items)
                 ? quoteCalculator.calculateSplitModelSetupFee(policy)
-                : session.getSetupCostChf() != null ? session.getSetupCostChf() : BigDecimal.ZERO;
+                : BigDecimal.ZERO;
+        BigDecimal baseSetupFee = standardSetupFee.add(splitSetupFee);
         BigDecimal nozzleChangeCost = calculateNozzleChangeCost(items);
         BigDecimal setupFee = baseSetupFee.add(nozzleChangeCost).setScale(2, RoundingMode.HALF_UP);
         boolean shop = "SHOP_CART".equalsIgnoreCase(session.getSessionType())
                 || (!items.isEmpty() && items.stream().allMatch(i -> "SHOP_PRODUCT".equalsIgnoreCase(i.getLineItemType())));
-        ShippingQuoteService.ShippingQuote shippingQuote = shop ? null : shippingQuoteService.quote(items);
+        List<QuoteLineItem> orderableItems = items.stream()
+                .filter(this::isOrderable)
+                .toList();
+        ShippingQuoteService.ShippingQuote shippingQuote = shop ? null : shippingQuoteService.quote(orderableItems);
         BigDecimal shippingCost = shop ? calculateShopShippingCost(items) : shippingQuote.costChf();
         BigDecimal grandTotal = itemsTotal.add(setupFee).add(shippingCost);
 
@@ -98,6 +108,9 @@ public class QuoteSessionTotalsService {
 
         boolean exceedsBaseSize = false;
         for (QuoteLineItem item : items) {
+            if (!isOrderable(item)) {
+                continue;
+            }
             BigDecimal x = item.getBoundingBoxXMm() != null ? item.getBoundingBoxXMm() : BigDecimal.ZERO;
             BigDecimal y = item.getBoundingBoxYMm() != null ? item.getBoundingBoxYMm() : BigDecimal.ZERO;
             BigDecimal z = item.getBoundingBoxZMm() != null ? item.getBoundingBoxZMm() : BigDecimal.ZERO;
@@ -113,7 +126,10 @@ public class QuoteSessionTotalsService {
             }
         }
 
-        int totalQuantity = items.stream().mapToInt(i -> normalizeQuantity(i.getQuantity())).sum();
+        int totalQuantity = items.stream()
+                .filter(this::isOrderable)
+                .mapToInt(i -> normalizeQuantity(i.getQuantity()))
+                .sum();
         if (totalQuantity <= 0) {
             return BigDecimal.ZERO;
         }
@@ -131,7 +147,7 @@ public class QuoteSessionTotalsService {
 
         Set<BigDecimal> uniqueNozzles = new LinkedHashSet<>();
         for (QuoteLineItem item : items) {
-            if (item == null || item.getNozzleDiameterMm() == null) {
+            if (!isOrderable(item) || item.getNozzleDiameterMm() == null) {
                 continue;
             }
             uniqueNozzles.add(item.getNozzleDiameterMm().setScale(2, RoundingMode.HALF_UP));
@@ -158,7 +174,11 @@ public class QuoteSessionTotalsService {
         if (items == null || items.isEmpty()) {
             return false;
         }
-        return items.stream().anyMatch(item -> item != null && Boolean.TRUE.equals(item.getRequiresSplitPrinting()));
+        return items.stream().anyMatch(item -> isOrderable(item) && Boolean.TRUE.equals(item.getRequiresSplitPrinting()));
+    }
+
+    private boolean isOrderable(QuoteLineItem item) {
+        return item != null && !"REVIEW_REQUIRED".equalsIgnoreCase(item.getStatus());
     }
 
     private int normalizeQuantity(Integer quantity) {

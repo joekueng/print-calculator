@@ -43,16 +43,38 @@
   text-overflow: ellipsis;
 }
 
-.item-settings-diff {
-  margin-left: 2px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #8a6d1f;
-  white-space: normal;
-}
 .file-details {
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.item-settings-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 5px;
+}
+
+.item-setting-detail {
+  display: inline-flex;
+  gap: 3px;
+  min-width: 0;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.item-setting-label {
+  color: var(--color-text-muted);
+
+  &::after {
+    content: ":";
+  }
+}
+
+.item-setting-value {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .item-controls {

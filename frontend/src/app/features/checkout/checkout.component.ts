@@ -214,6 +214,12 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
+  orderableItems(session: any): any[] {
+    return Array.isArray(session?.items)
+      ? session.items.filter((item: any) => item?.status !== 'REVIEW_REQUIRED')
+      : [];
+  }
+
   isCadSession(): boolean {
     return this.isCadSessionData(this.quoteSession());
   }

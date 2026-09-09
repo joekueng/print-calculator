@@ -100,6 +100,10 @@ public class QuoteSessionResponseAssembler {
         dto.put("supportsEnabled", item.getSupportsEnabled());
         dto.put("requiresSplitPrinting", Boolean.TRUE.equals(item.getRequiresSplitPrinting()));
         dto.put("status", item.getStatus());
+        dto.put("errorMessage", item.getErrorMessage());
+        dto.put("errorCode", item.getPricingBreakdown() != null
+                ? item.getPricingBreakdown().get("errorCode")
+                : null);
         dto.put("shippingOrientations", item.getPricingBreakdown() != null
                 ? item.getPricingBreakdown().get("shippingOrientations") : null);
         dto.put("convertedStoredPath", quoteStorageService.extractConvertedStoredPath(item));

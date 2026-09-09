@@ -125,6 +125,7 @@ public class QuoteSessionItemService {
                 session.setInfillPattern(settings.getInfillPattern());
                 session.setInfillPercent(settings.getInfillDensity() != null ? settings.getInfillDensity().intValue() : 20);
                 session.setSupportsEnabled(settings.getSupportsEnabled() != null ? settings.getSupportsEnabled() : false);
+                session.setNotes(settings.getNotes());
                 sessionRepo.save(session);
             }
 
@@ -179,10 +180,7 @@ public class QuoteSessionItemService {
                         if (!shouldEstimateOversizedSplit(settings, ex)) {
                             throw ex;
                         }
-                        if (modelDimensions.isEmpty()) {
-                            throw buildSplitCustomQuoteFailure(ex);
-                        }
-                        if (oversizedEstimateAttempted) {
+                        if (modelDimensions.isEmpty() || oversizedEstimateAttempted) {
                             throw buildSplitCustomQuoteFailure(ex);
                         }
                         oversizedEstimateAttempted = true;
@@ -236,6 +234,16 @@ public class QuoteSessionItemService {
 
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No active printer could process the selected configuration");
         } catch (Exception e) {
+            if (isModelReviewFailure(e) && Files.exists(persistentPath)) {
+                return lineItemRepo.save(buildReviewRequiredLineItem(
+                        session,
+                        file.getOriginalFilename(),
+                        settings,
+                        persistentPath,
+                        convertedPersistentPath,
+                        e
+                ));
+            }
             Files.deleteIfExists(persistentPath);
             if (convertedPersistentPath != null) {
                 Files.deleteIfExists(convertedPersistentPath);
@@ -295,6 +303,10 @@ public class QuoteSessionItemService {
         return "standard";
     }
 
+    private boolean isModelReviewFailure(Exception exception) {
+        return exception instanceof ModelProcessingException || exception instanceof IOException;
+    }
+
     private boolean shouldEstimateOversizedSplit(PrintSettingsDto settings, ModelProcessingException exception) {
         return Boolean.TRUE.equals(settings.getAllowSplitForOversized())
                 && "MODEL_OUT_OF_PRINT_VOLUME".equals(exception.getCode());
@@ -306,6 +318,50 @@ public class QuoteSessionItemService {
                 "This model is too large for the automatic split-printing estimate. Please request a custom quote.",
                 cause
         );
+    }
+
+    private QuoteLineItem buildReviewRequiredLineItem(QuoteSession session,
+                                                       String originalFilename,
+                                                       PrintSettingsDto settings,
+                                                       Path persistentPath,
+                                                       Path convertedPersistentPath,
+                                                       Exception failure) {
+        String errorCode = failure instanceof ModelProcessingException modelFailure
+                ? modelFailure.getCode()
+                : "MODEL_PROCESSING_FAILED";
+
+        QuoteLineItem item = new QuoteLineItem();
+        item.setQuoteSession(session);
+        item.setLineItemType("PRINT_FILE");
+        item.setOriginalFilename(originalFilename);
+        item.setDisplayName(originalFilename);
+        item.setStoredPath(quoteStorageService.toStoredPath(persistentPath));
+        item.setQuantity(normalizeQuantity(settings.getQuantity()));
+        item.setColorCode(settings.getColor());
+        item.setMaterialCode(settingsService.normalizeRequestedMaterialCode(settings.getMaterial()));
+        item.setQuality(settings.getQuality());
+        item.setNozzleDiameterMm(settings.getNozzleDiameter() != null
+                ? BigDecimal.valueOf(settings.getNozzleDiameter()) : null);
+        item.setLayerHeightMm(settings.getLayerHeight() != null
+                ? BigDecimal.valueOf(settings.getLayerHeight()) : null);
+        item.setInfillPercent(settings.getInfillDensity() != null
+                ? settings.getInfillDensity().intValue() : 20);
+        item.setInfillPattern(settings.getInfillPattern());
+        item.setSupportsEnabled(Boolean.TRUE.equals(settings.getSupportsEnabled()));
+        item.setRequiresSplitPrinting(false);
+        item.setStatus("REVIEW_REQUIRED");
+        item.setErrorMessage(failure.getMessage());
+        item.setUnitPriceChf(BigDecimal.ZERO);
+        item.setMaterialGrams(BigDecimal.ZERO);
+        item.setPrintTimeSeconds(0);
+
+        Map<String, Object> breakdown = new HashMap<>();
+        breakdown.put("errorCode", errorCode);
+        if (convertedPersistentPath != null && Files.exists(convertedPersistentPath)) {
+            breakdown.put("convertedStoredPath", quoteStorageService.toStoredPath(convertedPersistentPath));
+        }
+        item.setPricingBreakdown(breakdown);
+        return item;
     }
 
     private QuoteLineItem buildLineItem(QuoteSession session,

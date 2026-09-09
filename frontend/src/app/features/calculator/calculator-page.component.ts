@@ -11,7 +11,7 @@ import {
   PLATFORM_ID,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
@@ -52,6 +52,7 @@ type PendingSessionRestore = {
   session: any;
   items: any[];
   files: File[];
+  preserveError: boolean;
   previewFiles: Array<{
     index: number;
     file: File;
@@ -94,7 +95,14 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     () => this.error() && this.errorKey() === 'CALC.ERROR_ZERO_PRICE',
   );
   isCustomQuoteError = computed(
-    () => this.error() && this.errorCode() === 'MODEL_REQUIRES_CUSTOM_QUOTE',
+    () =>
+      this.error() &&
+      (this.errorCode() === 'MODEL_REQUIRES_CUSTOM_QUOTE' ||
+        this.errorCode() === 'MODEL_OUT_OF_PRINT_VOLUME' ||
+        this.errorCode() === 'MODEL_PROCESSING_FAILED'),
+  );
+  isOutOfVolumeError = computed(
+    () => this.errorCode() === 'MODEL_OUT_OF_PRINT_VOLUME',
   );
   showSplitPrintingOption = computed(() => {
     const result = this.result();
@@ -104,7 +112,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       (result?.failedItems || []).some(
         (failure) => failure.code === 'MODEL_OUT_OF_PRINT_VOLUME',
       ) ||
-      (result?.items || []).some((item) => item.requiresSplitPrinting)
+      (result?.items || []).some((item) => item.requiresSplitPrinting === true)
     );
   });
   readonly faqIds = [
@@ -168,6 +176,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
   private baselineItemStates: TrackedPrintItemState[] = [];
   private pendingSessionRestore: PendingSessionRestore | null = null;
   private isRestoringQuoteState = false;
+  private restoreDraftWhenViewReady = false;
   private quoteStateVersion = 0;
 
   @ViewChild('uploadForm') uploadForm!: UploadFormComponent;
@@ -178,6 +187,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     private router: Router,
     private route: ActivatedRoute,
     private languageService: LanguageService,
+    private translate: TranslateService,
     @Optional() @Inject(PLATFORM_ID) platformId?: Object,
   ) {
     this.isBrowser = isPlatformBrowser(platformId ?? 'browser');
@@ -212,14 +222,20 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.applyPendingSessionRestoreIfNeeded();
 
-    const pendingDraft = this.estimator.consumePendingCalculatorDraft();
-    if (!pendingDraft || this.currentSessionId()) {
+    if (this.currentSessionId()) {
+      // Restore the in-memory files immediately when switching between the
+      // basic and advanced routes. The server refresh may replace this state
+      // afterwards, but the file cards and 3D preview never disappear.
+      this.restorePendingDraftFallback(false);
       return;
     }
+    const pendingDraft = this.estimator.consumePendingCalculatorDraft();
+    if (!pendingDraft) return;
 
     this.uploadForm?.restoreRequestDraft(pendingDraft.request, {
       sameSettingsForAll: pendingDraft.sameSettingsForAll,
       selectedFileName: pendingDraft.selectedFileName,
+      previewFiles: pendingDraft.previewFiles,
     });
   }
 
@@ -245,13 +261,24 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
         // 1. Map to Result
         const result = this.estimator.mapSessionToQuoteResult(data);
         if (this.isInvalidQuote(result)) {
-          this.setQuoteError('CALC.ERROR_ZERO_PRICE');
-          this.loading.set(false);
+          const failure = result.failedItems?.[0] ?? {
+            fileName: data.items?.[0]?.originalFilename || '',
+            code: 'MODEL_PROCESSING_FAILED',
+            message: '',
+          };
+          this.setQuoteError(
+            'CALC.ERROR_GENERIC',
+            this.failureDisplayMessage(failure),
+            failure.code || null,
+          );
+          this.restoreFilesAndSettings(data.session, data.items || []);
           return;
         }
 
         this.clearQuoteErrorState();
-        this.warningMessage.set(null);
+        this.warningMessage.set(
+          this.buildPartialFailureMessage(result.failedItems || []),
+        );
         this.result.set(result);
         this.baselinePrintSettings = this.toTrackedSettingsFromSession(
           data.session,
@@ -287,6 +314,8 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
   restoreFilesAndSettings(session: any, items: any[]) {
     const restoreStateVersion = this.quoteStateVersion;
     if (!items || items.length === 0) {
+      this.restoreDraftWhenViewReady = true;
+      this.restorePendingDraftFallback();
       this.loading.set(false);
       return;
     }
@@ -361,6 +390,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
           items,
           files,
           previewFiles,
+          preserveError: this.error() && !this.result(),
         };
         this.applyPendingSessionRestoreIfNeeded();
         this.loading.set(false);
@@ -373,6 +403,8 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
           return;
         }
         console.error('Failed to download files', err);
+        this.restoreDraftWhenViewReady = true;
+        this.restorePendingDraftFallback();
         this.loading.set(false);
         // Still show result? Yes.
       },
@@ -384,6 +416,12 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     this.quoteStateVersion += 1;
     this.pendingSessionRestore = null;
     this.currentRequest = req;
+    this.estimator.setPendingCalculatorDraft({
+      request: req,
+      sameSettingsForAll: this.uploadForm.sameSettingsForAll(),
+      selectedFileName: this.uploadForm.selectedFile()?.name ?? null,
+      previewFiles: this.uploadForm.getPreviewFilesByIndex(),
+    });
     this.loading.set(true);
     this.uploadProgress.set(0);
     this.clearQuoteErrorState();
@@ -410,7 +448,17 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
           // It's the result
           const res = event as QuoteResult;
           if (this.isInvalidQuote(res)) {
-            this.setQuoteError('CALC.ERROR_ZERO_PRICE');
+            const failure = res.failedItems?.[0] ?? {
+              fileName: req.items[0]?.file.name || '',
+              code: 'MODEL_PROCESSING_FAILED',
+              message: '',
+            };
+            this.setQuoteError(
+              'CALC.ERROR_GENERIC',
+              this.failureDisplayMessage(failure),
+              failure.code,
+            );
+            this.applyFailureStates([failure]);
             this.loading.set(false);
             return;
           }
@@ -419,6 +467,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
           this.warningMessage.set(
             this.buildPartialFailureMessage(res.failedItems || []),
           );
+          this.applyFailureStates(res.failedItems || []);
           this.result.set(res);
           this.baselinePrintSettings = this.toTrackedSettingsFromRequest(req);
           this.baselineItemStates =
@@ -452,12 +501,27 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
         }
       },
       error: (err) => {
-        const failure = this.normalizeCalculationFailure(err);
+        const failure = this.normalizeCalculationFailure(err) ?? {
+          fileName: req.items[0]?.file.name || '',
+          code: 'MODEL_PROCESSING_FAILED',
+          message: '',
+        };
+        if (failure.sessionId) {
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { session: failure.sessionId },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+        }
         this.setQuoteError(
-          'CALC.ERROR_GENERIC',
-          failure?.message || null,
-          failure?.code || null,
+          failure.code === 'QUOTE_RATE_LIMITED' || failure.status === 429
+            ? 'CALC.ERROR_RATE_LIMIT'
+            : 'CALC.ERROR_GENERIC',
+          this.failureDisplayMessage(failure),
+          failure.code || null,
         );
+        this.applyFailureStates([failure]);
         this.loading.set(false);
       },
     });
@@ -466,6 +530,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
   onProceed() {
     const res = this.result();
     if (res && res.sessionId) {
+      this.persistPendingDraft();
       const segments = this.cadSessionLocked()
         ? ['/', this.languageService.selectedLang(), 'checkout', 'cad']
         : ['/', this.languageService.selectedLang(), 'checkout'];
@@ -609,27 +674,39 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    let details = `Richiesta Preventivo:\n`;
-    details += `- Materiale: ${req.material}\n`;
-    details += `- Qualità: ${req.quality}\n`;
+    let details = `${this.translate.instant('CALC.CONSULTATION.TITLE')}:\n`;
+    details += `- ${this.translate.instant('CALC.CONSULTATION.MATERIAL')}: ${req.material}\n`;
+    details += `- ${this.translate.instant('CALC.CONSULTATION.QUALITY')}: ${this.localizedQuality(req.quality)}\n`;
 
-    details += `- File:\n`;
+    details += `- ${this.translate.instant('CALC.CONSULTATION.FILES')}:\n`;
     req.items.forEach((item) => {
-      details += `  * ${item.file.name} (Qtà: ${item.quantity}`;
+      details += `  * ${item.file.name} (${this.translate.instant('CALC.CONSULTATION.QUANTITY')}: ${item.quantity}`;
       if (item.color) {
-        details += `, Colore: ${item.color}`;
+        details += `, ${this.translate.instant('CALC.CONSULTATION.COLOR')}: ${this.localizedColor(item.color)}`;
       }
       details += `)\n`;
     });
 
     if (req.mode === 'advanced') {
-      if (req.infillDensity) details += `- Infill: ${req.infillDensity}%\n`;
+      if (req.infillDensity) {
+        details += `- ${this.translate.instant('CALC.CONSULTATION.INFILL')}: ${req.infillDensity}%\n`;
+      }
     }
-    if (req.acceptSplitPrinting) {
-      details += `- Suddivisione per stampa: accettata\n`;
+    const requiresManualReview =
+      this.errorCode() === 'MODEL_OUT_OF_PRINT_VOLUME' ||
+      this.errorCode() === 'MODEL_PROCESSING_FAILED' ||
+      (this.result()?.failedItems || []).some(
+        (failure) =>
+          failure.code === 'MODEL_OUT_OF_PRINT_VOLUME' ||
+          failure.code === 'MODEL_PROCESSING_FAILED',
+      );
+    if (requiresManualReview) {
+      details += `- ${this.translate.instant('CALC.CONSULTATION.MANUAL_REVIEW')}\n`;
     }
 
-    if (req.notes) details += `\nNote: ${req.notes}`;
+    if (req.notes) {
+      details += `\n${this.translate.instant('CALC.CONSULTATION.NOTES')}: ${req.notes}`;
+    }
 
     this.estimator.setPendingConsultation({
       files: req.items.map((i) => i.file),
@@ -686,22 +763,28 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     }
 
     const maybeFailure = error as Partial<QuoteCalculationFailure>;
-    if (
+    const hasMessage =
       typeof maybeFailure.message === 'string' &&
-      maybeFailure.message.trim().length > 0
-    ) {
+      maybeFailure.message.trim().length > 0;
+    const hasCode = typeof maybeFailure.code === 'string';
+    const hasStatus = typeof maybeFailure.status === 'number';
+    if (hasMessage || hasCode || hasStatus) {
       return {
         fileName:
           typeof maybeFailure.fileName === 'string'
             ? maybeFailure.fileName
             : '',
+        sessionId:
+          typeof maybeFailure.sessionId === 'string'
+            ? maybeFailure.sessionId
+            : undefined,
         status:
           typeof maybeFailure.status === 'number'
             ? maybeFailure.status
             : undefined,
         code:
           typeof maybeFailure.code === 'string' ? maybeFailure.code : undefined,
-        message: maybeFailure.message.trim(),
+        message: hasMessage ? maybeFailure.message!.trim() : '',
       };
     }
 
@@ -717,7 +800,10 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
 
     if (failures.length === 1) {
       const failure = failures[0];
-      return `${failure.fileName} was not included in the quote. ${failure.message}`;
+      return this.translate.instant('CALC.REVIEW_PARTIAL_SINGLE', {
+        fileName: failure.fileName,
+        reason: this.failureDisplayMessage(failure),
+      });
     }
 
     const fileNames = failures
@@ -729,15 +815,54 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       ? failures[0].message
       : null;
 
-    let message = `${failures.length} files were not included in the quote`;
-    if (fileNames.length > 0) {
-      message += `: ${fileNames.join(', ')}`;
+    return this.translate.instant('CALC.REVIEW_PARTIAL_MULTIPLE', {
+      count: failures.length,
+      fileNames: fileNames.join(', '),
+      reason: sharedMessage
+        ? this.failureDisplayMessage({ ...failures[0], message: sharedMessage })
+        : '',
+    });
+  }
+
+  private failureDisplayMessage(failure: QuoteCalculationFailure): string {
+    if (failure.code === 'QUOTE_RATE_LIMITED' || failure.status === 429) {
+      return this.translate.instant('CALC.ERROR_RATE_LIMIT');
     }
-    message += '.';
-    if (sharedMessage) {
-      message += ` ${sharedMessage}`;
+    if (failure.code === 'MODEL_OUT_OF_PRINT_VOLUME') {
+      return this.translate.instant('CALC.REVIEW_OUT_OF_VOLUME');
     }
-    return message;
+    if (failure.code === 'MODEL_PROCESSING_FAILED') {
+      return this.translate.instant('CALC.REVIEW_PROCESSING_FAILED');
+    }
+    if (failure.code === 'MODEL_REQUIRES_CUSTOM_QUOTE') {
+      return this.translate.instant('CALC.CUSTOM_QUOTE_HELP');
+    }
+    if (failure.code === 'QUOTE_SESSION_INIT_FAILED') {
+      return this.translate.instant('CALC.ERROR_SESSION_INIT');
+    }
+    if (failure.code === 'QUOTE_FINALIZATION_FAILED') {
+      return this.translate.instant('CALC.ERROR_FINALIZATION');
+    }
+    if (failure.code === 'QUOTE_ITEM_PROCESSING_FAILED') {
+      return this.translate.instant('CALC.ERROR_ITEM_PROCESSING');
+    }
+    return failure.message || this.translate.instant('CALC.ERROR_GENERIC');
+  }
+
+  private localizedQuality(value: string): string {
+    const key = `CALC.QUALITY_OPTIONS.${String(value || '').toUpperCase()}`;
+    const translated = this.translate.instant(key);
+    return translated === key ? value : translated;
+  }
+
+  private localizedColor(value: string): string {
+    const colorKey = String(value || '')
+      .trim()
+      .replace(/[-\s]+/g, '_')
+      .toUpperCase();
+    const key = `COLOR.NAME.${colorKey}`;
+    const translated = this.translate.instant(key);
+    return translated === key ? value : translated;
   }
 
   switchMode(nextMode: 'easy' | 'advanced'): void {
@@ -752,9 +877,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (!this.currentSessionId()) {
-      this.persistPendingDraftForModeSwitch();
-    }
+    this.persistPendingDraft();
 
     this.router.navigate(['..', targetPath], {
       relativeTo: this.route,
@@ -780,7 +903,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       : null;
   }
 
-  private persistPendingDraftForModeSwitch(): void {
+  private persistPendingDraft(): void {
     if (!this.uploadForm) {
       this.estimator.setPendingCalculatorDraft(null);
       return;
@@ -796,6 +919,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       request,
       sameSettingsForAll: this.uploadForm.sameSettingsForAll(),
       selectedFileName: this.uploadForm.selectedFile()?.name ?? null,
+      previewFiles: this.uploadForm.getPreviewFilesByIndex(),
     };
     this.estimator.setPendingCalculatorDraft(draft);
   }
@@ -814,16 +938,48 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     const baselineSessionSettings = this.toTrackedSettingsFromSession(
       payload.session,
     );
+    const localDraft = this.estimator.getPendingCalculatorDraft();
+    const selectedFileName = this.normalizeFileName(
+      localDraft?.selectedFileName ??
+        this.uploadForm.selectedFile()?.name ??
+        '',
+    );
 
     this.isRestoringQuoteState = true;
     try {
-      this.uploadForm.setFiles(payload.files, { autoSelect: false });
-      payload.previewFiles.forEach((preview) => {
-        this.uploadForm.setPreviewFileByIndex(preview.index, preview.file);
-      });
-      this.uploadForm.patchSettings(payload.session);
+      if (localDraft?.request.items.length) {
+        this.uploadForm.restoreRequestDraft(localDraft.request, {
+          sameSettingsForAll: localDraft.sameSettingsForAll,
+          selectedFileName: localDraft.selectedFileName,
+          previewFiles: localDraft.previewFiles,
+        });
+      } else {
+        this.uploadForm.setFiles(payload.files, { autoSelect: false });
+        payload.previewFiles.forEach((preview) => {
+          this.uploadForm.setPreviewFileByIndex(preview.index, preview.file);
+        });
+        this.uploadForm.patchSettings(payload.session);
+      }
 
       payload.items.forEach((item, index) => {
+        if (localDraft?.request.items.length) {
+          if (item.status === 'REVIEW_REQUIRED') {
+            const failure: QuoteCalculationFailure = {
+              fileName: item.originalFilename || '',
+              code: item.errorCode,
+              message: item.errorMessage || '',
+            };
+            this.uploadForm.setItemReviewStateByName(
+              item.originalFilename || '',
+              item.errorCode === 'MODEL_OUT_OF_PRINT_VOLUME'
+                ? 'warning'
+                : 'error',
+              this.failureDisplayMessage(failure),
+            );
+          }
+          return;
+        }
+
         // Preserve persisted quantities when restoring from session.
         // Without this, setFiles() defaults every item back to 1.
         this.uploadForm.updateItemQuantityByIndex(
@@ -851,11 +1007,40 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
             filamentVariantId: item.filamentVariantId,
           });
         }
+        if (item.status === 'REVIEW_REQUIRED') {
+          const failure: QuoteCalculationFailure = {
+            fileName: item.originalFilename || '',
+            code: item.errorCode,
+            message: item.errorMessage || '',
+          };
+          this.uploadForm.setItemReviewStateByIndex(
+            index,
+            item.errorCode === 'MODEL_OUT_OF_PRINT_VOLUME'
+              ? 'warning'
+              : 'error',
+            this.failureDisplayMessage(failure),
+          );
+        }
       });
 
-      const selected = payload.files[payload.files.length - 1] ?? null;
-      if (selected) {
-        this.uploadForm.selectFile(selected);
+      this.uploadForm.setAcceptSplitPrinting(
+        payload.items.some(
+          (item) =>
+            item.status !== 'REVIEW_REQUIRED' &&
+            Boolean(item.requiresSplitPrinting),
+        ),
+      );
+
+      if (!localDraft?.request.items.length) {
+        const selected =
+          payload.files.find(
+            (file) => this.normalizeFileName(file.name) === selectedFileName,
+          ) ??
+          payload.files[payload.files.length - 1] ??
+          null;
+        if (selected) {
+          this.uploadForm.selectFile(selected);
+        }
       }
     } finally {
       this.isRestoringQuoteState = false;
@@ -868,8 +1053,37 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     );
     this.requiresRecalculation.set(false);
     this.refreshRecalculationRequirement();
-    this.clearQuoteErrorState();
+    if (!payload.preserveError) {
+      this.clearQuoteErrorState();
+    }
+    this.estimator.setPendingCalculatorDraft(null);
+    this.restoreDraftWhenViewReady = false;
     this.pendingSessionRestore = null;
+  }
+
+  private restorePendingDraftFallback(consume = true): void {
+    if (!this.uploadForm) return;
+    const pendingDraft = consume
+      ? this.estimator.consumePendingCalculatorDraft()
+      : this.estimator.getPendingCalculatorDraft();
+    if (!pendingDraft) return;
+    this.uploadForm.restoreRequestDraft(pendingDraft.request, {
+      sameSettingsForAll: pendingDraft.sameSettingsForAll,
+      selectedFileName: pendingDraft.selectedFileName,
+      previewFiles: pendingDraft.previewFiles,
+    });
+    this.restoreDraftWhenViewReady = false;
+  }
+
+  private applyFailureStates(failures: QuoteCalculationFailure[]): void {
+    if (!this.uploadForm) return;
+    failures.forEach((failure) => {
+      this.uploadForm.setItemReviewStateByName(
+        failure.fileName,
+        failure.code === 'MODEL_OUT_OF_PRINT_VOLUME' ? 'warning' : 'error',
+        this.failureDisplayMessage(failure),
+      );
+    });
   }
 
   private toTrackedSettingsFromRequest(
@@ -1101,7 +1315,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
 
   private isCurrentSessionRestore(session: any): boolean {
     const restoreSessionId = String(session?.id || '');
-    const currentResultSessionId = String(this.result()?.sessionId || '');
+    const currentResultSessionId = String(this.currentSessionId() || '');
     return (
       restoreSessionId.length > 0 &&
       currentResultSessionId.length > 0 &&

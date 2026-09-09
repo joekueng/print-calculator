@@ -12,6 +12,18 @@ import { AppInputComponent } from '../../../shared/components/app-input/app-inpu
 import { AppTextareaComponent } from '../../../shared/components/app-textarea/app-textarea.component';
 import { downloadBlobInBrowser } from '../../../core/utils/browser-download';
 
+export function parseDecimalInput(value: unknown): number {
+  const normalized = String(value ?? '')
+    .trim()
+    .replace(',', '.');
+
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) {
+    return Number.NaN;
+  }
+
+  return Number(normalized);
+}
+
 @Component({
   selector: 'app-admin-cad-invoices',
   standalone: true,
@@ -40,7 +52,7 @@ export class AdminCadInvoicesComponent implements OnInit {
   form = {
     sessionId: '',
     sourceRequestId: '',
-    cadHours: 1,
+    cadHours: '1',
     cadHourlyRateChf: '',
     notes: '',
   };
@@ -69,7 +81,7 @@ export class AdminCadInvoicesComponent implements OnInit {
       return;
     }
 
-    const cadHours = Number(this.form.cadHours);
+    const cadHours = parseDecimalInput(this.form.cadHours);
     if (!Number.isFinite(cadHours) || cadHours <= 0) {
       this.errorMessage = 'Inserisci ore CAD valide (> 0).';
       return;
@@ -92,15 +104,23 @@ export class AdminCadInvoicesComponent implements OnInit {
       const sourceRequestIdRaw = String(this.form.sourceRequestId ?? '').trim();
       const cadRateRaw = String(this.form.cadHourlyRateChf ?? '').trim();
       const notesRaw = String(this.form.notes ?? '').trim();
+      const cadHourlyRateChf =
+        cadRateRaw.length > 0 ? parseDecimalInput(cadRateRaw) : undefined;
+
+      if (
+        cadHourlyRateChf !== undefined &&
+        (!Number.isFinite(cadHourlyRateChf) || cadHourlyRateChf < 0)
+      ) {
+        this.creating = false;
+        this.errorMessage = 'Inserisci una tariffa CAD valida (>= 0).';
+        return;
+      }
 
       payload = {
         sessionId: sessionIdRaw || undefined,
         sourceRequestId: sourceRequestIdRaw || undefined,
         cadHours,
-        cadHourlyRateChf:
-          cadRateRaw.length > 0 && Number.isFinite(Number(cadRateRaw))
-            ? Number(cadRateRaw)
-            : undefined,
+        cadHourlyRateChf,
         notes: notesRaw.length > 0 ? notesRaw : undefined,
       };
     } catch {

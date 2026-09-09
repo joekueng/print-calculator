@@ -803,7 +803,7 @@ CREATE TABLE IF NOT EXISTS quote_line_items
     quote_line_item_id uuid PRIMARY KEY     DEFAULT gen_random_uuid(),
     quote_session_id   uuid        NOT NULL REFERENCES quote_sessions (quote_session_id) ON DELETE CASCADE,
 
-    status             text        NOT NULL CHECK (status IN ('CALCULATING', 'READY', 'FAILED')),
+    status             text        NOT NULL CHECK (status IN ('CALCULATING', 'READY', 'FAILED', 'REVIEW_REQUIRED')),
 
     original_filename  text        NOT NULL,
     quantity           integer     NOT NULL DEFAULT 1 CHECK (quantity >= 1),
@@ -834,6 +834,15 @@ CREATE TABLE IF NOT EXISTS quote_line_items
 
 CREATE INDEX IF NOT EXISTS ix_quote_line_items_session
     ON quote_line_items (quote_session_id);
+
+-- Keep files that cannot be priced automatically available for manual review.
+-- PostgreSQL check constraints are not updated by Hibernate ddl-auto=update.
+ALTER TABLE quote_line_items
+    DROP CONSTRAINT IF EXISTS quote_line_items_status_check;
+
+ALTER TABLE quote_line_items
+    ADD CONSTRAINT quote_line_items_status_check
+        CHECK (status IN ('CALCULATING', 'READY', 'FAILED', 'REVIEW_REQUIRED'));
 
 ALTER TABLE quote_line_items
     ADD COLUMN IF NOT EXISTS material_code text;

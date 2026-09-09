@@ -77,6 +77,16 @@
     background: rgba(250, 207, 10, 0.08);
     box-shadow: 0 0 0 1px var(--color-brand);
   }
+  &.has-warning {
+    border-color: #d97706;
+    background: #fff7ed;
+    box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.28);
+  }
+  &.has-error {
+    border-color: var(--color-danger-500);
+    background: var(--color-danger-50, #fff1f2);
+    box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.2);
+  }
 }
 
 .card-header {
@@ -93,6 +103,30 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.review-badge {
+  display: inline-flex;
+  margin-top: var(--space-1);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  background: rgba(217, 119, 6, 0.14);
+  color: #9a4c05;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.has-error .review-badge {
+  background: rgba(220, 38, 38, 0.12);
+  color: var(--color-danger-500);
+}
+
+.review-message {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .card-body {

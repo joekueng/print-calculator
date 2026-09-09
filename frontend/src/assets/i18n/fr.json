@@ -516,6 +516,32 @@
           }
         }
       },
+      "petg-extrudr": {
+        "NAME": "PETG Extrudr",
+        "SUMMARY": "PETG polyvalent et résistant, également utilisé pour des projets avec un contact alimentaire limité. Le filament est déclaré adapté par le fournisseur, mais la pièce FDM finie n'est pas certifiée food safe.",
+        "QUALITY_TIPS": [
+          "Utiliser un plateau chauffant et une surface propre pour une adhérence fiable.",
+          "Pour les demandes alimentaires, nous évaluons par écrit l'aliment, la température, la durée du contact et le nettoyage."
+        ],
+        "PROS": [
+          "Bonne résistance mécanique, adhérence entre couches et tenue thermique jusqu'à environ 90 °C.",
+          "Adapté aux pièces fonctionnelles et 100% recyclable selon la fiche produit."
+        ],
+        "CONS": [
+          "Les lignes de couche et microfissures FDM compliquent le nettoyage et la désinfection.",
+          "La pièce imprimée n'est pas certifiée food safe pour un usage professionnel continu ou prolongé."
+        ],
+        "IDEAL_FOR": [
+          "Pièces fonctionnelles",
+          "Contact bref et occasionnel avec des aliments froids ou à température ambiante, après évaluation",
+          "Ustensiles et accessoires de cuisine non professionnels"
+        ],
+        "SOURCES": {
+          "extrudr-petg-white": {
+            "LABEL": "3DJake - Extrudr PETG White"
+          }
+        }
+      },
       "pet-cf": {
         "NAME": "PET-CF",
         "SUMMARY": "Materiau technique rigide avec fibre de carbone, tres stable sur les pieces de precision.",
@@ -711,7 +737,7 @@
     "SUPPORT": "Supports",
     "SUPPORT_DESC": "Activer les supports pour les surplombs",
     "SPLIT_ACCEPT_LABEL": "J'accepte que les modèles trop grands soient divisés pour l'impression",
-    "SPLIT_RESULT_NOTE": "Ce devis inclut le setup pour préparer la division des modèles trop grands. Le fichier original reste associé à la commande.",
+    "SPLIT_RESULT_NOTE": "Ce devis inclut le supplément de CHF 10 pour diviser les modèles trop grands. Le fichier original reste associé à la commande.",
     "CALCULATE": "Calculer le devis",
     "RESULT": "Devis estimé",
     "TIME": "Temps d'impression",
@@ -720,6 +746,10 @@
     "ORDER": "Commander maintenant",
     "CONSULT": "Demander une consultation",
     "ERROR_GENERIC": "Une erreur s'est produite pendant le calcul du devis.",
+    "ERROR_RATE_LIMIT": "Trop de tentatives ont été effectuées en peu de temps. Le calculateur fonctionne correctement : attendez au moins 60 secondes sans réessayer, puis calculez à nouveau le devis.",
+    "ERROR_SESSION_INIT": "Le calcul du devis n’a pas pu être démarré. Veuillez réessayer.",
+    "ERROR_FINALIZATION": "Le calcul est terminé, mais le devis final n’a pas pu être chargé. Veuillez réessayer.",
+    "ERROR_ITEM_PROCESSING": "Le fichier n’a pas pu être traité.",
     "NEW_QUOTE": "Calculer un nouveau devis",
     "ORDER_SUCCESS_TITLE": "Commande envoyée avec succès",
     "ORDER_SUCCESS_DESC": "Nous avons reçu les détails de votre commande. Vous recevrez bientôt un e-mail de confirmation avec les informations de paiement.",
@@ -732,6 +762,37 @@
     "ANALYZING_TEXT": "Nous analysons la géométrie et calculons le parcours outil.",
     "QTY_SHORT": "QTÉ",
     "COLOR_LABEL": "COULEUR",
+    "SAME_SETTINGS_ALL": "Mêmes paramètres pour tous les fichiers",
+    "COLOR_EXCLUDED": "Couleur exclue",
+    "GLOBAL_SETTINGS": "Paramètres globaux",
+    "FILE_SETTINGS": "Paramètres pour {{fileName}}",
+    "OPTION_STANDARD": "Standard",
+    "OPTION_FLEXIBLE": "Flexible",
+    "OPTION_TECHNICAL": "Technique",
+    "NOT_AVAILABLE": "N/D",
+    "VALUE_ON": "Activés",
+    "VALUE_OFF": "Désactivés",
+    "QUALITY_OPTIONS": {
+      "DRAFT": "Brouillon",
+      "STANDARD": "Standard",
+      "EXTRA_FINE": "Haute définition"
+    },
+    "INFILL_PATTERNS": {
+      "GRID": "Grille",
+      "GYROID": "Gyroïde",
+      "CUBIC": "Cubique"
+    },
+    "CONSULTATION": {
+      "TITLE": "Demande de devis",
+      "MATERIAL": "Matériau",
+      "QUALITY": "Qualité",
+      "FILES": "Fichiers",
+      "QUANTITY": "Quantité",
+      "COLOR": "Couleur",
+      "INFILL": "Remplissage",
+      "MANUAL_REVIEW": "Le modèle nécessite une évaluation manuelle. La division éventuelle, le prix final et l’approbation seront convenus par e-mail.",
+      "NOTES": "Notes"
+    },
     "ADD_FILES": "Ajouter des fichiers",
     "UPLOADING": "Téléversement...",
     "PROCESSING": "Traitement...",
@@ -749,7 +810,15 @@
     "ZERO_RESULT_TITLE": "Résultat invalide",
     "ZERO_RESULT_HELP": "Le calcul a renvoyé des valeurs nulles invalides. Essayez un autre format de fichier ou contactez-nous directement via Demander une consultation.",
     "CUSTOM_QUOTE_TITLE": "Devis personnalisé nécessaire",
-    "CUSTOM_QUOTE_HELP": "Ce modèle est trop grand pour l'estimation automatique, même avec la division acceptée. Envoyez une demande personnalisée avec le fichier joint."
+    "CUSTOM_QUOTE_HELP": "Le fichier reste enregistré et nécessite une évaluation manuelle. Contactez-nous : nous conviendrons par e-mail de la division éventuelle, du prix final et de votre accord avant de poursuivre.",
+    "SPLIT_REVIEW_TITLE": "Ce modèle doit être divisé",
+    "SPLIT_REVIEW_HELP": "Le modèle dépasse le volume d'impression disponible. Le fichier reste enregistré : demandez une consultation afin de convenir par e-mail de sa division, du prix final et de votre accord.",
+    "SPLIT_REQUEST_ACTION": "Demander la division du modèle",
+    "REVIEW_OUT_OF_VOLUME": "Le modèle dépasse le volume d'impression disponible.",
+    "REVIEW_PROCESSING_FAILED": "Le fichier n'a pas pu être analysé automatiquement. Il reste enregistré pour une évaluation manuelle.",
+    "REVIEW_PARTIAL_SINGLE": "{{fileName}} nécessite une évaluation manuelle et n'est pas inclus dans le total. {{reason}}",
+    "REVIEW_PARTIAL_MULTIPLE": "{{count}} fichiers nécessitent une évaluation manuelle et ne sont pas inclus dans le total : {{fileNames}}. {{reason}}",
+    "FILE_REVIEW_REQUIRED": "Évaluation requise"
   },
   "QUOTE": {
     "PROCEED_ORDER": "Procéder à la commande",

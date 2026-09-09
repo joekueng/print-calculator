@@ -208,24 +208,30 @@ export class UploadFormComponent implements OnInit {
 
         this.materials.set(
           (options.materials || []).map((m) => ({
-            label: m.label,
+            label: this.localizeMaterialLabel(m),
             value: m.code,
           })),
         );
         this.qualities.set(
           (options.qualities || []).map((q) => ({
-            label: q.label,
+            label: this.localizedOptionLabel(
+              `CALC.QUALITY_OPTIONS.${q.id.toUpperCase()}`,
+              q.label,
+            ),
             value: q.id,
           })),
         );
         this.infillPatterns.set(
           (options.infillPatterns || []).map((p) => ({
-            label: p.label,
+            label: this.localizedOptionLabel(
+              `CALC.INFILL_PATTERNS.${p.id.toUpperCase()}`,
+              p.label,
+            ),
             value: p.id,
           })),
         );
         this.allNozzleDiameters = (options.nozzleDiameters || []).map((n) => ({
-          label: n.label,
+          label: this.localizeBackendLabel(n.label),
           value: n.value,
         }));
         this.nozzleDiameters.set(this.allNozzleDiameters);
@@ -261,7 +267,12 @@ export class UploadFormComponent implements OnInit {
             value: 'standard',
           },
         ]);
-        this.infillPatterns.set([{ label: 'Grid', value: 'grid' }]);
+        this.infillPatterns.set([
+          {
+            label: this.translate.instant('CALC.INFILL_PATTERNS.GRID'),
+            value: 'grid',
+          },
+        ]);
         this.allNozzleDiameters = [{ label: '0.4 mm', value: 0.4 }];
         this.nozzleDiameters.set(this.allNozzleDiameters);
 
@@ -297,6 +308,10 @@ export class UploadFormComponent implements OnInit {
     if (!selected) return null;
     const item = this.items().find((i) => i.file === selected);
     return item ? item.previewFile || item.file : null;
+  }
+
+  getPreviewFilesByIndex(): Array<File | null> {
+    return this.items().map((item) => item.previewFile ?? null);
   }
 
   getSelectedItemIndex(): number {
@@ -668,6 +683,36 @@ export class UploadFormComponent implements OnInit {
     });
   }
 
+  setItemReviewStateByIndex(
+    index: number,
+    level: 'warning' | 'error',
+    message: string,
+  ): void {
+    if (!Number.isInteger(index) || index < 0) return;
+    this.items.update((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, reviewLevel: level, reviewMessage: message }
+          : item,
+      ),
+    );
+  }
+
+  setItemReviewStateByName(
+    fileName: string,
+    level: 'warning' | 'error',
+    message: string,
+  ): void {
+    const normalizedName = normalizeFileName(fileName);
+    this.items.update((current) =>
+      current.map((item) =>
+        normalizeFileName(item.file.name) === normalizedName
+          ? { ...item, reviewLevel: level, reviewMessage: message }
+          : item,
+      ),
+    );
+  }
+
   setItemPrintSettingsByIndex(index: number, update: ItemPrintSettingsUpdate) {
     if (!Number.isInteger(index) || index < 0) return;
 
@@ -725,6 +770,7 @@ export class UploadFormComponent implements OnInit {
     options?: {
       sameSettingsForAll?: boolean;
       selectedFileName?: string | null;
+      previewFiles?: Array<File | null>;
     },
   ) {
     if (!request?.items?.length) {
@@ -735,6 +781,11 @@ export class UploadFormComponent implements OnInit {
       request.items.map((item) => item.file),
       { autoSelect: false },
     );
+    options?.previewFiles?.forEach((previewFile, index) => {
+      if (previewFile) {
+        this.setPreviewFileByIndex(index, previewFile);
+      }
+    });
     this.patchSettings({
       materialCode: request.material,
       quality: request.quality,
@@ -785,6 +836,12 @@ export class UploadFormComponent implements OnInit {
 
     this.emitPrintSettingsChange();
     this.emitItemSettingsDiffChange();
+  }
+
+  setAcceptSplitPrinting(accepted: boolean): void {
+    this.form
+      .get('acceptSplitPrinting')
+      ?.setValue(accepted, { emitEvent: false });
   }
 
   getCurrentRequestDraft(): QuoteRequest {
@@ -1364,6 +1421,34 @@ export class UploadFormComponent implements OnInit {
       colorName: preferred.colorName,
       filamentVariantId: preferred.id,
     };
+  }
+
+  private localizedOptionLabel(key: string, fallback: string): string {
+    const translated = this.translate.instant(key);
+    return translated === key ? fallback : translated;
+  }
+
+  private localizeBackendLabel(label: string): string {
+    return String(label || '')
+      .replace(
+        /\(Standard\)$/,
+        `(${this.translate.instant('CALC.OPTION_STANDARD')})`,
+      )
+      .replace(
+        /\(Flexible\)$/,
+        `(${this.translate.instant('CALC.OPTION_FLEXIBLE')})`,
+      );
+  }
+
+  private localizeMaterialLabel(material: MaterialOption): string {
+    const code = String(material.code || '').trim();
+    const backendLabel = String(material.label || '');
+    const typeKey = /\(Flexible\)$/i.test(backendLabel)
+      ? 'CALC.OPTION_FLEXIBLE'
+      : material.isTechnical
+        ? 'CALC.OPTION_TECHNICAL'
+        : 'CALC.OPTION_STANDARD';
+    return `${code} (${this.translate.instant(typeKey)})`;
   }
 
   private refreshSameSettingsFlag() {

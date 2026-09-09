@@ -9,6 +9,7 @@ import com.printcalculator.event.OrderShippedEvent;
 import com.printcalculator.event.PaymentConfirmedEvent;
 import com.printcalculator.event.PaymentReportedEvent;
 import com.printcalculator.repository.OrderItemRepository;
+import com.printcalculator.repository.OrderRepository;
 import com.printcalculator.repository.PaymentRepository;
 import com.printcalculator.service.email.EmailAuditService;
 import com.printcalculator.service.email.EmailSendResult;
@@ -19,9 +20,10 @@ import com.printcalculator.service.email.EmailNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.text.NumberFormat;
 import java.time.OffsetDateTime;
@@ -45,6 +47,7 @@ public class OrderEmailListener {
 
     private final EmailNotificationService emailNotificationService;
     private final InvoicePdfRenderingService invoicePdfRenderingService;
+    private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final QrBillService qrBillService;
@@ -61,9 +64,9 @@ public class OrderEmailListener {
     private String frontendBaseUrl;
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderCreatedEvent(OrderCreatedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         log.info("Processing OrderCreatedEvent for order id: {}", order.getId());
 
         try {
@@ -76,9 +79,9 @@ public class OrderEmailListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentReportedEvent(PaymentReportedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         log.info("Processing PaymentReportedEvent for order id: {}", order.getId());
 
         try {
@@ -89,9 +92,9 @@ public class OrderEmailListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         Payment payment = event.getPayment();
         log.info("Processing PaymentConfirmedEvent for order id: {}", order.getId());
 
@@ -103,9 +106,9 @@ public class OrderEmailListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderShippedEvent(OrderShippedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         log.info("Processing OrderShippedEvent for order id: {}", order.getId());
 
         try {
@@ -117,6 +120,13 @@ public class OrderEmailListener {
 
     private void sendCustomerConfirmationEmail(Order order) {
         sendCustomerConfirmationEmail(order, EmailAuditService.ORIGIN_SYSTEM, null);
+    }
+
+    private Order loadCommittedOrder(Order eventOrder) {
+        if (eventOrder == null || eventOrder.getId() == null) {
+            return eventOrder;
+        }
+        return orderRepository.findForEmailById(eventOrder.getId()).orElse(eventOrder);
     }
 
     public EmailLog sendCustomerConfirmationEmail(Order order, String origin, UUID resentFromEmailLogId) {

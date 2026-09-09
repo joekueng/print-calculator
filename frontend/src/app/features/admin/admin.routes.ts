@@ -90,6 +90,13 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.AdminShopComponent,
           ),
       },
+      {
+        path: 'linkedin',
+        loadComponent: () =>
+          import('./pages/admin-linkedin.component').then(
+            (m) => m.AdminLinkedInComponent,
+          ),
+      },
     ],
   },
 ];

@@ -40,7 +40,8 @@
     "PRIVACY": "Privacy",
     "TERMS": "Terms & Conditions",
     "MATERIALS": "Quality & Materials",
-    "CONTACT": "Contact Us"
+    "CONTACT": "Contact Us",
+    "LINKEDIN": "3D Fab on LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -924,7 +925,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Electronics Engineering Student",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Follow our work",
+      "TITLE": "3D Fab on LinkedIn",
+      "DESCRIPTION": "Follow our company page for workshop updates, current projects and practical examples of custom 3D printing.",
+      "CTA": "Follow 3D Fab",
+      "POST_LABEL": "Recent update",
+      "POST_TITLE": "A new collaboration is taking shape",
+      "POST_TEXT": "We are developing a new solution for kappa events. We look forward to turning the idea into something tangible and sharing the result soon.",
+      "POST_SECOND_TITLE": "Introducing 3D Fab",
+      "POST_SECOND_TEXT": "We help companies, professionals and makers turn digital models into prototypes, custom components, spare parts and small production runs.",
+      "POST_CTA": "Read the post on LinkedIn",
+      "IMAGE_ALT": "Image from the 3D Fab LinkedIn post",
+      "PREVIOUS": "Previous LinkedIn post",
+      "NEXT": "Next LinkedIn post",
+      "PAUSE": "Pause",
+      "PLAY": "Play",
+      "SLIDE_LABEL": "Show LinkedIn post {{number}}"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Our Locations",
@@ -1335,6 +1354,24 @@
     "TYPE_CALCULATOR": "Calculator",
     "TYPE_MIXED": "Mixed",
     "NOT_AVAILABLE": "N/A"
+  },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "LinkedIn synchronization",
+    "DESCRIPTION": "Manage the posts displayed on the About us page.",
+    "OPEN_PAGE": "Open LinkedIn",
+    "LOADING": "Loading LinkedIn status...",
+    "SYNC_ENABLED": "Synchronization enabled",
+    "API_CONFIGURED": "API configured",
+    "CACHED_POSTS": "Cached posts",
+    "LAST_SYNC": "Last synchronization",
+    "DAILY_TITLE": "Daily update",
+    "DAILY_DESCRIPTION": "The cron job runs every day at 04:00 Swiss time. You can refresh immediately after publishing a new post.",
+    "SYNC_NOW": "Synchronize now",
+    "SYNCING": "Synchronizing...",
+    "SYNC_SUCCESS": "LinkedIn posts updated successfully.",
+    "SYNC_ERROR": "LinkedIn did not respond. Existing posts have been retained.",
+    "STATUS_ERROR": "Unable to load the synchronization status.",
+    "CONFIG_REQUIRED": "Configure and enable the LinkedIn credentials before synchronizing."
   },
   "DROPZONE": {
     "DEFAULT_LABEL": "Drop files here or click to upload",

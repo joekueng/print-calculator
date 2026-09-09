@@ -50,7 +50,7 @@ public interface QuoteSessionRepository extends JpaRepository<QuoteSession, UUID
                   and o.status <> 'CANCELLED'
                   and exists (
                       select p.id from Payment p
-                      where p.order = o and p.status = 'COMPLETED'
+                      where p.order = o and p.status in ('RECEIVED', 'COMPLETED')
                   )
             )
             """)
@@ -77,7 +77,7 @@ public interface QuoteSessionRepository extends JpaRepository<QuoteSession, UUID
                     and o.status <> 'CANCELLED'
                     and exists (
                         select p.id from Payment p
-                        where p.order = o and p.status = 'COMPLETED'
+                        where p.order = o and p.status in ('RECEIVED', 'COMPLETED')
                     )
               )
             """)

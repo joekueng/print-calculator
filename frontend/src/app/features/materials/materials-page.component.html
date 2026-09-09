@@ -195,23 +195,6 @@
     </div>
   </section>
 
-  <section class="materials-section" aria-labelledby="petg-food-contact-title">
-    <div class="container">
-      <article class="materials-panel">
-        <div class="materials-section-head">
-          <h2 id="petg-food-contact-title">{{ pageContent().FOOD_CONTACT.TITLE }}</h2>
-          <p>{{ pageContent().FOOD_CONTACT.DESCRIPTION }}</p>
-          <p>{{ pageContent().FOOD_CONTACT.NOTE }}</p>
-          <a class="materials-inline-link"
-            href="https://s3.extrudr.com/extrudr-media/datasheets/ris/ris-en/petg-RIS-en.pdf"
-            target="_blank" rel="noopener noreferrer">
-            {{ pageContent().FOOD_CONTACT.SOURCE_LABEL }}
-          </a>
-        </div>
-      </article>
-    </div>
-  </section>
-
   <section
     id="materials-calculator"
     class="materials-section materials-section--muted materials-section--calculator"
@@ -381,6 +364,34 @@
           }
         </div>
       </div>
+    </div>
+  </section>
+
+  <section
+    class="materials-section materials-section--food-contact"
+    aria-labelledby="petg-food-contact-title"
+  >
+    <div class="container">
+      <article class="food-contact-card">
+        <div>
+          <p class="ui-eyebrow ui-eyebrow--compact">PETG</p>
+          <h2 id="petg-food-contact-title">
+            {{ pageContent().FOOD_CONTACT.TITLE }}
+          </h2>
+        </div>
+        <div class="food-contact-copy">
+          <p>{{ pageContent().FOOD_CONTACT.DESCRIPTION }}</p>
+          <p class="food-contact-note">{{ pageContent().FOOD_CONTACT.NOTE }}</p>
+          <a
+            class="materials-inline-link"
+            href="https://s3.extrudr.com/extrudr-media/datasheets/ris/ris-en/petg-RIS-en.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ pageContent().FOOD_CONTACT.SOURCE_LABEL }}
+          </a>
+        </div>
+      </article>
     </div>
   </section>
 

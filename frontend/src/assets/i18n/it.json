@@ -12,7 +12,8 @@
     "PRIVACY": "Privacy",
     "TERMS": "Termini & Condizioni",
     "MATERIALS": "Qualita e Materiali",
-    "CONTACT": "Contattaci"
+    "CONTACT": "Contattaci",
+    "LINKEDIN": "3D Fab su LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -996,7 +997,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Studente Ingegneria Elettronica",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Segui il nostro lavoro",
+      "TITLE": "3D Fab su LinkedIn",
+      "DESCRIPTION": "Segui la pagina aziendale per aggiornamenti dal laboratorio, progetti in corso ed esempi concreti di stampa 3D su misura.",
+      "CTA": "Segui 3D Fab",
+      "POST_LABEL": "Aggiornamento recente",
+      "POST_TITLE": "Una nuova collaborazione prende forma",
+      "POST_TEXT": "Stiamo sviluppando una nuova soluzione per kappa events. Non vediamo l’ora di trasformare l’idea in qualcosa di concreto e condividere presto il risultato.",
+      "POST_SECOND_TITLE": "Vi presentiamo 3D Fab",
+      "POST_SECOND_TEXT": "Aiutiamo aziende, professionisti e maker a trasformare modelli digitali in prototipi, componenti personalizzati, ricambi e piccole serie.",
+      "POST_CTA": "Leggi il post su LinkedIn",
+      "IMAGE_ALT": "Immagine del post LinkedIn di 3D Fab",
+      "PREVIOUS": "Post LinkedIn precedente",
+      "NEXT": "Post LinkedIn successivo",
+      "PAUSE": "Pausa",
+      "PLAY": "Riprendi",
+      "SLIDE_LABEL": "Mostra il post LinkedIn {{number}}"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Le Nostre Sedi",
@@ -1342,6 +1361,24 @@
     "TYPE_CALCULATOR": "Calcolatore",
     "TYPE_MIXED": "Misto",
     "NOT_AVAILABLE": "N/D"
+  },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "Sincronizzazione LinkedIn",
+    "DESCRIPTION": "Gestisci i post mostrati nella pagina Chi siamo.",
+    "OPEN_PAGE": "Apri LinkedIn",
+    "LOADING": "Caricamento stato LinkedIn...",
+    "SYNC_ENABLED": "Sincronizzazione attiva",
+    "API_CONFIGURED": "API configurata",
+    "CACHED_POSTS": "Post in cache",
+    "LAST_SYNC": "Ultima sincronizzazione",
+    "DAILY_TITLE": "Aggiornamento giornaliero",
+    "DAILY_DESCRIPTION": "Il cron viene eseguito ogni giorno alle 04:00, ora svizzera. Puoi aggiornare subito dopo aver pubblicato un nuovo post.",
+    "SYNC_NOW": "Sincronizza ora",
+    "SYNCING": "Sincronizzazione...",
+    "SYNC_SUCCESS": "Post LinkedIn aggiornati correttamente.",
+    "SYNC_ERROR": "LinkedIn non ha risposto. I post già presenti sono stati mantenuti.",
+    "STATUS_ERROR": "Impossibile caricare lo stato della sincronizzazione.",
+    "CONFIG_REQUIRED": "Configura e abilita le credenziali LinkedIn prima della sincronizzazione."
   },
   "DROPZONE": {
     "DEFAULT_LABEL": "Trascina i file qui o clicca per caricare",

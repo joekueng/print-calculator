@@ -142,9 +142,15 @@ describe('MaterialsPageComponent', () => {
     expect(component.materialById().get('petg-extrudr')?.name).toBe('PETG');
     expect(host.querySelector('thead')?.textContent).toContain('PETG');
     const section = host.querySelector('[aria-labelledby="petg-food-contact-title"]');
+    const calculator = host.querySelector('#materials-calculator')!;
+    const sources = host.querySelector('.ui-page-surface__body')!;
     expect(section?.textContent).toContain('We also offer a PETG variant');
     expect(section?.textContent).toContain('does not automatically certify');
     expect(section?.querySelector('a')?.href).toBe('https://s3.extrudr.com/extrudr-media/datasheets/ris/ris-en/petg-RIS-en.pdf');
+    expect(calculator.compareDocumentPosition(section!) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
+    expect(section!.compareDocumentPosition(sources) & Node.DOCUMENT_POSITION_FOLLOWING)
+      .toBeTruthy();
   });
 
   it('keeps selected chip and radar colors aligned by selection order', () => {

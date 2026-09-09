@@ -4,6 +4,7 @@ import com.printcalculator.entity.Customer;
 import com.printcalculator.entity.Order;
 import com.printcalculator.event.OrderCreatedEvent;
 import com.printcalculator.repository.OrderItemRepository;
+import com.printcalculator.repository.OrderRepository;
 import com.printcalculator.repository.PaymentRepository;
 import com.printcalculator.service.email.EmailAuditService;
 import com.printcalculator.service.email.EmailSendResult;
@@ -26,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -48,6 +50,9 @@ class OrderEmailListenerTest {
 
     @Mock
     private InvoicePdfRenderingService invoicePdfRenderingService;
+
+    @Mock
+    private OrderRepository orderRepository;
 
     @Mock
     private OrderItemRepository orderItemRepository;
@@ -90,6 +95,8 @@ class OrderEmailListenerTest {
         order.setTotalChf(new BigDecimal("150.50"));
 
         event = new OrderCreatedEvent(this, order);
+
+        lenient().when(orderRepository.findForEmailById(order.getId())).thenReturn(Optional.of(order));
 
         ReflectionTestUtils.setField(orderEmailListener, "adminMailEnabled", true);
         ReflectionTestUtils.setField(orderEmailListener, "adminMailAddress", "admin@printcalculator.local");

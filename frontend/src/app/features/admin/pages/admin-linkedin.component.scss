@@ -1,0 +1,57 @@
+.linkedin-admin {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.section-header p:last-child {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-muted);
+}
+
+.linkedin-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.linkedin-status-grid strong {
+  overflow-wrap: anywhere;
+}
+
+.linkedin-sync-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+}
+
+.linkedin-sync-action h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.1rem;
+}
+
+.linkedin-sync-action p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 900px) {
+  .linkedin-status-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .linkedin-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .linkedin-sync-action {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

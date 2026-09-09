@@ -40,7 +40,8 @@
     "PRIVACY": "Datenschutz",
     "TERMS": "AGB",
     "MATERIALS": "Qualität & Materialien",
-    "CONTACT": "Kontakt"
+    "CONTACT": "Kontakt",
+    "LINKEDIN": "3D Fab auf LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -937,7 +938,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Elektrotechnik-Student",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Folge unserer Arbeit",
+      "TITLE": "3D Fab auf LinkedIn",
+      "DESCRIPTION": "Folge unserer Unternehmensseite für Neuigkeiten aus der Werkstatt, aktuelle Projekte und praktische Beispiele für individuellen 3D-Druck.",
+      "CTA": "3D Fab folgen",
+      "POST_LABEL": "Aktueller Beitrag",
+      "POST_TITLE": "Eine neue Zusammenarbeit nimmt Form an",
+      "POST_TEXT": "Wir entwickeln eine neue Lösung für kappa events. Wir freuen uns darauf, die Idee greifbar zu machen und das Ergebnis bald zu zeigen.",
+      "POST_SECOND_TITLE": "Wir stellen 3D Fab vor",
+      "POST_SECOND_TEXT": "Wir helfen Unternehmen, Fachpersonen und Makern, digitale Modelle in Prototypen, individuelle Komponenten, Ersatzteile und Kleinserien zu verwandeln.",
+      "POST_CTA": "Beitrag auf LinkedIn lesen",
+      "IMAGE_ALT": "Bild aus dem LinkedIn-Beitrag von 3D Fab",
+      "PREVIOUS": "Vorheriger LinkedIn-Beitrag",
+      "NEXT": "Nächster LinkedIn-Beitrag",
+      "PAUSE": "Pause",
+      "PLAY": "Fortsetzen",
+      "SLIDE_LABEL": "LinkedIn-Beitrag {{number}} anzeigen"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Unsere Standorte",
@@ -1348,6 +1367,24 @@
     "TYPE_CALCULATOR": "Rechner",
     "TYPE_MIXED": "Gemischt",
     "NOT_AVAILABLE": "N/V"
+  },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "LinkedIn-Synchronisierung",
+    "DESCRIPTION": "Verwalte die Beiträge, die auf der Seite Über uns angezeigt werden.",
+    "OPEN_PAGE": "LinkedIn öffnen",
+    "LOADING": "LinkedIn-Status wird geladen...",
+    "SYNC_ENABLED": "Synchronisierung aktiv",
+    "API_CONFIGURED": "API konfiguriert",
+    "CACHED_POSTS": "Beiträge im Cache",
+    "LAST_SYNC": "Letzte Synchronisierung",
+    "DAILY_TITLE": "Tägliche Aktualisierung",
+    "DAILY_DESCRIPTION": "Der Cronjob läuft täglich um 04:00 Uhr Schweizer Zeit. Nach der Veröffentlichung eines neuen Beitrags kann sofort aktualisiert werden.",
+    "SYNC_NOW": "Jetzt synchronisieren",
+    "SYNCING": "Synchronisierung...",
+    "SYNC_SUCCESS": "LinkedIn-Beiträge wurden erfolgreich aktualisiert.",
+    "SYNC_ERROR": "LinkedIn hat nicht geantwortet. Vorhandene Beiträge wurden beibehalten.",
+    "STATUS_ERROR": "Der Synchronisierungsstatus konnte nicht geladen werden.",
+    "CONFIG_REQUIRED": "LinkedIn-Zugangsdaten vor der Synchronisierung konfigurieren und aktivieren."
   },
   "DROPZONE": {
     "DEFAULT_LABEL": "Dateien hierher ziehen oder klicken zum Hochladen",

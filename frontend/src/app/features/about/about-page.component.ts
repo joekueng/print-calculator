@@ -1,6 +1,14 @@
-import { Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { TranslateModule } from '@ngx-translate/core';
+import { interval } from 'rxjs';
 import { AppLocationsComponent } from '../../shared/components/app-locations/app-locations.component';
 import {
   buildPublicMediaUsageScopeKey,
@@ -8,8 +16,14 @@ import {
   PublicMediaService,
   PublicMediaUsageCollectionMap,
 } from '../../core/services/public-media.service';
+import {
+  LinkedInPost,
+  LinkedInPostService,
+} from '../../core/services/linkedin-post.service';
 
 const EMPTY_MEDIA_COLLECTIONS: PublicMediaUsageCollectionMap = {};
+const LINKEDIN_SLIDE_INTERVAL_MS = 30_000;
+const LINKEDIN_FALLBACK_POST_COUNT = 2;
 
 type MemberId = 'joe' | 'matteo';
 type PassionId =
@@ -41,7 +55,9 @@ interface PassionChip {
   styleUrl: './about-page.component.scss',
 })
 export class AboutPageComponent {
+  private readonly destroyRef = inject(DestroyRef);
   private readonly publicMediaService = inject(PublicMediaService);
+  private readonly linkedInPostService = inject(LinkedInPostService);
   private readonly mediaByUsage = toSignal(
     this.publicMediaService.getUsageCollections([
       {
@@ -74,6 +90,33 @@ export class AboutPageComponent {
     return image ? this.publicMediaService.toDisplayImage(image, 'card') : null;
   });
 
+  private readonly syncedLinkedInPosts = toSignal(
+    this.linkedInPostService.getPosts(),
+    { initialValue: [] as readonly LinkedInPost[] },
+  );
+  readonly activeLinkedInSlide = signal(0);
+  readonly linkedInManuallyPaused = signal(false);
+  readonly linkedInInteractionPaused = signal(false);
+  readonly linkedInSlideCount = computed(() =>
+    this.syncedLinkedInPosts().length || LINKEDIN_FALLBACK_POST_COUNT,
+  );
+  readonly linkedInSlideIndexes = computed(() =>
+    Array.from({ length: this.linkedInSlideCount() }, (_, index) => index),
+  );
+  readonly normalizedLinkedInSlide = computed(
+    () => this.activeLinkedInSlide() % this.linkedInSlideCount(),
+  );
+  readonly activeLinkedInPost = computed<LinkedInPost | null>(() => {
+    const posts = this.syncedLinkedInPosts();
+    if (posts.length === 0) {
+      return null;
+    }
+    return posts[this.normalizedLinkedInSlide()] ?? null;
+  });
+  readonly linkedInPaused = computed(
+    () => this.linkedInManuallyPaused() || this.linkedInInteractionPaused(),
+  );
+
   selectedMember: MemberId | null = null;
   hoveredMember: MemberId | null = null;
 
@@ -99,6 +142,18 @@ export class AboutPageComponent {
       labelKey: 'ABOUT.PASSION_SNOWBOARD_INSTRUCTOR',
     },
   ];
+
+  constructor() {
+    afterNextRender(() => {
+      interval(LINKEDIN_SLIDE_INTERVAL_MS)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          if (!this.linkedInPaused()) {
+            this.nextLinkedInSlide();
+          }
+        });
+    });
+  }
 
   private readonly memberPassions: Readonly<
     Record<MemberId, ReadonlyArray<PassionId>>
@@ -149,5 +204,26 @@ export class AboutPageComponent {
   isPassionActive(passionId: PassionId): boolean {
     const member = this.activeMember;
     return member !== null && this.memberPassions[member].includes(passionId);
+  }
+
+  selectLinkedInSlide(index: number): void {
+    this.activeLinkedInSlide.set(index % this.linkedInSlideCount());
+  }
+
+  nextLinkedInSlide(): void {
+    this.selectLinkedInSlide(this.activeLinkedInSlide() + 1);
+  }
+
+  previousLinkedInSlide(): void {
+    const count = this.linkedInSlideCount();
+    this.selectLinkedInSlide(this.activeLinkedInSlide() - 1 + count);
+  }
+
+  toggleLinkedInPaused(): void {
+    this.linkedInManuallyPaused.update((paused) => !paused);
+  }
+
+  setLinkedInInteractionPaused(paused: boolean): void {
+    this.linkedInInteractionPaused.set(paused);
   }
 }

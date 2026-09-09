@@ -34,7 +34,8 @@
         name="cadHours"
         [(ngModel)]="form.cadHours"
         label="Ore CAD"
-        type="number"
+        type="text"
+        inputmode="decimal"
         min="0.1"
         step="0.1"
       ></app-input>
@@ -43,7 +44,8 @@
         [(ngModel)]="form.cadHourlyRateChf"
         label="Tariffa CAD CHF/h (opzionale)"
         placeholder="Se vuoto usa pricing policy attiva"
-        type="number"
+        type="text"
+        inputmode="decimal"
         min="0"
         step="0.05"
       ></app-input>

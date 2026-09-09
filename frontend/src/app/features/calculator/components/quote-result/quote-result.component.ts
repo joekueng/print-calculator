@@ -22,6 +22,7 @@ interface ItemSettingDetail {
   key: string;
   labelKey: string;
   value: string;
+  valueKey?: string;
 }
 
 @Component({
@@ -250,6 +251,10 @@ export class QuoteResultComponent {
               key,
               labelKey: 'CALC.QUALITY',
               value: this.formatOptionValue(item.quality || rawValue),
+              valueKey: this.optionValueKey(
+                'QUALITY_OPTIONS',
+                item.quality || rawValue,
+              ),
             };
           case 'nozzle':
             return {
@@ -274,6 +279,10 @@ export class QuoteResultComponent {
               key,
               labelKey: 'CALC.PATTERN',
               value: this.formatOptionValue(item.infillPattern || rawValue),
+              valueKey: this.optionValueKey(
+                'INFILL_PATTERNS',
+                item.infillPattern || rawValue,
+              ),
             };
           case 'support':
             return {
@@ -282,9 +291,19 @@ export class QuoteResultComponent {
               value:
                 typeof item.supportEnabled === 'boolean'
                   ? item.supportEnabled
-                    ? 'ON'
-                    : 'OFF'
+                    ? this.formatOptionValue('on')
+                    : this.formatOptionValue('off')
                   : rawValue.toUpperCase(),
+              valueKey:
+                (typeof item.supportEnabled === 'boolean'
+                  ? item.supportEnabled
+                    ? 'CALC.VALUE_ON'
+                    : 'CALC.VALUE_OFF'
+                  : rawValue.toLowerCase() === 'on'
+                    ? 'CALC.VALUE_ON'
+                    : rawValue.toLowerCase() === 'off'
+                      ? 'CALC.VALUE_OFF'
+                      : undefined),
             };
           default:
             return null;
@@ -337,5 +356,19 @@ export class QuoteResultComponent {
     return String(value || '')
       .replace(/[_-]+/g, ' ')
       .replace(/\b\w/g, (character) => character.toUpperCase());
+  }
+
+  private optionValueKey(group: string, value: string): string | undefined {
+    const normalized = String(value || '')
+      .trim()
+      .replace(/[-\s]+/g, '_')
+      .toUpperCase();
+    const supportedValues: Record<string, readonly string[]> = {
+      QUALITY_OPTIONS: ['DRAFT', 'STANDARD', 'EXTRA_FINE'],
+      INFILL_PATTERNS: ['GRID', 'GYROID', 'CUBIC'],
+    };
+    return supportedValues[group]?.includes(normalized)
+      ? `CALC.${group}.${normalized}`
+      : undefined;
   }
 }

@@ -6,7 +6,7 @@
   <div
     class="color-circle trigger"
     [style.background-color]="getCurrentHex()"
-    [title]="selectedColor()"
+    [title]="getCurrentLabel() | translate"
     (click)="toggleOpen()"
   ></div>
 

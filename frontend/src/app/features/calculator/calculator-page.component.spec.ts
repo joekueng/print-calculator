@@ -387,6 +387,27 @@ describe('CalculatorPageComponent', () => {
     );
   });
 
+  it('shows a clear banner when quote requests are rate limited', () => {
+    const { component, estimator } = createComponent();
+    const request = createDraftRequest();
+
+    estimator.calculate.and.returnValue(
+      throwError(() => ({
+        fileName: 'part-a.stl',
+        status: 429,
+        code: 'QUOTE_RATE_LIMITED',
+        message: 'Too Many Requests',
+      })),
+    );
+
+    component.onCalculate(request);
+
+    expect(component.error()).toBeTrue();
+    expect(component.errorKey()).toBe('CALC.ERROR_RATE_LIMIT');
+    expect(component.errorMessage()).toBe('CALC.ERROR_RATE_LIMIT');
+    expect(component.errorCode()).toBe('QUOTE_RATE_LIMITED');
+  });
+
   it('restores the local draft when a session has no downloadable items', () => {
     const { component, estimator, uploadForm } = createComponent(undefined, {
       session: 'session-1',

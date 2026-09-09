@@ -115,8 +115,18 @@ describe('QuoteResultComponent', () => {
       { key: 'nozzle', labelKey: 'CALC.NOZZLE', value: '0.6 mm' },
       { key: 'layer', labelKey: 'CALC.LAYER_HEIGHT', value: '0.3 mm' },
       { key: 'infill', labelKey: 'CALC.INFILL', value: '30%' },
-      { key: 'pattern', labelKey: 'CALC.PATTERN', value: 'Gyroid' },
-      { key: 'support', labelKey: 'CALC.SUPPORT', value: 'OFF' },
+      {
+        key: 'pattern',
+        labelKey: 'CALC.PATTERN',
+        value: 'Gyroid',
+        valueKey: 'CALC.INFILL_PATTERNS.GYROID',
+      },
+      {
+        key: 'support',
+        labelKey: 'CALC.SUPPORT',
+        value: 'Off',
+        valueKey: 'CALC.VALUE_OFF',
+      },
     ]);
     expect(
       fixture.nativeElement.querySelectorAll('.item-setting-detail').length,
@@ -152,7 +162,12 @@ describe('QuoteResultComponent', () => {
       { key: 'material', labelKey: 'CALC.MATERIAL', value: 'TPU' },
       { key: 'nozzle', labelKey: 'CALC.NOZZLE', value: '0.6 mm' },
       { key: 'layer', labelKey: 'CALC.LAYER_HEIGHT', value: '0.3 mm' },
-      { key: 'pattern', labelKey: 'CALC.PATTERN', value: 'Gyroid' },
+      {
+        key: 'pattern',
+        labelKey: 'CALC.PATTERN',
+        value: 'Gyroid',
+        valueKey: 'CALC.INFILL_PATTERNS.GYROID',
+      },
     ]);
     expect(
       fixture.nativeElement.querySelectorAll('.item-setting-detail').length,

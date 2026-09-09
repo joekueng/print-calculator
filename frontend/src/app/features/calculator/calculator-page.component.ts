@@ -515,7 +515,9 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
           });
         }
         this.setQuoteError(
-          'CALC.ERROR_GENERIC',
+          failure.code === 'QUOTE_RATE_LIMITED' || failure.status === 429
+            ? 'CALC.ERROR_RATE_LIMIT'
+            : 'CALC.ERROR_GENERIC',
           this.failureDisplayMessage(failure),
           failure.code || null,
         );
@@ -672,21 +674,23 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    let details = `Richiesta Preventivo:\n`;
-    details += `- Materiale: ${req.material}\n`;
-    details += `- Qualità: ${req.quality}\n`;
+    let details = `${this.translate.instant('CALC.CONSULTATION.TITLE')}:\n`;
+    details += `- ${this.translate.instant('CALC.CONSULTATION.MATERIAL')}: ${req.material}\n`;
+    details += `- ${this.translate.instant('CALC.CONSULTATION.QUALITY')}: ${this.localizedQuality(req.quality)}\n`;
 
-    details += `- File:\n`;
+    details += `- ${this.translate.instant('CALC.CONSULTATION.FILES')}:\n`;
     req.items.forEach((item) => {
-      details += `  * ${item.file.name} (Qtà: ${item.quantity}`;
+      details += `  * ${item.file.name} (${this.translate.instant('CALC.CONSULTATION.QUANTITY')}: ${item.quantity}`;
       if (item.color) {
-        details += `, Colore: ${item.color}`;
+        details += `, ${this.translate.instant('CALC.CONSULTATION.COLOR')}: ${this.localizedColor(item.color)}`;
       }
       details += `)\n`;
     });
 
     if (req.mode === 'advanced') {
-      if (req.infillDensity) details += `- Infill: ${req.infillDensity}%\n`;
+      if (req.infillDensity) {
+        details += `- ${this.translate.instant('CALC.CONSULTATION.INFILL')}: ${req.infillDensity}%\n`;
+      }
     }
     const requiresManualReview =
       this.errorCode() === 'MODEL_OUT_OF_PRINT_VOLUME' ||
@@ -697,12 +701,12 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
           failure.code === 'MODEL_PROCESSING_FAILED',
       );
     if (requiresManualReview) {
-      details +=
-        `- Il modello richiede una valutazione manuale. ` +
-        `Eventuale suddivisione, prezzo definitivo e approvazione saranno concordati via email.\n`;
+      details += `- ${this.translate.instant('CALC.CONSULTATION.MANUAL_REVIEW')}\n`;
     }
 
-    if (req.notes) details += `\nNote: ${req.notes}`;
+    if (req.notes) {
+      details += `\n${this.translate.instant('CALC.CONSULTATION.NOTES')}: ${req.notes}`;
+    }
 
     this.estimator.setPendingConsultation({
       files: req.items.map((i) => i.file),
@@ -759,10 +763,12 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     }
 
     const maybeFailure = error as Partial<QuoteCalculationFailure>;
-    if (
+    const hasMessage =
       typeof maybeFailure.message === 'string' &&
-      maybeFailure.message.trim().length > 0
-    ) {
+      maybeFailure.message.trim().length > 0;
+    const hasCode = typeof maybeFailure.code === 'string';
+    const hasStatus = typeof maybeFailure.status === 'number';
+    if (hasMessage || hasCode || hasStatus) {
       return {
         fileName:
           typeof maybeFailure.fileName === 'string'
@@ -778,7 +784,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
             : undefined,
         code:
           typeof maybeFailure.code === 'string' ? maybeFailure.code : undefined,
-        message: maybeFailure.message.trim(),
+        message: hasMessage ? maybeFailure.message!.trim() : '',
       };
     }
 
@@ -819,13 +825,44 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
   }
 
   private failureDisplayMessage(failure: QuoteCalculationFailure): string {
+    if (failure.code === 'QUOTE_RATE_LIMITED' || failure.status === 429) {
+      return this.translate.instant('CALC.ERROR_RATE_LIMIT');
+    }
     if (failure.code === 'MODEL_OUT_OF_PRINT_VOLUME') {
       return this.translate.instant('CALC.REVIEW_OUT_OF_VOLUME');
     }
     if (failure.code === 'MODEL_PROCESSING_FAILED') {
       return this.translate.instant('CALC.REVIEW_PROCESSING_FAILED');
     }
-    return failure.message;
+    if (failure.code === 'MODEL_REQUIRES_CUSTOM_QUOTE') {
+      return this.translate.instant('CALC.CUSTOM_QUOTE_HELP');
+    }
+    if (failure.code === 'QUOTE_SESSION_INIT_FAILED') {
+      return this.translate.instant('CALC.ERROR_SESSION_INIT');
+    }
+    if (failure.code === 'QUOTE_FINALIZATION_FAILED') {
+      return this.translate.instant('CALC.ERROR_FINALIZATION');
+    }
+    if (failure.code === 'QUOTE_ITEM_PROCESSING_FAILED') {
+      return this.translate.instant('CALC.ERROR_ITEM_PROCESSING');
+    }
+    return failure.message || this.translate.instant('CALC.ERROR_GENERIC');
+  }
+
+  private localizedQuality(value: string): string {
+    const key = `CALC.QUALITY_OPTIONS.${String(value || '').toUpperCase()}`;
+    const translated = this.translate.instant(key);
+    return translated === key ? value : translated;
+  }
+
+  private localizedColor(value: string): string {
+    const colorKey = String(value || '')
+      .trim()
+      .replace(/[-\s]+/g, '_')
+      .toUpperCase();
+    const key = `COLOR.NAME.${colorKey}`;
+    const translated = this.translate.instant(key);
+    return translated === key ? value : translated;
   }
 
   switchMode(nextMode: 'easy' | 'advanced'): void {

@@ -54,7 +54,7 @@
           <span class="file-details">
             {{ item.unitTime / 3600 | number: "1.1-1" }}h |
             {{ item.unitWeight | number: "1.0-0" }}g |
-            {{ item.material || "N/D" }}
+            {{ item.material || ("CALC.NOT_AVAILABLE" | translate) }}
           </span>
           @if (getItemSettingDetails(item); as settingDetails) {
             @if (settingDetails.length > 0) {
@@ -64,7 +64,13 @@
                     <span class="item-setting-label">
                       {{ setting.labelKey | translate }}
                     </span>
-                    <span class="item-setting-value">{{ setting.value }}</span>
+                    <span class="item-setting-value">
+                      {{
+                        setting.valueKey
+                          ? (setting.valueKey | translate)
+                          : setting.value
+                      }}
+                    </span>
                   </small>
                 }
               </div>

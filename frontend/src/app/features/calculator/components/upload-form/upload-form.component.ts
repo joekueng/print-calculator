@@ -208,24 +208,30 @@ export class UploadFormComponent implements OnInit {
 
         this.materials.set(
           (options.materials || []).map((m) => ({
-            label: m.label,
+            label: this.localizeMaterialLabel(m),
             value: m.code,
           })),
         );
         this.qualities.set(
           (options.qualities || []).map((q) => ({
-            label: q.label,
+            label: this.localizedOptionLabel(
+              `CALC.QUALITY_OPTIONS.${q.id.toUpperCase()}`,
+              q.label,
+            ),
             value: q.id,
           })),
         );
         this.infillPatterns.set(
           (options.infillPatterns || []).map((p) => ({
-            label: p.label,
+            label: this.localizedOptionLabel(
+              `CALC.INFILL_PATTERNS.${p.id.toUpperCase()}`,
+              p.label,
+            ),
             value: p.id,
           })),
         );
         this.allNozzleDiameters = (options.nozzleDiameters || []).map((n) => ({
-          label: n.label,
+          label: this.localizeBackendLabel(n.label),
           value: n.value,
         }));
         this.nozzleDiameters.set(this.allNozzleDiameters);
@@ -261,7 +267,12 @@ export class UploadFormComponent implements OnInit {
             value: 'standard',
           },
         ]);
-        this.infillPatterns.set([{ label: 'Grid', value: 'grid' }]);
+        this.infillPatterns.set([
+          {
+            label: this.translate.instant('CALC.INFILL_PATTERNS.GRID'),
+            value: 'grid',
+          },
+        ]);
         this.allNozzleDiameters = [{ label: '0.4 mm', value: 0.4 }];
         this.nozzleDiameters.set(this.allNozzleDiameters);
 
@@ -1410,6 +1421,34 @@ export class UploadFormComponent implements OnInit {
       colorName: preferred.colorName,
       filamentVariantId: preferred.id,
     };
+  }
+
+  private localizedOptionLabel(key: string, fallback: string): string {
+    const translated = this.translate.instant(key);
+    return translated === key ? fallback : translated;
+  }
+
+  private localizeBackendLabel(label: string): string {
+    return String(label || '')
+      .replace(
+        /\(Standard\)$/,
+        `(${this.translate.instant('CALC.OPTION_STANDARD')})`,
+      )
+      .replace(
+        /\(Flexible\)$/,
+        `(${this.translate.instant('CALC.OPTION_FLEXIBLE')})`,
+      );
+  }
+
+  private localizeMaterialLabel(material: MaterialOption): string {
+    const code = String(material.code || '').trim();
+    const backendLabel = String(material.label || '');
+    const typeKey = /\(Flexible\)$/i.test(backendLabel)
+      ? 'CALC.OPTION_FLEXIBLE'
+      : material.isTechnical
+        ? 'CALC.OPTION_TECHNICAL'
+        : 'CALC.OPTION_STANDARD';
+    return `${code} (${this.translate.instant(typeKey)})`;
   }
 
   private refreshSameSettingsFlag() {

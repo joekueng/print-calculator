@@ -27,49 +27,53 @@
 
   @if (loading) {
     <p>{{ "ADMIN_LINKEDIN.LOADING" | translate }}</p>
-  } @else if (status; as currentStatus) {
-    <div class="linkedin-status-grid">
-      <article class="ui-stat-chip">
-        <strong>{{ currentStatus.enabled ? "ON" : "OFF" }}</strong>
-        <span>{{ "ADMIN_LINKEDIN.SYNC_ENABLED" | translate }}</span>
-      </article>
-      <article class="ui-stat-chip">
-        <strong>{{ currentStatus.configured ? "OK" : "—" }}</strong>
-        <span>{{ "ADMIN_LINKEDIN.API_CONFIGURED" | translate }}</span>
-      </article>
-      <article class="ui-stat-chip">
-        <strong>{{ currentStatus.postCount }}</strong>
-        <span>{{ "ADMIN_LINKEDIN.CACHED_POSTS" | translate }}</span>
-      </article>
-      <article class="ui-stat-chip">
-        <strong>
-          @if (currentStatus.lastSuccessfulSync) {
-            {{ currentStatus.lastSuccessfulSync | date: "dd.MM.yyyy HH:mm" }}
-          } @else {
-            —
-          }
-        </strong>
-        <span>{{ "ADMIN_LINKEDIN.LAST_SYNC" | translate }}</span>
-      </article>
-    </div>
-
-    <div class="linkedin-sync-action">
-      <div>
-        <h2>{{ "ADMIN_LINKEDIN.DAILY_TITLE" | translate }}</h2>
-        <p>{{ "ADMIN_LINKEDIN.DAILY_DESCRIPTION" | translate }}</p>
+  } @else {
+    @if (status; as currentStatus) {
+      <div class="linkedin-status-grid">
+        <article class="ui-stat-chip">
+          <strong>{{ currentStatus.enabled ? "ON" : "OFF" }}</strong>
+          <span>{{ "ADMIN_LINKEDIN.SYNC_ENABLED" | translate }}</span>
+        </article>
+        <article class="ui-stat-chip">
+          <strong>{{ currentStatus.configured ? "OK" : "—" }}</strong>
+          <span>{{ "ADMIN_LINKEDIN.API_CONFIGURED" | translate }}</span>
+        </article>
+        <article class="ui-stat-chip">
+          <strong>{{ currentStatus.postCount }}</strong>
+          <span>{{ "ADMIN_LINKEDIN.CACHED_POSTS" | translate }}</span>
+        </article>
+        <article class="ui-stat-chip">
+          <strong>
+            @if (currentStatus.lastSuccessfulSync) {
+              {{ currentStatus.lastSuccessfulSync | date: "dd.MM.yyyy HH:mm" }}
+            } @else {
+              —
+            }
+          </strong>
+          <span>{{ "ADMIN_LINKEDIN.LAST_SYNC" | translate }}</span>
+        </article>
       </div>
-      <app-button
-        type="button"
-        (click)="refresh()"
-        [disabled]="syncing || !currentStatus.enabled || !currentStatus.configured"
-      >
-        {{
-          (syncing
-            ? "ADMIN_LINKEDIN.SYNCING"
-            : "ADMIN_LINKEDIN.SYNC_NOW"
-          ) | translate
-        }}
-      </app-button>
-    </div>
+
+      <div class="linkedin-sync-action">
+        <div>
+          <h2>{{ "ADMIN_LINKEDIN.DAILY_TITLE" | translate }}</h2>
+          <p>{{ "ADMIN_LINKEDIN.DAILY_DESCRIPTION" | translate }}</p>
+        </div>
+        <app-button
+          type="button"
+          (click)="refresh()"
+          [disabled]="
+            syncing || !currentStatus.enabled || !currentStatus.configured
+          "
+        >
+          {{
+            (syncing
+              ? "ADMIN_LINKEDIN.SYNCING"
+              : "ADMIN_LINKEDIN.SYNC_NOW"
+            ) | translate
+          }}
+        </app-button>
+      </div>
+    }
   }
 </section>

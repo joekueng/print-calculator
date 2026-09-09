@@ -1035,7 +1035,9 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
         const selected =
           payload.files.find(
             (file) => this.normalizeFileName(file.name) === selectedFileName,
-          ) ?? payload.files[payload.files.length - 1] ?? null;
+          ) ??
+          payload.files[payload.files.length - 1] ??
+          null;
         if (selected) {
           this.uploadForm.selectFile(selected);
         }

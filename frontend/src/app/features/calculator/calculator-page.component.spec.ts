@@ -460,10 +460,9 @@ describe('CalculatorPageComponent', () => {
     });
     estimator.getLineItemContent.and.returnValue(of(new Blob(['server'])));
 
-    component.restoreFilesAndSettings(
-      { id: 'session-1' },
-      [{ id: 'line-1', originalFilename: 'part-a.stl', quantity: 1 }],
-    );
+    component.restoreFilesAndSettings({ id: 'session-1' }, [
+      { id: 'line-1', originalFilename: 'part-a.stl', quantity: 1 },
+    ]);
 
     expect(uploadForm.restoreRequestDraft).toHaveBeenCalled();
     expect(uploadForm.setFiles).not.toHaveBeenCalled();

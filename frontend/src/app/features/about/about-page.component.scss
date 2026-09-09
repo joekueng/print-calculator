@@ -265,8 +265,10 @@ h1 {
   height: 1.1rem;
   flex: 0 0 auto;
   background: currentColor;
-  mask: url("/assets/images/SVG/linkedin-svgrepo-com.svg") center / contain no-repeat;
-  -webkit-mask: url("/assets/images/SVG/linkedin-svgrepo-com.svg") center / contain no-repeat;
+  mask: url("/assets/images/SVG/linkedin-svgrepo-com.svg") center / contain
+    no-repeat;
+  -webkit-mask: url("/assets/images/SVG/linkedin-svgrepo-com.svg") center /
+    contain no-repeat;
 }
 
 .linkedin-post {

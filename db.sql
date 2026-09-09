@@ -919,6 +919,7 @@ CREATE TABLE IF NOT EXISTS orders
     currency                 char(3)        NOT NULL DEFAULT 'CHF',
     setup_cost_chf           numeric(12, 2) NOT NULL DEFAULT 0.00,
     shipping_cost_chf        numeric(12, 2) NOT NULL DEFAULT 0.00,
+    shipping_quote_snapshot  jsonb,
     discount_chf             numeric(12, 2) NOT NULL DEFAULT 0.00,
 
     subtotal_chf             numeric(12, 2) NOT NULL DEFAULT 0.00,

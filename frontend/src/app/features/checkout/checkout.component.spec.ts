@@ -8,6 +8,17 @@ import { QuoteEstimatorService } from '../calculator/services/quote-estimator.se
 import { LanguageService } from '../../core/services/language.service';
 
 describe('CheckoutComponent', () => {
+  it('requires a shipping quote before order submission', () => {
+    const { component } = createComponent();
+    component.quoteSession.set({ shippingQuote: { status: 'MANUAL_QUOTE' } });
+    expect(component.shippingUnavailable()).toBeTrue();
+    component.onSubmit();
+    expect(component.isSubmitting()).toBeFalse();
+    component.quoteSession.set({ shippingQuote: { status: 'QUOTED' } });
+    expect(component.shippingUnavailable()).toBeFalse();
+    component.quoteSession.set({ session: { sessionType: 'SHOP_CART' } });
+    expect(component.shippingUnavailable()).toBeFalse();
+  });
   function createComponent(
     platformId: Object = 'browser',
     queryParams: Record<string, unknown> = {},

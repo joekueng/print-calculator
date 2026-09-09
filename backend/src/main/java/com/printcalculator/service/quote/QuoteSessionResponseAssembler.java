@@ -38,6 +38,7 @@ public class QuoteSessionResponseAssembler {
         response.put("nozzleChangeCostChf", totals.nozzleChangeCostChf());
         response.put("setupCostChf", totals.setupCostChf());
         response.put("shippingCostChf", totals.shippingCostChf());
+        response.put("shippingQuote", totals.shippingQuote());
         response.put("globalMachineCostChf", totals.globalMachineCostChf());
         response.put("grandTotalChf", totals.grandTotalChf());
         return response;
@@ -103,6 +104,8 @@ public class QuoteSessionResponseAssembler {
         dto.put("errorCode", item.getPricingBreakdown() != null
                 ? item.getPricingBreakdown().get("errorCode")
                 : null);
+        dto.put("shippingOrientations", item.getPricingBreakdown() != null
+                ? item.getPricingBreakdown().get("shippingOrientations") : null);
         dto.put("convertedStoredPath", quoteStorageService.extractConvertedStoredPath(item));
         dto.put("unitPriceChf", resolveDistributedUnitPrice(item, totals));
         return dto;

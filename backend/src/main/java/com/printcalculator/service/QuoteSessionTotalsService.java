@@ -19,13 +19,16 @@ public class QuoteSessionTotalsService {
     private final PricingPolicyRepository pricingRepo;
     private final QuoteCalculator quoteCalculator;
     private final NozzleOptionRepository nozzleOptionRepo;
+    private final ShippingQuoteService shippingQuoteService;
 
     public QuoteSessionTotalsService(PricingPolicyRepository pricingRepo,
                                      QuoteCalculator quoteCalculator,
-                                     NozzleOptionRepository nozzleOptionRepo) {
+                                     NozzleOptionRepository nozzleOptionRepo,
+                                     ShippingQuoteService shippingQuoteService) {
         this.pricingRepo = pricingRepo;
         this.quoteCalculator = quoteCalculator;
         this.nozzleOptionRepo = nozzleOptionRepo;
+        this.shippingQuoteService = shippingQuoteService;
     }
 
     public QuoteSessionTotals compute(QuoteSession session, List<QuoteLineItem> items) {
@@ -62,7 +65,13 @@ public class QuoteSessionTotalsService {
         BigDecimal baseSetupFee = standardSetupFee.add(splitSetupFee);
         BigDecimal nozzleChangeCost = calculateNozzleChangeCost(items);
         BigDecimal setupFee = baseSetupFee.add(nozzleChangeCost).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal shippingCost = calculateShippingCost(items);
+        boolean shop = "SHOP_CART".equalsIgnoreCase(session.getSessionType())
+                || (!items.isEmpty() && items.stream().allMatch(i -> "SHOP_PRODUCT".equalsIgnoreCase(i.getLineItemType())));
+        List<QuoteLineItem> orderableItems = items.stream()
+                .filter(this::isOrderable)
+                .toList();
+        ShippingQuoteService.ShippingQuote shippingQuote = shop ? null : shippingQuoteService.quote(orderableItems);
+        BigDecimal shippingCost = shop ? calculateShopShippingCost(items) : shippingQuote.costChf();
         BigDecimal grandTotal = itemsTotal.add(setupFee).add(shippingCost);
 
         return new QuoteSessionTotals(
@@ -75,7 +84,8 @@ public class QuoteSessionTotalsService {
                 setupFee,
                 shippingCost,
                 grandTotal,
-                totalSeconds
+                totalSeconds,
+                shippingQuote
         );
     }
 
@@ -91,7 +101,7 @@ public class QuoteSessionTotalsService {
         return cadHours.multiply(cadRate).setScale(2, RoundingMode.HALF_UP);
     }
 
-    public BigDecimal calculateShippingCost(List<QuoteLineItem> items) {
+    private BigDecimal calculateShopShippingCost(List<QuoteLineItem> items) {
         if (items == null || items.isEmpty()) {
             return BigDecimal.ZERO;
         }
@@ -125,9 +135,9 @@ public class QuoteSessionTotalsService {
         }
 
         if (exceedsBaseSize) {
-            return totalQuantity > 5 ? BigDecimal.valueOf(9.00) : BigDecimal.valueOf(4.00);
+            return totalQuantity > 5 ? BigDecimal.valueOf(12.00) : BigDecimal.valueOf(9.00);
         }
-        return BigDecimal.valueOf(2.00);
+        return BigDecimal.valueOf(4.00);
     }
 
     private BigDecimal calculateNozzleChangeCost(List<QuoteLineItem> items) {
@@ -188,6 +198,15 @@ public class QuoteSessionTotalsService {
             BigDecimal setupCostChf,
             BigDecimal shippingCostChf,
             BigDecimal grandTotalChf,
-            BigDecimal totalPrintSeconds
-    ) {}
+            BigDecimal totalPrintSeconds,
+            ShippingQuoteService.ShippingQuote shippingQuote
+    ) {
+        public QuoteSessionTotals(BigDecimal printItemsTotalChf, BigDecimal globalMachineCostChf,
+                BigDecimal cadTotalChf, BigDecimal itemsTotalChf, BigDecimal baseSetupCostChf,
+                BigDecimal nozzleChangeCostChf, BigDecimal setupCostChf, BigDecimal shippingCostChf,
+                BigDecimal grandTotalChf, BigDecimal totalPrintSeconds) {
+            this(printItemsTotalChf, globalMachineCostChf, cadTotalChf, itemsTotalChf, baseSetupCostChf,
+                    nozzleChangeCostChf, setupCostChf, shippingCostChf, grandTotalChf, totalPrintSeconds, null);
+        }
+    }
 }

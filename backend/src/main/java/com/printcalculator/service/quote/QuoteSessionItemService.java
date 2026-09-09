@@ -405,6 +405,8 @@ public class QuoteSessionItemService {
         breakdown.put("machine_cost", result.getTotalPrice());
         breakdown.put("setup_fee", 0);
         breakdown.put("requiresSplitPrinting", requiresSplitPrinting);
+        breakdown.put("shippingOrientations", com.printcalculator.service.ShippingGeometry.inspect(
+                convertedPersistentPath != null ? convertedPersistentPath : persistentPath));
         if (convertedPersistentPath != null) {
             breakdown.put("convertedStoredPath", quoteStorageService.toStoredPath(convertedPersistentPath));
         }

@@ -71,6 +71,10 @@ export interface QuoteCalculationFailure {
 }
 
 export interface QuoteResult {
+  shippingCost?: number;
+  shippingQuote?: {
+    status: 'QUOTED' | 'NOT_REQUIRED' | 'PENDING' | 'MANUAL_QUOTE';
+  };
   sessionId?: string;
   items: QuoteItem[];
   baseSetupCost?: number;
@@ -568,6 +572,8 @@ export class QuoteEstimatorService {
 
     return {
       sessionId: session?.id,
+      shippingCost: Number(sessionData?.shippingCostChf ?? 0),
+      shippingQuote: sessionData?.shippingQuote,
       items: items.map((item: any) => ({
         id: item?.id,
         fileName: item?.originalFilename,

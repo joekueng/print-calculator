@@ -239,9 +239,16 @@
           </div>
 
           <div class="ui-actions">
+            @if (shippingUnavailable()) {
+              <p class="ui-banner">
+                {{ "CALC.SHIPPING_UNAVAILABLE" | translate }}
+              </p>
+            }
             <app-button
               type="submit"
-              [disabled]="checkoutForm.invalid || isSubmitting()"
+              [disabled]="
+                checkoutForm.invalid || isSubmitting() || shippingUnavailable()
+              "
               [fullWidth]="true"
             >
               {{

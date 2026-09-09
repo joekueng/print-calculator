@@ -20,6 +20,9 @@
   </div>
 
   <div class="setup-note">
+    @if (shippingUnavailable()) {
+      <p class="ui-banner">{{ "CALC.SHIPPING_UNAVAILABLE" | translate }}</p>
+    }
     <small class="shipping-note" style="color: #666">{{
       "CALC.SHIPPING_NOTE" | translate
     }}</small>
@@ -124,7 +127,11 @@
     <div class="actions-right">
       @if (!hasQuantityOverLimit()) {
         <app-button
-          [disabled]="recalculationRequired()"
+          [disabled]="
+            recalculationRequired() ||
+            shippingUnavailable() ||
+            quantitiesPending()
+          "
           (click)="proceed.emit()"
         >
           {{ "QUOTE.PROCEED_ORDER" | translate }}

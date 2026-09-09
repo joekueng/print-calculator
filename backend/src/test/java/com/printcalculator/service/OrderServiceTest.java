@@ -479,6 +479,43 @@ class OrderServiceTest {
         return request;
     }
 
+    @Test
+    void createOrderRejectsUnquotableShippingBeforePaymentOrEvents() {
+        assertShippingRejected("MANUAL_QUOTE", "CH", null);
+    }
+
+    @Test
+    void createOrderRejectsForeignDestinationAndStaleShippingPrice() {
+        assertShippingRejected("QUOTED", "DE", null);
+    }
+
+    @Test
+    void createOrderRejectsStaleShippingPrice() {
+        assertShippingRejected("QUOTED", "CH", BigDecimal.valueOf(4));
+    }
+
+    private void assertShippingRejected(String status, String country, BigDecimal expected) {
+        UUID id = UUID.randomUUID();
+        QuoteSession session = new QuoteSession(); session.setId(id);
+        Customer customer = new Customer(); customer.setEmail("buyer@example.com");
+        when(quoteSessionRepo.findById(id)).thenReturn(Optional.of(session));
+        when(customerRepo.findByEmail("buyer@example.com")).thenReturn(Optional.of(customer));
+        when(quoteLineItemRepo.findByQuoteSessionId(id)).thenReturn(List.of());
+        when(quoteSessionTotalsService.calculateCadTotal(session)).thenReturn(BigDecimal.ONE);
+        var shipping = new ShippingQuoteService.ShippingQuote(status, BigDecimal.valueOf(9),null,null,3,List.of());
+        when(quoteSessionTotalsService.compute(session,List.of())).thenReturn(
+                new QuoteSessionTotalsService.QuoteSessionTotals(BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,
+                        BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.valueOf(9),
+                        BigDecimal.valueOf(9),BigDecimal.ZERO,shipping));
+        CreateOrderRequest request = buildRequest(); request.getBillingAddress().setCountryCode(country);
+        request.setExpectedShippingCostChf(expected);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.createOrderFromQuote(id,request));
+        verify(orderRepo,never()).save(any(Order.class));
+        verify(eventPublisher,never()).publishEvent(any(OrderCreatedEvent.class));
+        verify(paymentService,never()).getOrCreatePaymentForOrder(any(Order.class),eq("OTHER"));
+    }
+
     private void assertAmountEquals(String expected, BigDecimal actual) {
         assertTrue(new BigDecimal(expected).compareTo(actual) == 0,
                 "Expected " + expected + " but got " + actual);

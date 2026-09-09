@@ -255,6 +255,7 @@ export class CheckoutComponent implements OnInit {
       {
         labelKey: 'CHECKOUT.SHIPPING',
         amount: session?.shippingCostChf ?? 0,
+        visible: !this.shippingUnavailable(),
       },
     ];
   }
@@ -480,8 +481,14 @@ export class CheckoutComponent implements OnInit {
     this.closePreview();
   }
 
+  shippingUnavailable(): boolean {
+    const status: string | undefined =
+      this.quoteSession()?.shippingQuote?.status;
+    return status === 'PENDING' || status === 'MANUAL_QUOTE';
+  }
+
   onSubmit() {
-    if (this.checkoutForm.invalid) {
+    if (this.checkoutForm.invalid || this.shippingUnavailable()) {
       return;
     }
 
@@ -525,6 +532,7 @@ export class CheckoutComponent implements OnInit {
             countryCode: formVal.shippingAddress.countryCode,
           },
       shippingSameAsBilling: formVal.shippingSameAsBilling,
+      expectedShippingCostChf: this.quoteSession()?.shippingCostChf,
       language: this.languageService.selectedLang(),
       acceptTerms: formVal.acceptLegal,
       acceptPrivacy: formVal.acceptLegal,

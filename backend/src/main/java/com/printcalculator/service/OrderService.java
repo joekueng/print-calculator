@@ -170,6 +170,22 @@ public class OrderService {
         }
 
         QuoteSessionTotalsService.QuoteSessionTotals totals = quoteSessionTotalsService.compute(session, quoteItems);
+        if (totals.shippingQuote() != null) {
+            if (!totals.shippingQuote().available()) {
+                throw new IllegalArgumentException("Shipping requires a completed calculation or a manual quote");
+            }
+            if (request.getExpectedShippingCostChf() != null
+                    && request.getExpectedShippingCostChf().compareTo(totals.shippingCostChf()) != 0) {
+                throw new IllegalArgumentException("Shipping price changed. Refresh checkout before placing the order");
+            }
+            if (!"NOT_REQUIRED".equals(totals.shippingQuote().status())
+                    && !"CH".equalsIgnoreCase(order.getShippingCountryCode())) {
+                throw new IllegalArgumentException("Automatic calculator shipping is available only within Switzerland");
+            }
+            order.setShippingQuoteSnapshot(new com.fasterxml.jackson.databind.ObjectMapper().convertValue(
+                    totals.shippingQuote(), new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String,Object>>() {}));
+            order.getShippingQuoteSnapshot().put("algorithmVersion", "swiss-post-packing-v1-2026-09");
+        }
         BigDecimal cadTotal = totals.cadTotalChf();
 
         BigDecimal subtotal = BigDecimal.ZERO;

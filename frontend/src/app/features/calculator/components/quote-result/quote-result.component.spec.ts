@@ -173,4 +173,34 @@ describe('QuoteResultComponent', () => {
       fixture.nativeElement.querySelectorAll('.item-setting-detail').length,
     ).toBe(4);
   });
+
+  it('includes quoted shipping in the displayed total', () => {
+    fixture.componentRef.setInput('result', {
+      ...createResult(),
+      shippingCost: 9,
+      shippingQuote: { status: 'QUOTED' },
+    });
+    fixture.detectChanges();
+    expect(component.costBreakdown().total).toBe(19.5);
+    expect(component.shippingUnavailable()).toBeFalse();
+  });
+
+  it('blocks checkout for manual shipping and pending quantity updates', () => {
+    fixture.componentRef.setInput('result', {
+      ...createResult(),
+      shippingQuote: { status: 'MANUAL_QUOTE' },
+    });
+    fixture.detectChanges();
+    expect(component.shippingUnavailable()).toBeTrue();
+    const buttons = Array.from(
+      fixture.nativeElement.querySelectorAll('button'),
+    ) as HTMLButtonElement[];
+    expect(
+      buttons.find((button) =>
+        button.textContent?.includes('QUOTE.PROCEED_ORDER'),
+      )?.disabled,
+    ).toBeTrue();
+    component.updateQuantity(0, 3);
+    expect(component.quantitiesPending()).toBeTrue();
+  });
 });

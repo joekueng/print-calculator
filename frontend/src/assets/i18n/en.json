@@ -109,6 +109,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG for food contact",
+      "DESCRIPTION": "We also offer a PETG variant from Extrudr for food-contact projects. Extrudr’s regulatory sheet declares compliance with EC 1935/2004 and EU 10/2011 for the material.",
+      "NOTE": "This does not automatically certify the printed part: suitability depends on the food, temperature, contact duration and printing and cleaning conditions. Tell us the intended use so we can assess it.",
+      "SOURCE_LABEL": "Extrudr PETG — regulatory information (PDF)"
+    },
     "HERO": {
       "TITLE": "Quality & Materials",
       "SUBTITLE_PREFIX": "Technical guide to a curated set of materials. Compare print-quality tradeoffs and see how to use the",
@@ -124,7 +130,7 @@
       "SELECTOR_ARIA_LABEL": "Material selection",
       "SELECTOR_HELP": "Note: on the Economy axis, a higher value means a lower cost per kg.",
       "READING_TITLE": "How to read the comparison",
-      "READING_DESCRIPTION": "Each axis shows a technical property. The highest value represents the strongest relative performance among the compared materials.",
+      "READING_DESCRIPTION": "Each axis shows a technical property. Scales use the full material range and remain fixed when the selection changes. A larger area is not necessarily better for your application.",
       "AXES": {
         "economy": {
           "LABEL": "Economy",
@@ -133,7 +139,7 @@
         },
         "printability": {
           "LABEL": "Printability",
-          "DESCRIPTION": "Synthetic index that reflects ease of printing, moisture sensitivity and process stability.",
+          "DESCRIPTION": "Indicative 0–100 index for our printer and print profiles: higher means easier to print. It considers warping, moisture and process stability. ASA is the most demanding in our setup due to warping. This is not a universal material property.",
           "UNIT": "index"
         },
         "tensile": {
@@ -148,7 +154,7 @@
         },
         "elongation": {
           "LABEL": "Flexibility",
-          "DESCRIPTION": "Elongation at break (%).",
+          "DESCRIPTION": "Elongation at break (%) on a fixed logarithmic scale. Adding or removing TPU does not change the scale. Exact percentages are in the table.",
           "UNIT": "%"
         },
         "hdt": {
@@ -537,7 +543,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "Extrudr PETG",
+        "NAME": "PETG",
         "SUMMARY": "Versatile, durable PETG also used for projects involving limited food contact. The supplier declares the filament suitable, but the finished FDM part is not certified as food safe.",
         "QUALITY_TIPS": [
           "Use a heated bed and a clean surface for reliable adhesion.",

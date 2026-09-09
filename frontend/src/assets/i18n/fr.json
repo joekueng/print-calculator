@@ -81,6 +81,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG pour le contact alimentaire",
+      "DESCRIPTION": "Nous proposons aussi une variante PETG d’Extrudr pour les projets en contact avec des aliments. La fiche réglementaire Extrudr déclare la conformité du matériau aux règlements CE 1935/2004 et UE 10/2011.",
+      "NOTE": "Cela ne certifie pas automatiquement la pièce imprimée : son aptitude dépend de l’aliment, de la température, de la durée du contact et des conditions d’impression et de nettoyage. Indiquez-nous l’usage prévu pour que nous puissions l’évaluer.",
+      "SOURCE_LABEL": "Extrudr PETG — fiche réglementaire (PDF)"
+    },
     "HERO": {
       "TITLE": "Qualité & matériaux",
       "SUBTITLE_PREFIX": "Guide technique sur une selection de materiaux. Comparez la qualite d'impression et les compromis de production, puis voyez comment utiliser le",
@@ -96,7 +102,7 @@
       "SELECTOR_ARIA_LABEL": "Selection des materiaux",
       "SELECTOR_HELP": "Note : sur l'axe Economie, une valeur plus elevee signifie un cout par kg plus bas.",
       "READING_TITLE": "Comment lire la comparaison",
-      "READING_DESCRIPTION": "Chaque axe montre une propriete technique. La valeur la plus elevee represente la meilleure performance relative parmi les materiaux compares.",
+      "READING_DESCRIPTION": "Chaque axe représente une propriété technique. Les échelles utilisent toute la gamme de matériaux et restent fixes lorsque la sélection change. Une surface plus grande n’est pas forcément préférable pour votre projet.",
       "AXES": {
         "economy": {
           "LABEL": "Economie",
@@ -105,7 +111,7 @@
         },
         "printability": {
           "LABEL": "Imprimabilite",
-          "DESCRIPTION": "Indice synthetique qui prend en compte la facilite d'impression, la sensibilite a l'humidite et la stabilite du processus.",
+          "DESCRIPTION": "Indice indicatif de 0 à 100 pour notre imprimante et nos profils : plus il est élevé, plus l’impression est facile. Il tient compte du gauchissement, de l’humidité et de la stabilité du procédé. L’ASA est le plus exigeant dans notre configuration en raison du gauchissement. Ce n’est pas une propriété universelle du matériau.",
           "UNIT": "indice"
         },
         "tensile": {
@@ -120,7 +126,7 @@
         },
         "elongation": {
           "LABEL": "Flexibilite",
-          "DESCRIPTION": "Allongement a la rupture (%).",
+          "DESCRIPTION": "Allongement à la rupture (%) sur une échelle logarithmique fixe. L’ajout ou le retrait du TPU ne change pas l’échelle. Les pourcentages exacts figurent dans le tableau.",
           "UNIT": "%"
         },
         "hdt": {
@@ -517,7 +523,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "PETG Extrudr",
+        "NAME": "PETG",
         "SUMMARY": "PETG polyvalent et résistant, également utilisé pour des projets avec un contact alimentaire limité. Le filament est déclaré adapté par le fournisseur, mais la pièce FDM finie n'est pas certifiée food safe.",
         "QUALITY_TIPS": [
           "Utiliser un plateau chauffant et une surface propre pour une adhérence fiable.",

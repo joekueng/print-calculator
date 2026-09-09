@@ -109,6 +109,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG für Lebensmittelkontakt",
+      "DESCRIPTION": "Wir bieten auch eine PETG-Variante von Extrudr für Projekte mit Lebensmittelkontakt an. Das Extrudr-Regulierungsdatenblatt erklärt die Konformität des Materials mit den Verordnungen EG 1935/2004 und EU 10/2011.",
+      "NOTE": "Das zertifiziert nicht automatisch das gedruckte Teil: Die Eignung hängt von Lebensmittel, Temperatur, Kontaktdauer sowie Druck- und Reinigungsbedingungen ab. Teile uns den geplanten Einsatz mit, damit wir ihn prüfen können.",
+      "SOURCE_LABEL": "Extrudr PETG — regulatorische Informationen (PDF)"
+    },
     "HERO": {
       "TITLE": "Qualität & Materialien",
       "SUBTITLE_PREFIX": "Technischer Leitfaden zu einer Auswahl von Materialien. Vergleichen Sie Druckqualitat und Eigenschaften und sehen Sie, wie Sie den",
@@ -124,7 +130,7 @@
       "SELECTOR_ARIA_LABEL": "Materialauswahl",
       "SELECTOR_HELP": "Hinweis: Auf der Achse Wirtschaftlichkeit bedeutet ein hoherer Wert niedrigere Kosten pro kg.",
       "READING_TITLE": "So liest man den Vergleich",
-      "READING_DESCRIPTION": "Jede Achse zeigt eine technische Eigenschaft. Der hochste Wert steht fur die beste relative Leistung unter den verglichenen Materialien.",
+      "READING_DESCRIPTION": "Jede Achse zeigt eine technische Eigenschaft. Die Skalen nutzen das gesamte Materialsortiment und bleiben bei Änderungen der Auswahl gleich. Eine grössere Fläche ist nicht unbedingt besser für deine Anwendung.",
       "AXES": {
         "economy": {
           "LABEL": "Wirtschaftlichkeit",
@@ -133,7 +139,7 @@
         },
         "printability": {
           "LABEL": "Druckbarkeit",
-          "DESCRIPTION": "Kompakter Index fur Druckbarkeit, Feuchtigkeitsempfindlichkeit und Prozessstabilitat.",
+          "DESCRIPTION": "Orientierungswert von 0–100 für unseren Drucker und unsere Druckprofile: Höher bedeutet einfacher zu drucken. Berücksichtigt werden Warping, Feuchtigkeit und Prozessstabilität. ASA ist bei uns wegen Warping am anspruchsvollsten. Dies ist keine universelle Materialeigenschaft.",
           "UNIT": "Index"
         },
         "tensile": {
@@ -148,7 +154,7 @@
         },
         "elongation": {
           "LABEL": "Flexibilitat",
-          "DESCRIPTION": "Bruchdehnung (%).",
+          "DESCRIPTION": "Bruchdehnung (%) auf einer festen logarithmischen Skala. Das Hinzufügen oder Entfernen von TPU verändert die Skala nicht. Die genauen Prozentwerte stehen in der Tabelle.",
           "UNIT": "%"
         },
         "hdt": {
@@ -550,7 +556,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "Extrudr PETG",
+        "NAME": "PETG",
         "SUMMARY": "Vielseitiges, widerstandsfähiges PETG, das auch für Projekte mit begrenztem Lebensmittelkontakt verwendet wird. Das Filament wird vom Lieferanten als geeignet angegeben, das fertige FDM-Teil ist jedoch nicht als lebensmittelecht zertifiziert.",
         "QUALITY_TIPS": [
           "Ein beheiztes Druckbett und eine saubere Oberfläche für zuverlässige Haftung verwenden.",

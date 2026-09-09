@@ -256,6 +256,12 @@ export interface QualityVisualGuideTranslation {
 }
 
 export interface MaterialsPageTranslations {
+  FOOD_CONTACT: {
+    TITLE: string;
+    DESCRIPTION: string;
+    NOTE: string;
+    SOURCE_LABEL: string;
+  };
   HERO: {
     TITLE: string;
     SUBTITLE_PREFIX: string;

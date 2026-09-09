@@ -81,6 +81,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG per contatto alimentare",
+      "DESCRIPTION": "Disponiamo anche di una variante PETG di Extrudr per progetti a contatto con alimenti. La scheda normativa Extrudr dichiara la conformità del materiale ai regolamenti CE 1935/2004 e UE 10/2011.",
+      "NOTE": "Questo non certifica automaticamente il pezzo stampato: l’idoneità dipende da alimento, temperatura, durata del contatto e condizioni di stampa e pulizia. Indicaci l’uso previsto per valutarlo insieme.",
+      "SOURCE_LABEL": "Extrudr PETG — scheda normativa (PDF)"
+    },
     "HERO": {
       "TITLE": "Qualita e Materiali",
       "SUBTITLE_PREFIX": "Guida tecnica su una selezione di materiali. Confronto qualita di stampa disponibili e spiegazione all'utilizzo del",
@@ -96,7 +102,7 @@
       "SELECTOR_ARIA_LABEL": "Selezione materiali",
       "SELECTOR_HELP": "Nota: nell asse Convenienza, un valore piu alto indica un costo al kg piu basso.",
       "READING_TITLE": "Come leggere il confronto",
-      "READING_DESCRIPTION": "Ogni asse mostra una proprieta tecnica. Il valore massimo rappresenta la prestazione relativa piu alta tra i materiali confrontati.",
+      "READING_DESCRIPTION": "Ogni asse mostra una proprietà tecnica. Le scale usano l’intera gamma di materiali e restano fisse quando cambia la selezione. Un’area maggiore non è necessariamente migliore per il tuo progetto.",
       "AXES": {
         "economy": {
           "LABEL": "Convenienza",
@@ -105,7 +111,7 @@
         },
         "printability": {
           "LABEL": "Stampabilita",
-          "DESCRIPTION": "Indice sintetico che considera facilita di stampa, sensibilita all umidita e stabilita del processo.",
+          "DESCRIPTION": "Indice indicativo 0–100 per la nostra stampante e i nostri profili: più alto significa più facile da stampare. Considera warping, umidità e stabilità del processo. Nel nostro setup l’ASA è il più impegnativo per il warping. Non è una proprietà universale del materiale.",
           "UNIT": "indice"
         },
         "tensile": {
@@ -120,7 +126,7 @@
         },
         "elongation": {
           "LABEL": "Flessibilita",
-          "DESCRIPTION": "Allungamento a rottura (%).",
+          "DESCRIPTION": "Allungamento a rottura (%) su scala logaritmica fissa. Aggiungere o rimuovere TPU non cambia la scala. Le percentuali esatte sono nella tabella.",
           "UNIT": "%"
         },
         "hdt": {
@@ -510,7 +516,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "PETG Extrudr",
+        "NAME": "PETG",
         "SUMMARY": "PETG versatile e resistente, usato anche per progetti con contatto alimentare limitato. Il filamento è dichiarato adatto dal fornitore, ma il pezzo FDM finito non è certificato food safe.",
         "QUALITY_TIPS": [
           "Usare piano riscaldato e una superficie pulita per una buona adesione.",

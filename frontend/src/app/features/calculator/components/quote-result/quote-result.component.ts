@@ -308,10 +308,7 @@ export class QuoteResultComponent {
     ) {
       differences.push(`nozzle:${item.nozzleDiameter}`);
     }
-    if (
-      item.layerHeight != null &&
-      Math.abs(item.layerHeight - 0.2) > 0.0001
-    ) {
+    if (item.layerHeight != null && Math.abs(item.layerHeight - 0.2) > 0.0001) {
       differences.push(`layer:${item.layerHeight}`);
     }
     if (

@@ -100,18 +100,21 @@ describe('CalculatorPageComponent', () => {
       'LanguageService',
       ['selectedLang'],
     );
-    const translate = jasmine.createSpyObj<TranslateService>('TranslateService', [
-      'instant',
-    ]);
-    translate.instant.and.callFake((key: string, params?: Record<string, unknown>) => {
-      if (key === 'CALC.REVIEW_PARTIAL_SINGLE') {
-        return `${params?.['fileName']} was not included in the quote. ${params?.['reason']}`;
-      }
-      if (key === 'CALC.REVIEW_OUT_OF_VOLUME') {
-        return 'This model could not be placed fully inside the printer volume.';
-      }
-      return key;
-    });
+    const translate = jasmine.createSpyObj<TranslateService>(
+      'TranslateService',
+      ['instant'],
+    );
+    translate.instant.and.callFake(
+      (key: string, params?: Record<string, unknown>) => {
+        if (key === 'CALC.REVIEW_PARTIAL_SINGLE') {
+          return `${params?.['fileName']} was not included in the quote. ${params?.['reason']}`;
+        }
+        if (key === 'CALC.REVIEW_OUT_OF_VOLUME') {
+          return 'This model could not be placed fully inside the printer volume.';
+        }
+        return key;
+      },
+    );
 
     const component = new CalculatorPageComponent(
       estimator,

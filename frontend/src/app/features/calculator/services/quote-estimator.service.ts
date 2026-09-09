@@ -368,7 +368,8 @@ export class QuoteEstimatorService {
                             success: false,
                             failure: {
                               fileName:
-                                responseItem?.originalFilename || item.file.name,
+                                responseItem?.originalFilename ||
+                                item.file.name,
                               sessionId,
                               code: responseItem?.pricingBreakdown?.errorCode,
                               message:

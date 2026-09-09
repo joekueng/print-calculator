@@ -142,6 +142,18 @@ describe('QuoteResultComponent', () => {
     ).toBeNull();
   });
 
+  it('removes every percent sign when formatting an emitted infill value', () => {
+    const result = createResult();
+    fixture.componentRef.setInput('result', result);
+    fixture.componentRef.setInput('itemSettingsDiffByFileName', {
+      'part-a.stl': { differences: ['infill:30%%'] },
+    });
+
+    expect(component.getItemSettingDetails(result.items[0])).toEqual([
+      { key: 'infill', labelKey: 'CALC.INFILL', value: '30%' },
+    ]);
+  });
+
   it('shows changed global settings when all files use the same settings', () => {
     const result = createResult();
     result.items[0] = {

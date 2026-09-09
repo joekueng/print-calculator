@@ -289,7 +289,7 @@ export class QuoteResultComponent {
             return {
               key,
               labelKey: 'CALC.INFILL',
-              value: `${item.infillDensity ?? rawValue.replace('%', '')}%`,
+              value: `${item.infillDensity ?? rawValue.replace(/%/g, '')}%`,
             };
           case 'pattern':
             return {

@@ -40,6 +40,7 @@ export interface PendingCalculatorDraft {
   request: QuoteRequest;
   sameSettingsForAll: boolean;
   selectedFileName?: string | null;
+  previewFiles?: Array<File | null>;
 }
 
 export interface QuoteItem {
@@ -416,6 +417,10 @@ export class QuoteEstimatorService {
 
   setPendingCalculatorDraft(data: PendingCalculatorDraft | null) {
     this.pendingCalculatorDraft.set(data);
+  }
+
+  getPendingCalculatorDraft(): PendingCalculatorDraft | null {
+    return this.pendingCalculatorDraft();
   }
 
   consumePendingCalculatorDraft(): PendingCalculatorDraft | null {

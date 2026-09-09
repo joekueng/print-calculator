@@ -76,9 +76,11 @@ describe('CalculatorPageComponent', () => {
         'mapSessionToQuoteResult',
         'calculate',
         'setPendingCalculatorDraft',
+        'getPendingCalculatorDraft',
         'consumePendingCalculatorDraft',
       ],
     );
+    estimator.getPendingCalculatorDraft.and.returnValue(null);
     const router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     const route = {
       data: of({}),
@@ -135,6 +137,7 @@ describe('CalculatorPageComponent', () => {
         'updateItemQuantityByIndex',
         'updateItemQuantityByName',
         'getCurrentRequestDraft',
+        'getPreviewFilesByIndex',
         'restoreRequestDraft',
       ],
     );
@@ -144,6 +147,7 @@ describe('CalculatorPageComponent', () => {
     uploadForm.selectedFile = jasmine
       .createSpy('selectedFile')
       .and.returnValue(null) as any;
+    uploadForm.getPreviewFilesByIndex.and.returnValue([]);
     component.uploadForm = uploadForm;
 
     return {
@@ -253,6 +257,32 @@ describe('CalculatorPageComponent', () => {
       request: draftRequest,
       sameSettingsForAll: false,
       selectedFileName: 'part-a.stl',
+      previewFiles: [],
+    });
+  });
+
+  it('stores files and previews before switching mode with a quote session', () => {
+    const { component, estimator, uploadForm } = createComponent(undefined, {
+      session: 'session-1',
+    });
+    const draftRequest = createDraftRequest();
+    const previewFile = new File(['preview'], 'part-a-preview.stl', {
+      type: 'model/stl',
+    });
+    uploadForm.getCurrentRequestDraft.and.returnValue(draftRequest);
+    uploadForm.getPreviewFilesByIndex.and.returnValue([previewFile]);
+    (uploadForm.sameSettingsForAll as jasmine.Spy).and.returnValue(false);
+    (uploadForm.selectedFile as jasmine.Spy).and.returnValue(
+      draftRequest.items[0].file,
+    );
+
+    component.switchMode('advanced');
+
+    expect(estimator.setPendingCalculatorDraft).toHaveBeenCalledWith({
+      request: draftRequest,
+      sameSettingsForAll: false,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [previewFile],
     });
   });
 
@@ -271,6 +301,31 @@ describe('CalculatorPageComponent', () => {
     expect(uploadForm.restoreRequestDraft).toHaveBeenCalledWith(draftRequest, {
       sameSettingsForAll: true,
       selectedFileName: 'part-a.stl',
+      previewFiles: undefined,
+    });
+  });
+
+  it('restores files and previews after a mode switch with a quote session', () => {
+    const { component, estimator, uploadForm } = createComponent(undefined, {
+      session: 'session-1',
+    });
+    const draftRequest = createDraftRequest();
+    const previewFile = new File(['preview'], 'part-a-preview.stl', {
+      type: 'model/stl',
+    });
+    estimator.getPendingCalculatorDraft.and.returnValue({
+      request: draftRequest,
+      sameSettingsForAll: false,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [previewFile],
+    });
+
+    component.ngAfterViewInit();
+
+    expect(uploadForm.restoreRequestDraft).toHaveBeenCalledWith(draftRequest, {
+      sameSettingsForAll: false,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [previewFile],
     });
   });
 
@@ -345,6 +400,7 @@ describe('CalculatorPageComponent', () => {
     expect(uploadForm.restoreRequestDraft).toHaveBeenCalledWith(request, {
       sameSettingsForAll: true,
       selectedFileName: 'part-a.stl',
+      previewFiles: undefined,
     });
   });
 
@@ -368,6 +424,28 @@ describe('CalculatorPageComponent', () => {
     expect(component.errorCode()).toBe('MODEL_REQUIRES_CUSTOM_QUOTE');
   });
 
+  it('keeps the local file list authoritative during a session refresh', () => {
+    const { component, estimator, uploadForm } = createComponent();
+    const draftRequest = createDraftRequest();
+    component.result.set(createResult('session-1'));
+    estimator.getPendingCalculatorDraft.and.returnValue({
+      request: draftRequest,
+      sameSettingsForAll: true,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [draftRequest.items[0].file],
+    });
+    estimator.getLineItemContent.and.returnValue(of(new Blob(['server'])));
+
+    component.restoreFilesAndSettings(
+      { id: 'session-1' },
+      [{ id: 'line-1', originalFilename: 'part-a.stl', quantity: 1 }],
+    );
+
+    expect(uploadForm.restoreRequestDraft).toHaveBeenCalled();
+    expect(uploadForm.setFiles).not.toHaveBeenCalled();
+    expect(estimator.setPendingCalculatorDraft).toHaveBeenCalledWith(null);
+  });
+
   it('downloads converted previews only for items that expose them', () => {
     const { component, estimator, uploadForm } = createComponent();
     const originalBlob = new Blob(['original']);
@@ -378,7 +456,9 @@ describe('CalculatorPageComponent', () => {
       (_sessionId: string, _lineItemId: string, preview = false) =>
         of(preview ? previewBlob : originalBlob),
     );
-    (uploadForm.selectedFile as jasmine.Spy).and.returnValue(null);
+    (uploadForm.selectedFile as jasmine.Spy).and.returnValue(
+      new File(['current'], 'legacy.stl', { type: 'model/stl' }),
+    );
 
     component.restoreFilesAndSettings(
       {
@@ -414,6 +494,9 @@ describe('CalculatorPageComponent', () => {
     expect(uploadForm.setPreviewFileByIndex).toHaveBeenCalledWith(
       1,
       jasmine.any(File),
+    );
+    expect(uploadForm.selectFile.calls.mostRecent().args[0].name).toBe(
+      'legacy.stl',
     );
   });
 
@@ -538,6 +621,7 @@ describe('CalculatorPageComponent', () => {
         'updateItemQuantityByIndex',
         'updateItemQuantityByName',
         'getCurrentRequestDraft',
+        'getPreviewFilesByIndex',
         'restoreRequestDraft',
       ],
     );
@@ -547,6 +631,7 @@ describe('CalculatorPageComponent', () => {
     uploadForm.selectedFile = jasmine
       .createSpy('selectedFile')
       .and.returnValue(null) as any;
+    uploadForm.getPreviewFilesByIndex.and.returnValue([]);
 
     component.uploadForm = uploadForm;
     component.ngAfterViewInit();

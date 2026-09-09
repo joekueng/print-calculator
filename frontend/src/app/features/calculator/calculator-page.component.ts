@@ -223,9 +223,10 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     this.applyPendingSessionRestoreIfNeeded();
 
     if (this.currentSessionId()) {
-      if (this.restoreDraftWhenViewReady) {
-        this.restorePendingDraftFallback();
-      }
+      // Restore the in-memory files immediately when switching between the
+      // basic and advanced routes. The server refresh may replace this state
+      // afterwards, but the file cards and 3D preview never disappear.
+      this.restorePendingDraftFallback(false);
       return;
     }
     const pendingDraft = this.estimator.consumePendingCalculatorDraft();
@@ -234,6 +235,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     this.uploadForm?.restoreRequestDraft(pendingDraft.request, {
       sameSettingsForAll: pendingDraft.sameSettingsForAll,
       selectedFileName: pendingDraft.selectedFileName,
+      previewFiles: pendingDraft.previewFiles,
     });
   }
 
@@ -418,6 +420,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       request: req,
       sameSettingsForAll: this.uploadForm.sameSettingsForAll(),
       selectedFileName: this.uploadForm.selectedFile()?.name ?? null,
+      previewFiles: this.uploadForm.getPreviewFilesByIndex(),
     });
     this.loading.set(true);
     this.uploadProgress.set(0);
@@ -837,9 +840,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    if (!this.currentSessionId()) {
-      this.persistPendingDraft();
-    }
+    this.persistPendingDraft();
 
     this.router.navigate(['..', targetPath], {
       relativeTo: this.route,
@@ -881,6 +882,7 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
       request,
       sameSettingsForAll: this.uploadForm.sameSettingsForAll(),
       selectedFileName: this.uploadForm.selectedFile()?.name ?? null,
+      previewFiles: this.uploadForm.getPreviewFilesByIndex(),
     };
     this.estimator.setPendingCalculatorDraft(draft);
   }
@@ -899,16 +901,48 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     const baselineSessionSettings = this.toTrackedSettingsFromSession(
       payload.session,
     );
+    const localDraft = this.estimator.getPendingCalculatorDraft();
+    const selectedFileName = this.normalizeFileName(
+      localDraft?.selectedFileName ??
+        this.uploadForm.selectedFile()?.name ??
+        '',
+    );
 
     this.isRestoringQuoteState = true;
     try {
-      this.uploadForm.setFiles(payload.files, { autoSelect: false });
-      payload.previewFiles.forEach((preview) => {
-        this.uploadForm.setPreviewFileByIndex(preview.index, preview.file);
-      });
-      this.uploadForm.patchSettings(payload.session);
+      if (localDraft?.request.items.length) {
+        this.uploadForm.restoreRequestDraft(localDraft.request, {
+          sameSettingsForAll: localDraft.sameSettingsForAll,
+          selectedFileName: localDraft.selectedFileName,
+          previewFiles: localDraft.previewFiles,
+        });
+      } else {
+        this.uploadForm.setFiles(payload.files, { autoSelect: false });
+        payload.previewFiles.forEach((preview) => {
+          this.uploadForm.setPreviewFileByIndex(preview.index, preview.file);
+        });
+        this.uploadForm.patchSettings(payload.session);
+      }
 
       payload.items.forEach((item, index) => {
+        if (localDraft?.request.items.length) {
+          if (item.status === 'REVIEW_REQUIRED') {
+            const failure: QuoteCalculationFailure = {
+              fileName: item.originalFilename || '',
+              code: item.errorCode,
+              message: item.errorMessage || '',
+            };
+            this.uploadForm.setItemReviewStateByName(
+              item.originalFilename || '',
+              item.errorCode === 'MODEL_OUT_OF_PRINT_VOLUME'
+                ? 'warning'
+                : 'error',
+              this.failureDisplayMessage(failure),
+            );
+          }
+          return;
+        }
+
         // Preserve persisted quantities when restoring from session.
         // Without this, setFiles() defaults every item back to 1.
         this.uploadForm.updateItemQuantityByIndex(
@@ -960,9 +994,14 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
         ),
       );
 
-      const selected = payload.files[payload.files.length - 1] ?? null;
-      if (selected) {
-        this.uploadForm.selectFile(selected);
+      if (!localDraft?.request.items.length) {
+        const selected =
+          payload.files.find(
+            (file) => this.normalizeFileName(file.name) === selectedFileName,
+          ) ?? payload.files[payload.files.length - 1] ?? null;
+        if (selected) {
+          this.uploadForm.selectFile(selected);
+        }
       }
     } finally {
       this.isRestoringQuoteState = false;
@@ -983,13 +1022,16 @@ export class CalculatorPageComponent implements OnInit, AfterViewInit {
     this.pendingSessionRestore = null;
   }
 
-  private restorePendingDraftFallback(): void {
+  private restorePendingDraftFallback(consume = true): void {
     if (!this.uploadForm) return;
-    const pendingDraft = this.estimator.consumePendingCalculatorDraft();
+    const pendingDraft = consume
+      ? this.estimator.consumePendingCalculatorDraft()
+      : this.estimator.getPendingCalculatorDraft();
     if (!pendingDraft) return;
     this.uploadForm.restoreRequestDraft(pendingDraft.request, {
       sameSettingsForAll: pendingDraft.sameSettingsForAll,
       selectedFileName: pendingDraft.selectedFileName,
+      previewFiles: pendingDraft.previewFiles,
     });
     this.restoreDraftWhenViewReady = false;
   }

@@ -299,6 +299,10 @@ export class UploadFormComponent implements OnInit {
     return item ? item.previewFile || item.file : null;
   }
 
+  getPreviewFilesByIndex(): Array<File | null> {
+    return this.items().map((item) => item.previewFile ?? null);
+  }
+
   getSelectedItemIndex(): number {
     const selected = this.selectedFile();
     if (!selected) return -1;
@@ -755,6 +759,7 @@ export class UploadFormComponent implements OnInit {
     options?: {
       sameSettingsForAll?: boolean;
       selectedFileName?: string | null;
+      previewFiles?: Array<File | null>;
     },
   ) {
     if (!request?.items?.length) {
@@ -765,6 +770,11 @@ export class UploadFormComponent implements OnInit {
       request.items.map((item) => item.file),
       { autoSelect: false },
     );
+    options?.previewFiles?.forEach((previewFile, index) => {
+      if (previewFile) {
+        this.setPreviewFileByIndex(index, previewFile);
+      }
+    });
     this.patchSettings({
       materialCode: request.material,
       quality: request.quality,

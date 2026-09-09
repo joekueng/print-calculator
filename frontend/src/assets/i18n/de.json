@@ -40,7 +40,8 @@
     "PRIVACY": "Datenschutz",
     "TERMS": "AGB",
     "MATERIALS": "Qualität & Materialien",
-    "CONTACT": "Kontakt"
+    "CONTACT": "Kontakt",
+    "LINKEDIN": "3D Fab auf LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -109,6 +110,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG für Lebensmittelkontakt",
+      "DESCRIPTION": "Wir bieten auch eine PETG-Variante von Extrudr für Projekte mit Lebensmittelkontakt an. Das Extrudr-Regulierungsdatenblatt erklärt die Konformität des Materials mit den Verordnungen EG 1935/2004 und EU 10/2011.",
+      "NOTE": "Das zertifiziert nicht automatisch das gedruckte Teil: Die Eignung hängt von Lebensmittel, Temperatur, Kontaktdauer sowie Druck- und Reinigungsbedingungen ab. Teile uns den geplanten Einsatz mit, damit wir ihn prüfen können.",
+      "SOURCE_LABEL": "Extrudr PETG — regulatorische Informationen (PDF)"
+    },
     "HERO": {
       "TITLE": "Qualität & Materialien",
       "SUBTITLE_PREFIX": "Technischer Leitfaden zu einer Auswahl von Materialien. Vergleichen Sie Druckqualitat und Eigenschaften und sehen Sie, wie Sie den",
@@ -124,7 +131,7 @@
       "SELECTOR_ARIA_LABEL": "Materialauswahl",
       "SELECTOR_HELP": "Hinweis: Auf der Achse Wirtschaftlichkeit bedeutet ein hoherer Wert niedrigere Kosten pro kg.",
       "READING_TITLE": "So liest man den Vergleich",
-      "READING_DESCRIPTION": "Jede Achse zeigt eine technische Eigenschaft. Der hochste Wert steht fur die beste relative Leistung unter den verglichenen Materialien.",
+      "READING_DESCRIPTION": "Jede Achse zeigt eine technische Eigenschaft. Die Skalen nutzen das gesamte Materialsortiment und bleiben bei Änderungen der Auswahl gleich. Eine grössere Fläche ist nicht unbedingt besser für deine Anwendung.",
       "AXES": {
         "economy": {
           "LABEL": "Wirtschaftlichkeit",
@@ -133,7 +140,7 @@
         },
         "printability": {
           "LABEL": "Druckbarkeit",
-          "DESCRIPTION": "Kompakter Index fur Druckbarkeit, Feuchtigkeitsempfindlichkeit und Prozessstabilitat.",
+          "DESCRIPTION": "Orientierungswert von 0–100 für unseren Drucker und unsere Druckprofile: Höher bedeutet einfacher zu drucken. Berücksichtigt werden Warping, Feuchtigkeit und Prozessstabilität. ASA ist bei uns wegen Warping am anspruchsvollsten. Dies ist keine universelle Materialeigenschaft.",
           "UNIT": "Index"
         },
         "tensile": {
@@ -148,7 +155,7 @@
         },
         "elongation": {
           "LABEL": "Flexibilitat",
-          "DESCRIPTION": "Bruchdehnung (%).",
+          "DESCRIPTION": "Bruchdehnung (%) auf einer festen logarithmischen Skala. Das Hinzufügen oder Entfernen von TPU verändert die Skala nicht. Die genauen Prozentwerte stehen in der Tabelle.",
           "UNIT": "%"
         },
         "hdt": {
@@ -550,7 +557,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "Extrudr PETG",
+        "NAME": "PETG",
         "SUMMARY": "Vielseitiges, widerstandsfähiges PETG, das auch für Projekte mit begrenztem Lebensmittelkontakt verwendet wird. Das Filament wird vom Lieferanten als geeignet angegeben, das fertige FDM-Teil ist jedoch nicht als lebensmittelecht zertifiziert.",
         "QUALITY_TIPS": [
           "Ein beheiztes Druckbett und eine saubere Oberfläche für zuverlässige Haftung verwenden.",
@@ -931,7 +938,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Elektrotechnik-Student",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Folge unserer Arbeit",
+      "TITLE": "3D Fab auf LinkedIn",
+      "DESCRIPTION": "Folge unserer Unternehmensseite für Neuigkeiten aus der Werkstatt, aktuelle Projekte und praktische Beispiele für individuellen 3D-Druck.",
+      "CTA": "3D Fab folgen",
+      "POST_LABEL": "Aktueller Beitrag",
+      "POST_TITLE": "Eine neue Zusammenarbeit nimmt Form an",
+      "POST_TEXT": "Wir entwickeln eine neue Lösung für kappa events. Wir freuen uns darauf, die Idee greifbar zu machen und das Ergebnis bald zu zeigen.",
+      "POST_SECOND_TITLE": "Wir stellen 3D Fab vor",
+      "POST_SECOND_TEXT": "Wir helfen Unternehmen, Fachpersonen und Makern, digitale Modelle in Prototypen, individuelle Komponenten, Ersatzteile und Kleinserien zu verwandeln.",
+      "POST_CTA": "Beitrag auf LinkedIn lesen",
+      "IMAGE_ALT": "Bild aus dem LinkedIn-Beitrag von 3D Fab",
+      "PREVIOUS": "Vorheriger LinkedIn-Beitrag",
+      "NEXT": "Nächster LinkedIn-Beitrag",
+      "PAUSE": "Pause",
+      "PLAY": "Fortsetzen",
+      "SLIDE_LABEL": "LinkedIn-Beitrag {{number}} anzeigen"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Unsere Standorte",
@@ -1342,6 +1367,24 @@
     "TYPE_CALCULATOR": "Rechner",
     "TYPE_MIXED": "Gemischt",
     "NOT_AVAILABLE": "N/V"
+  },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "LinkedIn-Synchronisierung",
+    "DESCRIPTION": "Verwalte die Beiträge, die auf der Seite Über uns angezeigt werden.",
+    "OPEN_PAGE": "LinkedIn öffnen",
+    "LOADING": "LinkedIn-Status wird geladen...",
+    "SYNC_ENABLED": "Synchronisierung aktiv",
+    "API_CONFIGURED": "API konfiguriert",
+    "CACHED_POSTS": "Beiträge im Cache",
+    "LAST_SYNC": "Letzte Synchronisierung",
+    "DAILY_TITLE": "Tägliche Aktualisierung",
+    "DAILY_DESCRIPTION": "Der Cronjob läuft täglich um 04:00 Uhr Schweizer Zeit. Nach der Veröffentlichung eines neuen Beitrags kann sofort aktualisiert werden.",
+    "SYNC_NOW": "Jetzt synchronisieren",
+    "SYNCING": "Synchronisierung...",
+    "SYNC_SUCCESS": "LinkedIn-Beiträge wurden erfolgreich aktualisiert.",
+    "SYNC_ERROR": "LinkedIn hat nicht geantwortet. Vorhandene Beiträge wurden beibehalten.",
+    "STATUS_ERROR": "Der Synchronisierungsstatus konnte nicht geladen werden.",
+    "CONFIG_REQUIRED": "LinkedIn-Zugangsdaten vor der Synchronisierung konfigurieren und aktivieren."
   },
   "DROPZONE": {
     "DEFAULT_LABEL": "Dateien hierher ziehen oder klicken zum Hochladen",

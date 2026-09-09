@@ -113,4 +113,143 @@
   </div>
 </section>
 
+<section class="linkedin-section" aria-labelledby="linkedin-section-title">
+  <div class="container linkedin-layout">
+    <div class="linkedin-intro">
+      <p class="eyebrow">{{ "ABOUT.LINKEDIN.EYEBROW" | translate }}</p>
+      <h2 id="linkedin-section-title">
+        {{ "ABOUT.LINKEDIN.TITLE" | translate }}
+      </h2>
+      <p>{{ "ABOUT.LINKEDIN.DESCRIPTION" | translate }}</p>
+      <a
+        class="linkedin-cta"
+        href="https://www.linkedin.com/company/3d-fab-ch/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="linkedin-mark" aria-hidden="true"></span>
+        {{ "ABOUT.LINKEDIN.CTA" | translate }}
+      </a>
+    </div>
+
+    <article
+      class="linkedin-post"
+      (mouseenter)="setLinkedInInteractionPaused(true)"
+      (mouseleave)="setLinkedInInteractionPaused(false)"
+      (focusin)="setLinkedInInteractionPaused(true)"
+      (focusout)="setLinkedInInteractionPaused(false)"
+    >
+      <div class="linkedin-post-head">
+        <span class="linkedin-mark" aria-hidden="true"></span>
+        <div>
+          <strong>3D Fab</strong>
+          <span>{{ "ABOUT.LINKEDIN.POST_LABEL" | translate }}</span>
+        </div>
+      </div>
+      <div class="linkedin-post-content" aria-live="polite">
+        @if (activeLinkedInPost(); as post) {
+          <div class="linkedin-post-body" [class.has-media]="post.imageUrl">
+            @if (post.imageUrl) {
+              <a
+                class="linkedin-post-media"
+                [href]="post.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                tabindex="-1"
+              >
+                <img
+                  [src]="post.imageUrl"
+                  [attr.alt]="
+                    post.imageAltText ||
+                    ('ABOUT.LINKEDIN.IMAGE_ALT' | translate)
+                  "
+                />
+              </a>
+            }
+            <div class="linkedin-post-copy">
+              <p>{{ post.commentary }}</p>
+              <a [href]="post.url" target="_blank" rel="noopener noreferrer">
+                {{ "ABOUT.LINKEDIN.POST_CTA" | translate }}
+              </a>
+            </div>
+          </div>
+        } @else if (normalizedLinkedInSlide() === 0) {
+          <h3>{{ "ABOUT.LINKEDIN.POST_TITLE" | translate }}</h3>
+          <p>{{ "ABOUT.LINKEDIN.POST_TEXT" | translate }}</p>
+          <a
+            href="https://www.linkedin.com/company/3d-fab-ch/posts/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ "ABOUT.LINKEDIN.POST_CTA" | translate }}
+          </a>
+        } @else {
+          <h3>{{ "ABOUT.LINKEDIN.POST_SECOND_TITLE" | translate }}</h3>
+          <p>{{ "ABOUT.LINKEDIN.POST_SECOND_TEXT" | translate }}</p>
+          <a
+            href="https://www.linkedin.com/company/3d-fab-ch/posts/"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {{ "ABOUT.LINKEDIN.POST_CTA" | translate }}
+          </a>
+        }
+      </div>
+
+      <div
+        class="linkedin-slider-controls"
+        [class.is-carousel-autoplay-paused]="linkedInPaused()"
+        [style.--ui-carousel-duration]="'30000ms'"
+      >
+        <button
+          type="button"
+          class="linkedin-slider-arrow"
+          [attr.aria-label]="'ABOUT.LINKEDIN.PREVIOUS' | translate"
+          (click)="previousLinkedInSlide()"
+        >
+          ←
+        </button>
+        <div class="linkedin-slider-dots ui-carousel-indicators">
+          @for (slideIndex of linkedInSlideIndexes(); track slideIndex) {
+            <button
+              type="button"
+              class="ui-carousel-dot"
+              [class.is-active]="normalizedLinkedInSlide() === slideIndex"
+              [attr.aria-label]="
+                'ABOUT.LINKEDIN.SLIDE_LABEL'
+                  | translate: { number: slideIndex + 1 }
+              "
+              [attr.aria-current]="
+                normalizedLinkedInSlide() === slideIndex ? 'true' : null
+              "
+              (click)="selectLinkedInSlide(slideIndex)"
+            ></button>
+          }
+        </div>
+        <button
+          type="button"
+          class="linkedin-slider-pause"
+          [attr.aria-pressed]="linkedInManuallyPaused()"
+          (click)="toggleLinkedInPaused()"
+        >
+          {{
+            (linkedInManuallyPaused()
+              ? "ABOUT.LINKEDIN.PLAY"
+              : "ABOUT.LINKEDIN.PAUSE"
+            ) | translate
+          }}
+        </button>
+        <button
+          type="button"
+          class="linkedin-slider-arrow"
+          [attr.aria-label]="'ABOUT.LINKEDIN.NEXT' | translate"
+          (click)="nextLinkedInSlide()"
+        >
+          →
+        </button>
+      </div>
+    </article>
+  </div>
+</section>
+
 <app-locations></app-locations>

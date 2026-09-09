@@ -40,7 +40,8 @@
     "PRIVACY": "Privacy",
     "TERMS": "Terms & Conditions",
     "MATERIALS": "Quality & Materials",
-    "CONTACT": "Contact Us"
+    "CONTACT": "Contact Us",
+    "LINKEDIN": "3D Fab on LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -109,6 +110,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG for food contact",
+      "DESCRIPTION": "We also offer a PETG variant from Extrudr for food-contact projects. Extrudr’s regulatory sheet declares compliance with EC 1935/2004 and EU 10/2011 for the material.",
+      "NOTE": "This does not automatically certify the printed part: suitability depends on the food, temperature, contact duration and printing and cleaning conditions. Tell us the intended use so we can assess it.",
+      "SOURCE_LABEL": "Extrudr PETG — regulatory information (PDF)"
+    },
     "HERO": {
       "TITLE": "Quality & Materials",
       "SUBTITLE_PREFIX": "Technical guide to a curated set of materials. Compare print-quality tradeoffs and see how to use the",
@@ -124,7 +131,7 @@
       "SELECTOR_ARIA_LABEL": "Material selection",
       "SELECTOR_HELP": "Note: on the Economy axis, a higher value means a lower cost per kg.",
       "READING_TITLE": "How to read the comparison",
-      "READING_DESCRIPTION": "Each axis shows a technical property. The highest value represents the strongest relative performance among the compared materials.",
+      "READING_DESCRIPTION": "Each axis shows a technical property. Scales use the full material range and remain fixed when the selection changes. A larger area is not necessarily better for your application.",
       "AXES": {
         "economy": {
           "LABEL": "Economy",
@@ -133,7 +140,7 @@
         },
         "printability": {
           "LABEL": "Printability",
-          "DESCRIPTION": "Synthetic index that reflects ease of printing, moisture sensitivity and process stability.",
+          "DESCRIPTION": "Indicative 0–100 index for our printer and print profiles: higher means easier to print. It considers warping, moisture and process stability. ASA is the most demanding in our setup due to warping. This is not a universal material property.",
           "UNIT": "index"
         },
         "tensile": {
@@ -148,7 +155,7 @@
         },
         "elongation": {
           "LABEL": "Flexibility",
-          "DESCRIPTION": "Elongation at break (%).",
+          "DESCRIPTION": "Elongation at break (%) on a fixed logarithmic scale. Adding or removing TPU does not change the scale. Exact percentages are in the table.",
           "UNIT": "%"
         },
         "hdt": {
@@ -537,7 +544,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "Extrudr PETG",
+        "NAME": "PETG",
         "SUMMARY": "Versatile, durable PETG also used for projects involving limited food contact. The supplier declares the filament suitable, but the finished FDM part is not certified as food safe.",
         "QUALITY_TIPS": [
           "Use a heated bed and a clean surface for reliable adhesion.",
@@ -918,7 +925,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Electronics Engineering Student",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Follow our work",
+      "TITLE": "3D Fab on LinkedIn",
+      "DESCRIPTION": "Follow our company page for workshop updates, current projects and practical examples of custom 3D printing.",
+      "CTA": "Follow 3D Fab",
+      "POST_LABEL": "Recent update",
+      "POST_TITLE": "A new collaboration is taking shape",
+      "POST_TEXT": "We are developing a new solution for kappa events. We look forward to turning the idea into something tangible and sharing the result soon.",
+      "POST_SECOND_TITLE": "Introducing 3D Fab",
+      "POST_SECOND_TEXT": "We help companies, professionals and makers turn digital models into prototypes, custom components, spare parts and small production runs.",
+      "POST_CTA": "Read the post on LinkedIn",
+      "IMAGE_ALT": "Image from the 3D Fab LinkedIn post",
+      "PREVIOUS": "Previous LinkedIn post",
+      "NEXT": "Next LinkedIn post",
+      "PAUSE": "Pause",
+      "PLAY": "Play",
+      "SLIDE_LABEL": "Show LinkedIn post {{number}}"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Our Locations",
@@ -1329,6 +1354,24 @@
     "TYPE_CALCULATOR": "Calculator",
     "TYPE_MIXED": "Mixed",
     "NOT_AVAILABLE": "N/A"
+  },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "LinkedIn synchronization",
+    "DESCRIPTION": "Manage the posts displayed on the About us page.",
+    "OPEN_PAGE": "Open LinkedIn",
+    "LOADING": "Loading LinkedIn status...",
+    "SYNC_ENABLED": "Synchronization enabled",
+    "API_CONFIGURED": "API configured",
+    "CACHED_POSTS": "Cached posts",
+    "LAST_SYNC": "Last synchronization",
+    "DAILY_TITLE": "Daily update",
+    "DAILY_DESCRIPTION": "The cron job runs every day at 04:00 Swiss time. You can refresh immediately after publishing a new post.",
+    "SYNC_NOW": "Synchronize now",
+    "SYNCING": "Synchronizing...",
+    "SYNC_SUCCESS": "LinkedIn posts updated successfully.",
+    "SYNC_ERROR": "LinkedIn did not respond. Existing posts have been retained.",
+    "STATUS_ERROR": "Unable to load the synchronization status.",
+    "CONFIG_REQUIRED": "Configure and enable the LinkedIn credentials before synchronizing."
   },
   "DROPZONE": {
     "DEFAULT_LABEL": "Drop files here or click to upload",

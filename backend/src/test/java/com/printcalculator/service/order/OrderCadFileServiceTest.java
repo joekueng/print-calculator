@@ -108,6 +108,30 @@ class OrderCadFileServiceTest {
     }
 
     @Test
+    void downloadCustomerCadFiles_withReceivedPayment_shouldReturnOriginalFile() throws Exception {
+        UUID orderId = UUID.randomUUID();
+        UUID itemId = UUID.randomUUID();
+        Order order = buildCadOrder(orderId);
+        Payment payment = new Payment();
+        payment.setStatus("RECEIVED");
+
+        OrderItem item = buildBaseItem(order, itemId, "part.stl");
+        byte[] content = "solid mesh".getBytes();
+
+        when(orderRepo.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentRepo.findByOrder_Id(orderId)).thenReturn(Optional.of(payment));
+        when(orderItemRepo.findByOrder_Id(orderId)).thenReturn(List.of(item));
+        when(deliverableFileRepo.findByOrder_IdOrderByCreatedAtAsc(orderId)).thenReturn(List.of());
+        when(storageService.loadAsResource(Path.of("orders", orderId.toString(), "3d-files", itemId.toString(), "part.stl")))
+                .thenReturn(new ByteArrayResource(content));
+
+        ResponseEntity<?> response = service.downloadCustomerCadFiles(orderId);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertArrayEquals(content, ((Resource) response.getBody()).getInputStream().readAllBytes());
+    }
+
+    @Test
     void downloadCustomerCadFiles_withMultipleFiles_shouldReturnZip() throws Exception {
         UUID orderId = UUID.randomUUID();
         UUID itemId = UUID.randomUUID();

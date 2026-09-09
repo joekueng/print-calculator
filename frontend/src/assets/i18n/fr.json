@@ -12,7 +12,8 @@
     "PRIVACY": "Confidentialité",
     "TERMS": "Conditions générales",
     "MATERIALS": "Qualité & matériaux",
-    "CONTACT": "Contactez-nous"
+    "CONTACT": "Contactez-nous",
+    "LINKEDIN": "3D Fab sur LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -81,6 +82,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG pour le contact alimentaire",
+      "DESCRIPTION": "Nous proposons aussi une variante PETG d’Extrudr pour les projets en contact avec des aliments. La fiche réglementaire Extrudr déclare la conformité du matériau aux règlements CE 1935/2004 et UE 10/2011.",
+      "NOTE": "Cela ne certifie pas automatiquement la pièce imprimée : son aptitude dépend de l’aliment, de la température, de la durée du contact et des conditions d’impression et de nettoyage. Indiquez-nous l’usage prévu pour que nous puissions l’évaluer.",
+      "SOURCE_LABEL": "Extrudr PETG — fiche réglementaire (PDF)"
+    },
     "HERO": {
       "TITLE": "Qualité & matériaux",
       "SUBTITLE_PREFIX": "Guide technique sur une selection de materiaux. Comparez la qualite d'impression et les compromis de production, puis voyez comment utiliser le",
@@ -96,7 +103,7 @@
       "SELECTOR_ARIA_LABEL": "Selection des materiaux",
       "SELECTOR_HELP": "Note : sur l'axe Economie, une valeur plus elevee signifie un cout par kg plus bas.",
       "READING_TITLE": "Comment lire la comparaison",
-      "READING_DESCRIPTION": "Chaque axe montre une propriete technique. La valeur la plus elevee represente la meilleure performance relative parmi les materiaux compares.",
+      "READING_DESCRIPTION": "Chaque axe représente une propriété technique. Les échelles utilisent toute la gamme de matériaux et restent fixes lorsque la sélection change. Une surface plus grande n’est pas forcément préférable pour votre projet.",
       "AXES": {
         "economy": {
           "LABEL": "Economie",
@@ -105,7 +112,7 @@
         },
         "printability": {
           "LABEL": "Imprimabilite",
-          "DESCRIPTION": "Indice synthetique qui prend en compte la facilite d'impression, la sensibilite a l'humidite et la stabilite du processus.",
+          "DESCRIPTION": "Indice indicatif de 0 à 100 pour notre imprimante et nos profils : plus il est élevé, plus l’impression est facile. Il tient compte du gauchissement, de l’humidité et de la stabilité du procédé. L’ASA est le plus exigeant dans notre configuration en raison du gauchissement. Ce n’est pas une propriété universelle du matériau.",
           "UNIT": "indice"
         },
         "tensile": {
@@ -120,7 +127,7 @@
         },
         "elongation": {
           "LABEL": "Flexibilite",
-          "DESCRIPTION": "Allongement a la rupture (%).",
+          "DESCRIPTION": "Allongement à la rupture (%) sur une échelle logarithmique fixe. L’ajout ou le retrait du TPU ne change pas l’échelle. Les pourcentages exacts figurent dans le tableau.",
           "UNIT": "%"
         },
         "hdt": {
@@ -517,7 +524,7 @@
         }
       },
       "petg-extrudr": {
-        "NAME": "PETG Extrudr",
+        "NAME": "PETG",
         "SUMMARY": "PETG polyvalent et résistant, également utilisé pour des projets avec un contact alimentaire limité. Le filament est déclaré adapté par le fournisseur, mais la pièce FDM finie n'est pas certifiée food safe.",
         "QUALITY_TIPS": [
           "Utiliser un plateau chauffant et une surface propre pour une adhérence fiable.",
@@ -997,7 +1004,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Étudiant en ingénierie électronique",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Suivez notre travail",
+      "TITLE": "3D Fab sur LinkedIn",
+      "DESCRIPTION": "Suivez notre page d’entreprise pour découvrir les nouvelles de l’atelier, nos projets en cours et des exemples concrets d’impression 3D sur mesure.",
+      "CTA": "Suivre 3D Fab",
+      "POST_LABEL": "Publication récente",
+      "POST_TITLE": "Une nouvelle collaboration prend forme",
+      "POST_TEXT": "Nous développons une nouvelle solution pour kappa events. Nous avons hâte de concrétiser cette idée et de partager bientôt le résultat.",
+      "POST_SECOND_TITLE": "Nous vous présentons 3D Fab",
+      "POST_SECOND_TEXT": "Nous aidons les entreprises, les professionnels et les makers à transformer des modèles numériques en prototypes, composants personnalisés, pièces de rechange et petites séries.",
+      "POST_CTA": "Lire la publication sur LinkedIn",
+      "IMAGE_ALT": "Image de la publication LinkedIn de 3D Fab",
+      "PREVIOUS": "Publication LinkedIn précédente",
+      "NEXT": "Publication LinkedIn suivante",
+      "PAUSE": "Pause",
+      "PLAY": "Reprendre",
+      "SLIDE_LABEL": "Afficher la publication LinkedIn {{number}}"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Nos sites",
@@ -1343,6 +1368,24 @@
     "TYPE_CALCULATOR": "Calculateur",
     "TYPE_MIXED": "Mixte",
     "NOT_AVAILABLE": "N/D"
+  },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "Synchronisation LinkedIn",
+    "DESCRIPTION": "Gérez les publications affichées sur la page À propos.",
+    "OPEN_PAGE": "Ouvrir LinkedIn",
+    "LOADING": "Chargement de l’état LinkedIn...",
+    "SYNC_ENABLED": "Synchronisation active",
+    "API_CONFIGURED": "API configurée",
+    "CACHED_POSTS": "Publications en cache",
+    "LAST_SYNC": "Dernière synchronisation",
+    "DAILY_TITLE": "Mise à jour quotidienne",
+    "DAILY_DESCRIPTION": "La tâche cron s’exécute chaque jour à 04:00, heure suisse. Vous pouvez actualiser immédiatement après une nouvelle publication.",
+    "SYNC_NOW": "Synchroniser maintenant",
+    "SYNCING": "Synchronisation...",
+    "SYNC_SUCCESS": "Les publications LinkedIn ont été mises à jour.",
+    "SYNC_ERROR": "LinkedIn n’a pas répondu. Les publications existantes ont été conservées.",
+    "STATUS_ERROR": "Impossible de charger l’état de la synchronisation.",
+    "CONFIG_REQUIRED": "Configurez et activez les identifiants LinkedIn avant la synchronisation."
   },
   "DROPZONE": {
     "DEFAULT_LABEL": "Glissez les fichiers ici ou cliquez pour téléverser",

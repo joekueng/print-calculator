@@ -5,6 +5,7 @@ import { firstValueFrom, of } from 'rxjs';
 import enTranslations from '../../../assets/i18n/en.json';
 import itTranslations from '../../../assets/i18n/it.json';
 import { MaterialsPageComponent } from './materials-page.component';
+import { MaterialId } from './materials-page.types';
 import { PublicMediaService } from '../../core/services/public-media.service';
 import { LanguageService } from '../../core/services/language.service';
 
@@ -90,6 +91,95 @@ describe('MaterialsPageComponent', () => {
       fixture.nativeElement.querySelectorAll('.selector-chip.is-selected')
         .length,
     ).toBe(4);
+  });
+
+  it('keeps logarithmic flexibility fixed when TPU is added and removed, preserving raw values', () => {
+    component.selectedMaterialIds.set(['pc', 'pla-basic', 'petg-extrudr']);
+    const flexibility = () =>
+      component
+        .radarSeries()
+        .map(
+          (series) =>
+            series.values.find((point) => point.axis.id === 'elongation')!,
+        );
+    const initial = flexibility();
+    expect(initial.map((point) => point.rawValue)).toEqual([3.8, 12, 18]);
+    expect(initial[0].score).toBe(0);
+    expect(initial[1].score).toBeGreaterThan(15);
+    expect(initial[1].score).toBeLessThan(25);
+    expect(initial[2].score).toBeGreaterThan(initial[1].score);
+
+    component.toggleMaterial('tpu-95a-hf');
+    expect(flexibility().slice(0, 3)).toEqual(initial);
+    expect(flexibility()[3].score).toBe(100);
+    expect(flexibility()[1].score - flexibility()[0].score).toBeGreaterThan(15);
+
+    component.toggleMaterial('tpu-95a-hf');
+    expect(flexibility().map((point) => point.score)).toEqual(
+      initial.map((point) => point.score),
+    );
+    component.selectedMaterialIds.set(['petg-extrudr']);
+    expect(flexibility()[0]).toEqual(initial[2]);
+    expect(Number.isFinite(flexibility()[0].x)).toBeTrue();
+  });
+
+  it('ranks printability according to our printer in both the radar and table', () => {
+    const expected: MaterialId[] = [
+      'pla-basic',
+      'pla-matte',
+      'pla-tough-plus',
+      'petg-extrudr',
+      'tpu-95a-hf',
+      'pc',
+      'pet-cf',
+      'pa12-cf',
+      'asa',
+    ];
+    const ranked = [...component.materials()].sort(
+      (a, b) => b.metrics.printability - a.metrics.printability,
+    );
+    expect(ranked.map((material) => material.id)).toEqual(expected);
+    const scores = expected.map((id) => {
+      component.selectedMaterialIds.set([id]);
+      const point = component
+        .radarSeries()[0]
+        .values.find((value) => value.axis.id === 'printability')!;
+      expect(
+        component.comparisonRows().find((row) => row.id === 'printability')
+          ?.values,
+      ).toEqual([point.rawValue.toFixed(0)]);
+      return point.score;
+    });
+    scores
+      .slice(1)
+      .forEach((score, index) => expect(score).toBeLessThan(scores[index]));
+  });
+
+  it('shows PETG and the food-contact section with its manufacturer source', async () => {
+    await switchLanguage('en');
+    component.toggleMaterial('petg-extrudr');
+    fixture.detectChanges();
+    const host = fixture.nativeElement as HTMLElement;
+    expect(component.materialById().get('petg-extrudr')?.name).toBe('PETG');
+    expect(host.querySelector('thead')?.textContent).toContain('PETG');
+    const section = host.querySelector(
+      '[aria-labelledby="petg-food-contact-title"]',
+    );
+    const calculator = host.querySelector('#materials-calculator')!;
+    const sources = host.querySelector('.ui-page-surface__body')!;
+    expect(section?.textContent).toContain('We also offer a PETG variant');
+    expect(section?.textContent).toContain('does not automatically certify');
+    expect(section?.querySelector('a')?.href).toBe(
+      'https://s3.extrudr.com/extrudr-media/datasheets/ris/ris-en/petg-RIS-en.pdf',
+    );
+    expect(
+      calculator.compareDocumentPosition(section!) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      section!.compareDocumentPosition(sources) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('keeps selected chip and radar colors aligned by selection order', () => {

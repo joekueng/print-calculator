@@ -313,7 +313,8 @@ public class OrderCadFileService {
             return true;
         }
         return paymentRepo.findByOrder_Id(order.getId())
-                .map(payment -> "COMPLETED".equalsIgnoreCase(payment.getStatus()))
+                .map(payment -> "RECEIVED".equalsIgnoreCase(payment.getStatus())
+                        || "COMPLETED".equalsIgnoreCase(payment.getStatus()))
                 .orElse(false);
     }
 

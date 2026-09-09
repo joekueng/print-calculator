@@ -6,6 +6,7 @@ import {
   OnInit,
   inject,
   effect,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,6 +16,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppInputComponent } from '../../../../shared/components/app-input/app-input.component';
 import { AppDropzoneComponent } from '../../../../shared/components/app-dropzone/app-dropzone.component';
 import { AppButtonComponent } from '../../../../shared/components/app-button/app-button.component';
@@ -94,6 +96,7 @@ export class UploadFormComponent implements OnInit {
   private estimator = inject(QuoteEstimatorService);
   private fb = inject(FormBuilder);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
   readonly languageService = inject(LanguageService);
 
   form: FormGroup;
@@ -110,6 +113,8 @@ export class UploadFormComponent implements OnInit {
   currentMaterialVariants = signal<VariantOption[]>([]);
 
   private fullMaterialOptions: MaterialOption[] = [];
+  private optionsResponse: OptionsResponse | null = null;
+  private usingFallbackOptions = false;
   private allNozzleDiameters: SimpleOption[] = [];
   private allLayerHeights: SimpleOption[] = [];
   private layerHeightsByNozzle: Record<string, SimpleOption[]> = {};
@@ -199,80 +204,27 @@ export class UploadFormComponent implements OnInit {
       this.sameSettingsForAll.set(true);
       this.form.get('syncAllItems')?.setValue(true, { emitEvent: false });
     });
+
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.refreshLocalizedOptions();
+      });
   }
 
   ngOnInit() {
     this.estimator.getOptions().subscribe({
       next: (options: OptionsResponse) => {
-        this.fullMaterialOptions = options.materials || [];
-
-        this.materials.set(
-          (options.materials || []).map((m) => ({
-            label: this.localizeMaterialLabel(m),
-            value: m.code,
-          })),
-        );
-        this.qualities.set(
-          (options.qualities || []).map((q) => ({
-            label: this.localizedOptionLabel(
-              `CALC.QUALITY_OPTIONS.${q.id.toUpperCase()}`,
-              q.label,
-            ),
-            value: q.id,
-          })),
-        );
-        this.infillPatterns.set(
-          (options.infillPatterns || []).map((p) => ({
-            label: this.localizedOptionLabel(
-              `CALC.INFILL_PATTERNS.${p.id.toUpperCase()}`,
-              p.label,
-            ),
-            value: p.id,
-          })),
-        );
-        this.allNozzleDiameters = (options.nozzleDiameters || []).map((n) => ({
-          label: this.localizeBackendLabel(n.label),
-          value: n.value,
-        }));
-        this.nozzleDiameters.set(this.allNozzleDiameters);
-
-        this.allLayerHeights = (options.layerHeights || []).map((l) => ({
-          label: l.label,
-          value: l.value,
-        }));
-
-        this.layerHeightsByNozzle = {};
-        (options.layerHeightsByNozzle || []).forEach((entry) => {
-          this.layerHeightsByNozzle[toNozzleKey(entry.nozzleDiameter)] = (
-            entry.layerHeights || []
-          ).map((layer) => ({
-            label: layer.label,
-            value: layer.value,
-          }));
-        });
-
+        this.optionsResponse = options;
+        this.usingFallbackOptions = false;
+        this.refreshLocalizedOptions();
         this.setDefaults();
       },
       error: (err) => {
         console.error('Failed to load options', err);
-        this.materials.set([
-          {
-            label: this.translate.instant('CALC.FALLBACK_MATERIAL'),
-            value: 'PLA',
-          },
-        ]);
-        this.qualities.set([
-          {
-            label: this.translate.instant('CALC.FALLBACK_QUALITY_STANDARD'),
-            value: 'standard',
-          },
-        ]);
-        this.infillPatterns.set([
-          {
-            label: this.translate.instant('CALC.INFILL_PATTERNS.GRID'),
-            value: 'grid',
-          },
-        ]);
+        this.optionsResponse = null;
+        this.usingFallbackOptions = true;
+        this.refreshLocalizedOptions();
         this.allNozzleDiameters = [{ label: '0.4 mm', value: 0.4 }];
         this.nozzleDiameters.set(this.allNozzleDiameters);
 
@@ -1426,6 +1378,82 @@ export class UploadFormComponent implements OnInit {
   private localizedOptionLabel(key: string, fallback: string): string {
     const translated = this.translate.instant(key);
     return translated === key ? fallback : translated;
+  }
+
+  private refreshLocalizedOptions(): void {
+    if (this.usingFallbackOptions) {
+      this.materials.set([
+        {
+          label: this.translate.instant('CALC.FALLBACK_MATERIAL'),
+          value: 'PLA',
+        },
+      ]);
+      this.qualities.set([
+        {
+          label: this.translate.instant('CALC.FALLBACK_QUALITY_STANDARD'),
+          value: 'standard',
+        },
+      ]);
+      this.infillPatterns.set([
+        {
+          label: this.translate.instant('CALC.INFILL_PATTERNS.GRID'),
+          value: 'grid',
+        },
+      ]);
+      return;
+    }
+
+    const options = this.optionsResponse;
+    if (!options) {
+      return;
+    }
+
+    this.fullMaterialOptions = options.materials || [];
+    this.materials.set(
+      this.fullMaterialOptions.map((material) => ({
+        label: this.localizeMaterialLabel(material),
+        value: material.code,
+      })),
+    );
+    this.qualities.set(
+      (options.qualities || []).map((quality) => ({
+        label: this.localizedOptionLabel(
+          `CALC.QUALITY_OPTIONS.${quality.id.toUpperCase()}`,
+          quality.label,
+        ),
+        value: quality.id,
+      })),
+    );
+    this.infillPatterns.set(
+      (options.infillPatterns || []).map((pattern) => ({
+        label: this.localizedOptionLabel(
+          `CALC.INFILL_PATTERNS.${pattern.id.toUpperCase()}`,
+          pattern.label,
+        ),
+        value: pattern.id,
+      })),
+    );
+    this.allNozzleDiameters = (options.nozzleDiameters || []).map((nozzle) => ({
+      label: this.localizeBackendLabel(nozzle.label),
+      value: nozzle.value,
+    }));
+    this.allLayerHeights = (options.layerHeights || []).map((layer) => ({
+      label: layer.label,
+      value: layer.value,
+    }));
+    this.layerHeightsByNozzle = {};
+    (options.layerHeightsByNozzle || []).forEach((entry) => {
+      this.layerHeightsByNozzle[toNozzleKey(entry.nozzleDiameter)] = (
+        entry.layerHeights || []
+      ).map((layer) => ({
+        label: layer.label,
+        value: layer.value,
+      }));
+    });
+
+    this.updatePrintOptionsForMaterial(
+      String(this.form.get('material')?.value || ''),
+    );
   }
 
   private localizeBackendLabel(label: string): string {

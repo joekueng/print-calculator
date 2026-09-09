@@ -52,7 +52,7 @@ class PaymentServiceTest {
 
         assertEquals("PAID", order.getStatus());
         assertNotNull(order.getPaidAt());
-        assertEquals("COMPLETED", payment.getStatus());
+        assertEquals("RECEIVED", payment.getStatus());
         assertEquals("BANK_TRANSFER", payment.getMethod());
         ArgumentCaptor<PaymentConfirmedEvent> eventCaptor = ArgumentCaptor.forClass(PaymentConfirmedEvent.class);
         verify(eventPublisher).publishEvent(eventCaptor.capture());
@@ -61,7 +61,29 @@ class PaymentServiceTest {
     }
 
     @Test
-    void confirmPayment_whenAlreadyCompleted_doesNotPublishAnotherEmailEvent() {
+    void confirmPayment_whenAlreadyReceived_doesNotPublishAnotherEmailEvent() {
+        UUID orderId = UUID.randomUUID();
+        Order order = new Order();
+        order.setId(orderId);
+        order.setStatus("IN_PRODUCTION");
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setStatus("RECEIVED");
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(paymentRepository.findByOrder_Id(orderId)).thenReturn(Optional.of(payment));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        new PaymentService(paymentRepository, orderRepository, eventPublisher)
+                .confirmPayment(orderId, "TWINT");
+
+        assertEquals("PAID", order.getStatus());
+        verify(paymentRepository, never()).save(any(Payment.class));
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void confirmPayment_whenLegacyCompleted_doesNotPublishAnotherEmailEvent() {
         UUID orderId = UUID.randomUUID();
         Order order = new Order();
         order.setId(orderId);

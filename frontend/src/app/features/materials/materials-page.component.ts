@@ -31,6 +31,9 @@ import {
   RadarSeries,
 } from './materials-page.types';
 
+// Printability is a workshop-specific estimate, not a standardized material property.
+// Scores reflect our printer experience (especially ASA warping), informed by
+// manufacturer guidance on enclosure, drying and abrasive-filament requirements.
 const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
   {
     id: 'tpu-95a-hf',
@@ -156,7 +159,7 @@ const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
       elongationPct: 10,
       hdtC: 95,
       extrusionC: '240 - 260',
-      printability: 64,
+      printability: 38,
       layerRangeMm: '0.20 - 0.28',
     },
     sources: [
@@ -187,7 +190,7 @@ const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
       elongationPct: 3.8,
       hdtC: 112,
       extrusionC: '260 - 280',
-      printability: 47,
+      printability: 62,
       layerRangeMm: '0.20 - 0.28',
     },
     sources: [
@@ -218,7 +221,7 @@ const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
       elongationPct: 16,
       hdtC: 185,
       extrusionC: '260 - 290',
-      printability: 42,
+      printability: 50,
       layerRangeMm: '0.20 - 0.28',
     },
     sources: [
@@ -270,7 +273,7 @@ const MATERIAL_CONFIGS: readonly MaterialConfig[] = [
       elongationPct: 4,
       hdtC: 205,
       extrusionC: '260 - 290',
-      printability: 70,
+      printability: 56,
       layerRangeMm: '0.20 - 0.28',
     },
     sources: [
@@ -785,7 +788,13 @@ export class MaterialsPageComponent {
     score: number;
   } {
     const rawValue = axis.accessor(material);
-    const axisValues = this.materials().map(axis.accessor);
+    // Use the full catalogue for stable axes, including when TPU is toggled.
+    const logarithmic = axis.id === 'elongation';
+    const transform = (value: number) =>
+      logarithmic ? Math.log1p(value) : value;
+    const axisValues = this.materials().map((entry) =>
+      transform(axis.accessor(entry)),
+    );
     const min = Math.min(...axisValues);
     const max = Math.max(...axisValues);
 
@@ -793,7 +802,7 @@ export class MaterialsPageComponent {
       return { rawValue, score: 100 };
     }
 
-    const normalized = ((rawValue - min) / (max - min)) * 100;
+    const normalized = ((transform(rawValue) - min) / (max - min)) * 100;
     const score = axis.lowerIsBetter ? 100 - normalized : normalized;
     return { rawValue, score: Math.max(0, Math.min(100, score)) };
   }

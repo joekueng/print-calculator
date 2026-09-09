@@ -128,6 +128,19 @@ Expected runtime configuration:
 
 `APP_QR_DEBUG_LOGGING=true` helps diagnose `remoteAddr`, proxy headers, and the resolved IP, but logs IP addresses. Use it only while debugging.
 
+## LinkedIn company posts
+
+The backend refreshes the latest company posts every day at 04:00 Europe/Zurich and exposes its cached result at `GET /api/public/linkedin/posts`. An authenticated administrator can inspect the synchronization status and start it immediately from the LinkedIn back-office page. The About page rotates the cached posts every 30 seconds and falls back to two localized entries when LinkedIn is unavailable or not configured.
+
+Automatic synchronization requires a LinkedIn Developer application approved for the Community Management API, the `r_organization_social` permission, and an authenticated administrator of the company page. Configure these runtime variables without committing their values:
+
+- `LINKEDIN_ACCESS_TOKEN` — LinkedIn OAuth access token
+- `LINKEDIN_ORGANIZATION_URN` — company identifier such as `urn:li:organization:123456`
+- `LINKEDIN_SYNC_CRON` — Spring cron expression, default `0 0 4 * * *`
+- `LINKEDIN_SYNC_ZONE` — cron time zone, default `Europe/Zurich`
+- `LINKEDIN_POST_COUNT` — cached post count, default `5`
+- `LINKEDIN_API_VERSION` — version header, default `202608`
+
 ## License
 
 This project is proprietary software. All rights reserved.

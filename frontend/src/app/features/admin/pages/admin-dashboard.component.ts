@@ -73,6 +73,7 @@ export class AdminDashboardComponent implements OnInit {
     'ALL',
     'PENDING',
     'REPORTED',
+    'RECEIVED',
     'COMPLETED',
   ];
   readonly orderStatusFilterOptions = [

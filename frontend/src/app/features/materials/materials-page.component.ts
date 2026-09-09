@@ -790,8 +790,11 @@ export class MaterialsPageComponent {
     const rawValue = axis.accessor(material);
     // Use the full catalogue for stable axes, including when TPU is toggled.
     const logarithmic = axis.id === 'elongation';
-    const transform = (value: number) => logarithmic ? Math.log1p(value) : value;
-    const axisValues = this.materials().map((entry) => transform(axis.accessor(entry)));
+    const transform = (value: number) =>
+      logarithmic ? Math.log1p(value) : value;
+    const axisValues = this.materials().map((entry) =>
+      transform(axis.accessor(entry)),
+    );
     const min = Math.min(...axisValues);
     const max = Math.max(...axisValues);
 

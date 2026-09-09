@@ -97,8 +97,8 @@ export class AboutPageComponent {
   readonly activeLinkedInSlide = signal(0);
   readonly linkedInManuallyPaused = signal(false);
   readonly linkedInInteractionPaused = signal(false);
-  readonly linkedInSlideCount = computed(() =>
-    this.syncedLinkedInPosts().length || LINKEDIN_FALLBACK_POST_COUNT,
+  readonly linkedInSlideCount = computed(
+    () => this.syncedLinkedInPosts().length || LINKEDIN_FALLBACK_POST_COUNT,
   );
   readonly linkedInSlideIndexes = computed(() =>
     Array.from({ length: this.linkedInSlideCount() }, (_, index) => index),

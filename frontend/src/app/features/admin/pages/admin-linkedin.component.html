@@ -61,13 +61,13 @@
       <app-button
         type="button"
         (click)="refresh()"
-        [disabled]="syncing || !currentStatus.enabled || !currentStatus.configured"
+        [disabled]="
+          syncing || !currentStatus.enabled || !currentStatus.configured
+        "
       >
         {{
-          (syncing
-            ? "ADMIN_LINKEDIN.SYNCING"
-            : "ADMIN_LINKEDIN.SYNC_NOW"
-          ) | translate
+          (syncing ? "ADMIN_LINKEDIN.SYNCING" : "ADMIN_LINKEDIN.SYNC_NOW")
+            | translate
         }}
       </app-button>
     </div>

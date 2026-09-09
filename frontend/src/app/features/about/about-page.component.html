@@ -160,18 +160,15 @@
                 <img
                   [src]="post.imageUrl"
                   [attr.alt]="
-                    post.imageAltText || ('ABOUT.LINKEDIN.IMAGE_ALT' | translate)
+                    post.imageAltText ||
+                    ('ABOUT.LINKEDIN.IMAGE_ALT' | translate)
                   "
                 />
               </a>
             }
             <div class="linkedin-post-copy">
               <p>{{ post.commentary }}</p>
-              <a
-                [href]="post.url"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a [href]="post.url" target="_blank" rel="noopener noreferrer">
                 {{ "ABOUT.LINKEDIN.POST_CTA" | translate }}
               </a>
             </div>

@@ -1390,6 +1390,29 @@
     "DEFAULT_LABEL": "Dateien hierher ziehen oder klicken zum Hochladen",
     "DEFAULT_SUBTEXT": "Unterstützt .STL, .3MF"
   },
+  "ADMIN_ORDERS": {
+    "PAID_OR_COMPLETED_ORDERS": "bezahlte oder abgeschlossene Bestellungen",
+    "FILTERS": "Filter",
+    "BACK_TO_ORDERS": "Zurück zu den Bestellungen",
+    "ITEMS_AND_FILES": "Artikel und Dateien",
+    "CUSTOMER_AND_ADDRESSES": "Kunde und Adressen",
+    "PAYMENT_AND_DOCUMENTS": "Zahlung und Dokumente",
+    "EMAIL_HISTORY": "E-Mail-Verlauf",
+    "OPEN_3D_PREVIEW": "3D-Vorschau",
+    "PREVIEW_TITLE": "3D-Modellvorschau",
+    "PREVIEW_LOADING": "Modell wird geladen...",
+    "PREVIEW_ERROR": "Die Vorschau dieser Datei konnte nicht geladen werden.",
+    "CLOSE": "Schließen",
+    "STATUS": {
+      "PENDING_PAYMENT": "Zahlung ausstehend",
+      "PAID": "Bezahlt",
+      "IN_PRODUCTION": "In Produktion",
+      "SHIPPED": "Versandt",
+      "COMPLETED": "Abgeschlossen",
+      "CANCELLED": "Storniert",
+      "UNKNOWN": "Unbekannter Status"
+    }
+  },
   "COLOR": {
     "AVAILABLE_COLORS": "Verfügbare Farben",
     "CATEGORY_GLOSSY": "Glänzend",

@@ -20,7 +20,7 @@
   >
     <article class="ui-stat-chip">
       <strong>{{ currentStatistics.paidOrderCount }}</strong>
-      <span>ordini pagati</span>
+      <span>{{ "ADMIN_ORDERS.PAID_OR_COMPLETED_ORDERS" | translate }}</span>
     </article>
     <article class="ui-stat-chip">
       <strong>{{ currentStatistics.revenueChf | currency: "CHF" }}</strong>
@@ -44,10 +44,24 @@
     </p>
   </ng-template>
 
-  <div class="workspace ui-split-workspace" *ngIf="!loading; else loadingTpl">
-    <section class="list-panel">
-      <h2>Lista ordini</h2>
-      <div class="list-toolbar">
+  <div
+    class="workspace ui-split-workspace"
+    [class.workspace--mobile-detail]="mobileDetailOpen"
+    *ngIf="!loading; else loadingTpl"
+  >
+    <section class="list-panel" aria-label="Lista ordini">
+      <div class="list-panel__heading">
+        <h2>Lista ordini</h2>
+        <span class="order-count">{{ filteredOrders.length }}</span>
+      </div>
+      <section class="filters-disclosure" [class.filters-disclosure--open]="filtersOpen">
+        <button type="button" class="filters-toggle" (click)="filtersOpen = !filtersOpen" [attr.aria-expanded]="filtersOpen" aria-controls="order-filters">
+          <span>{{ "ADMIN_ORDERS.FILTERS" | translate }}</span>
+          <span class="active-filter-count" *ngIf="activeFilterCount() > 0">
+            {{ activeFilterCount() }}
+          </span>
+        </button>
+        <div class="list-toolbar" id="order-filters">
         <app-input
           class="toolbar-field"
           id="order-search"
@@ -85,17 +99,15 @@
           [ngModel]="orderTypeFilter"
           (ngModelChange)="onOrderTypeFilterChange($event)"
         ></app-select>
-      </div>
+        </div>
+      </section>
       <div class="table-wrap ui-table-wrap">
         <table class="orders-table ui-data-table">
           <thead>
             <tr>
               <th>Ordine</th>
-              <th>Creato</th>
-              <th>Tipo</th>
-              <th>Email</th>
-              <th>Pagamento</th>
               <th>Stato ordine</th>
+              <th>Tipo</th>
               <th>Totale</th>
             </tr>
           </thead>
@@ -104,51 +116,46 @@
               *ngFor="let order of filteredOrders"
               [class.selected]="isSelected(order.id)"
               (click)="openDetails(order.id)"
+              (keydown.enter)="openDetails(order.id)"
+              tabindex="0"
             >
-              <td data-label="Ordine">
-                <strong>{{ order.orderNumber }}</strong>
+              <td class="order-table__identity" data-label="Ordine">
+                <strong class="order-number">{{ order.orderNumber }}</strong>
+                <span class="order-table__date">
+                  {{
+                    order.createdAt
+                      ? (order.createdAt | date: "dd.MM.yyyy HH:mm")
+                      : "-"
+                  }}
+                </span>
+                <span class="order-table__email">{{ order.customerEmail }}</span>
               </td>
-              <td class="order-table__date" data-label="Creato">
-                {{
-                  order.createdAt
-                    ? (order.createdAt | date: "dd.MM.yyyy HH:mm")
-                    : "-"
-                }}
+              <td class="order-table__status" data-label="Stato ordine">
+                <span
+                  class="order-status-badge"
+                  [ngClass]="orderStatusClass(order.status)"
+                >
+                  {{ orderStatusTranslationKey(order.status) | translate }}
+                </span>
+                <span class="order-table__payment-status">
+                  {{ order.paymentStatus || "PENDING" }}
+                </span>
               </td>
               <td data-label="Tipo">
                 <span
                   class="order-type-badge"
                   [class.order-type-badge--mixed]="orderKind(order) === 'MIXED'"
+                  [class.order-type-badge--cad]="orderKind(order) === 'CAD'"
                 >
                   {{ orderKindLabel(order) }}
                 </span>
               </td>
-              <td data-label="Email">
-                <div class="order-customer-cell">
-                  <span>{{ order.customerEmail }}</span>
-                  <span
-                    class="customer-type-badge"
-                    *ngIf="customerTypeLabel(order) as customerType"
-                  >
-                    {{ customerType }}
-                  </span>
-                </div>
-              </td>
-              <td class="order-table__payment" data-label="Pagamento">
-                <div class="order-table__payment-status">
-                  {{ order.paymentStatus || "PENDING" }}
-                </div>
-                <div class="order-table__payment-date" *ngIf="order.paidAt">
-                  Pagato {{ order.paidAt | date: "dd.MM.yyyy HH:mm" }}
-                </div>
-              </td>
-              <td data-label="Stato ordine">{{ order.status }}</td>
-              <td data-label="Totale">
+              <td class="order-table__total" data-label="Totale">
                 {{ order.totalChf | currency: "CHF" : "symbol" : "1.2-2" }}
               </td>
             </tr>
             <tr class="no-results" *ngIf="filteredOrders.length === 0">
-              <td colspan="7">
+              <td colspan="4">
                 Nessun ordine trovato per i filtri selezionati.
               </td>
             </tr>
@@ -157,15 +164,32 @@
       </div>
     </section>
 
-    <section class="detail-panel ui-detail-panel" *ngIf="selectedOrder">
+    <section
+      class="detail-panel ui-detail-panel"
+      *ngIf="selectedOrder"
+      aria-label="Dettaglio ordine"
+    >
+      <app-button
+        class="mobile-back-button"
+        type="button"
+        variant="ghost"
+        (click)="backToOrders()"
+      >
+        ← {{ "ADMIN_ORDERS.BACK_TO_ORDERS" | translate }}
+      </app-button>
+
       <div class="detail-header">
         <div class="detail-title-row">
-          <h2>Dettaglio ordine {{ selectedOrder.orderNumber }}</h2>
+          <h2>
+            Dettaglio ordine
+            <span class="order-number">{{ selectedOrder.orderNumber }}</span>
+          </h2>
           <span
             class="order-type-badge"
             [class.order-type-badge--mixed]="
               orderKind(selectedOrder) === 'MIXED'
             "
+            [class.order-type-badge--cad]="orderKind(selectedOrder) === 'CAD'"
           >
             {{ orderKindLabel(selectedOrder) }}
           </span>
@@ -179,185 +203,40 @@
             >{{ selectedOrder.id }}</code
           >
         </p>
-        <p class="order-created-at">
-          Creato:
-          <strong>{{
-            selectedOrder.createdAt
-              ? (selectedOrder.createdAt | date: "dd.MM.yyyy HH:mm")
-              : "-"
-          }}</strong>
-        </p>
         <p *ngIf="detailLoading">Caricamento dettaglio...</p>
       </div>
 
-      <div class="meta-grid ui-meta-grid">
-        <div class="ui-meta-item">
-          <strong>Cliente</strong>
-          <div class="order-customer-cell">
-            <span>{{ selectedOrder.customerEmail }}</span>
-            <span
-              class="customer-type-badge"
-              *ngIf="customerTypeLabel(selectedOrder) as customerType"
-            >
-              {{ customerType }}
-            </span>
-          </div>
-        </div>
-        <div class="ui-meta-item">
-          <strong>Stato pagamento</strong
-          ><span>{{ selectedOrder.paymentStatus || "PENDING" }}</span>
-        </div>
-        <div class="ui-meta-item">
-          <strong>Pagato il</strong
-          ><span>{{
-            selectedOrder.paidAt
-              ? (selectedOrder.paidAt | date: "dd.MM.yyyy HH:mm")
-              : "-"
-          }}</span>
-        </div>
-        <div class="ui-meta-item">
-          <strong>Stato ordine</strong><span>{{ selectedOrder.status }}</span>
-        </div>
-        <div class="ui-meta-item">
-          <strong>Tipo ordine</strong
-          ><span>{{ orderKindLabel(selectedOrder) }}</span>
-        </div>
-        <div class="ui-meta-item">
-          <strong>Creato il</strong
-          ><span>{{
-            selectedOrder.createdAt
-              ? (selectedOrder.createdAt | date: "dd.MM.yyyy HH:mm")
-              : "-"
-          }}</span>
-        </div>
-        <div class="ui-meta-item">
-          <strong>Totale</strong
-          ><span>{{
-            selectedOrder.totalChf | currency: "CHF" : "symbol" : "1.2-2"
-          }}</span>
-        </div>
-      </div>
-      <br />
-      <section class="order-info-section ui-subpanel ui-subpanel--soft">
-        <header class="order-info-section__header">
-          <h3>Dati cliente e contatto</h3>
-        </header>
-        <dl class="customer-info-grid ui-meta-grid">
-          <div class="ui-meta-item">
-            <dt>Nome cliente</dt>
-            <dd>{{ customerDisplayName(selectedOrder) }}</dd>
-          </div>
-          <div class="ui-meta-item">
-            <dt>Tipo cliente</dt>
-            <dd>{{ customerTypeLabel(selectedOrder) || "-" }}</dd>
-          </div>
-          <div class="ui-meta-item">
-            <dt>Email</dt>
-            <dd>{{ selectedOrder.customerEmail || "-" }}</dd>
-          </div>
-          <div class="ui-meta-item">
-            <dt>Telefono</dt>
-            <dd>{{ selectedOrder.customerPhone || "-" }}</dd>
-          </div>
-          <div class="ui-meta-item">
-            <dt>Lingua preferita</dt>
-            <dd>{{ preferredLanguageLabel(selectedOrder) }}</dd>
-          </div>
-        </dl>
-      </section>
-
-      <div class="address-grid">
-        <section class="order-info-section ui-subpanel">
-          <header class="order-info-section__header">
-            <h3>Indirizzo di fatturazione</h3>
-          </header>
-          <dl class="address-meta-list">
-            <div>
-              <dt>Nominativo</dt>
-              <dd>{{ addressDisplayName(selectedOrder.billingAddress) }}</dd>
-            </div>
-            <div>
-              <dt>Azienda</dt>
-              <dd>
-                {{
-                  addressOptionalValue(
-                    selectedOrder.billingAddress?.companyName
-                  )
-                }}
-              </dd>
-            </div>
-            <div>
-              <dt>Referente</dt>
-              <dd>
-                {{
-                  addressOptionalValue(
-                    selectedOrder.billingAddress?.contactPerson
-                  )
-                }}
-              </dd>
-            </div>
-            <div>
-              <dt>Indirizzo</dt>
-              <dd>{{ addressStreetLine(selectedOrder.billingAddress) }}</dd>
-            </div>
-            <div>
-              <dt>Località</dt>
-              <dd>{{ addressCityLine(selectedOrder.billingAddress) }}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section class="order-info-section ui-subpanel">
-          <header class="order-info-section__header">
-            <h3>Indirizzo di spedizione</h3>
-            <span
-              class="same-address-badge"
-              *ngIf="selectedOrder.shippingSameAsBilling"
-            >
-              Uguale alla fatturazione
-            </span>
-          </header>
-          <ng-container
-            *ngIf="
-              effectiveShippingAddress(selectedOrder) as shippingAddress;
-              else missingShippingAddress
-            "
+      <section class="order-priority-panel">
+        <div class="order-priority-panel__status">
+          <span class="order-priority-panel__label">Stato ordine</span>
+          <span
+            class="order-status-badge order-status-badge--large"
+            [ngClass]="orderStatusClass(selectedOrder.status)"
           >
-            <dl class="address-meta-list">
-              <div>
-                <dt>Nominativo</dt>
-                <dd>{{ addressDisplayName(shippingAddress) }}</dd>
-              </div>
-              <div>
-                <dt>Azienda</dt>
-                <dd>{{ addressOptionalValue(shippingAddress.companyName) }}</dd>
-              </div>
-              <div>
-                <dt>Referente</dt>
-                <dd>
-                  {{ addressOptionalValue(shippingAddress.contactPerson) }}
-                </dd>
-              </div>
-              <div>
-                <dt>Indirizzo</dt>
-                <dd>{{ addressStreetLine(shippingAddress) }}</dd>
-              </div>
-              <div>
-                <dt>Località</dt>
-                <dd>{{ addressCityLine(shippingAddress) }}</dd>
-              </div>
-            </dl>
-          </ng-container>
-          <ng-template #missingShippingAddress>
-            <p class="missing-address">
-              Nessun indirizzo di spedizione salvato.
-            </p>
-          </ng-template>
-        </section>
-      </div>
-
-      <div class="actions-block">
-        <div class="status-editor">
+            {{ orderStatusTranslationKey(selectedOrder.status) | translate }}
+          </span>
+        </div>
+        <div class="order-priority-panel__meta">
+          <div>
+            <span>Totale</span>
+            <strong class="currency-value">{{
+              selectedOrder.totalChf | currency: "CHF" : "symbol" : "1.2-2"
+            }}</strong>
+          </div>
+          <div>
+            <span>Cliente</span>
+            <strong>{{ selectedOrder.customerEmail }}</strong>
+          </div>
+          <div>
+            <span>Creato</span>
+            <strong>{{
+              selectedOrder.createdAt
+                ? (selectedOrder.createdAt | date: "dd.MM.yyyy HH:mm")
+                : "-"
+            }}</strong>
+          </div>
+        </div>
+        <div class="status-editor status-editor--primary">
           <app-select
             id="order-status"
             [compact]="true"
@@ -369,168 +248,28 @@
           <app-button
             type="button"
             (click)="updateStatus()"
-            [disabled]="updatingStatus"
+            [disabled]="updatingStatus || selectedStatus === selectedOrder.status"
           >
             {{ updatingStatus ? "Salvataggio..." : "Aggiorna stato" }}
           </app-button>
         </div>
-
-        <div class="status-editor">
-          <app-select
-            id="payment-method"
-            [compact]="true"
-            label="Metodo pagamento"
-            [options]="paymentMethodSelectOptions"
-            [ngModel]="selectedPaymentMethod"
-            (ngModelChange)="onPaymentMethodChange($event)"
-          ></app-select>
-          <app-button
-            type="button"
-            (click)="updatePaymentMethod()"
-            [disabled]="confirmingPayment"
-          >
-            {{ confirmingPayment ? "Salvataggio..." : "Salva metodo" }}
-          </app-button>
-        </div>
-      </div>
-
-      <div class="doc-actions">
-        <app-button
-          type="button"
-          variant="ghost"
-          (click)="downloadConfirmation()"
-        >
-          Scarica conferma + QR bill
-        </app-button>
-        <app-button type="button" variant="ghost" (click)="downloadInvoice()">
-          Scarica fattura
-        </app-button>
-        <app-button
-          type="button"
-          variant="ghost"
-          (click)="openPrintDetails()"
-          [disabled]="!hasPrintItems(selectedOrder)"
-        >
-          Dettagli stampa
-        </app-button>
-      </div>
-
-      <section class="order-info-section ui-subpanel email-log-panel">
-        <header class="order-info-section__header">
-          <h3>Email inviate</h3>
-          <span class="same-address-badge">
-            {{ emailLogs(selectedOrder).length }} tentativi
-          </span>
-        </header>
-
-        <div
-          class="email-log-list"
-          *ngIf="emailLogs(selectedOrder).length > 0; else noOrderEmailsTpl"
-        >
-          <article
-            class="email-log-row"
-            *ngFor="let emailLog of emailLogs(selectedOrder)"
-          >
-            <div class="email-log-row__main">
-              <div class="email-log-row__heading">
-                <strong>{{ emailEventLabel(emailLog.eventType) }}</strong>
-                <span
-                  class="email-status"
-                  [ngClass]="emailStatusClass(emailLog.status)"
-                >
-                  {{ emailStatusLabel(emailLog.status) }}
-                </span>
-                <span class="email-origin" *ngIf="emailLog.origin === 'ADMIN'">
-                  Reinvio admin
-                </span>
-              </div>
-              <p class="email-log-row__meta">
-                A: {{ emailLog.recipient || "-" }} |
-                {{ emailLog.attemptedAt | date: "dd.MM.yyyy HH:mm" }}
-              </p>
-              <p class="email-log-row__subject">
-                {{ emailLog.subject || emailLog.templateName || "-" }}
-              </p>
-              <p class="email-log-row__error" *ngIf="emailLog.errorMessage">
-                {{ emailLog.errorMessage }}
-              </p>
-            </div>
-            <app-button
-              type="button"
-              variant="ghost"
-              size="sm"
-              (click)="resendEmail(emailLog)"
-              [disabled]="isResendingEmailLog(emailLog.id)"
-            >
-              {{ isResendingEmailLog(emailLog.id) ? "Reinvio..." : "Reinvia" }}
-            </app-button>
-          </article>
-        </div>
       </section>
 
-      <section
-        class="order-info-section ui-subpanel cad-files-panel"
-        *ngIf="isCadOrder(selectedOrder)"
-      >
-        <header class="order-info-section__header">
-          <h3>File CAD cliente</h3>
-          <span class="same-address-badge">
-            {{ selectedOrder.cadFileCount || 0 }} file totali
-          </span>
-        </header>
-
-        <div class="cad-file-upload">
-          <input
-            id="cad-deliverable-files"
-            class="sr-only"
-            type="file"
-            multiple
-            (change)="onCadFilesSelected($event)"
-          />
-          <label class="ui-file-picker" for="cad-deliverable-files">
-            <span class="ui-file-picker__button">Scegli file</span>
-            <span class="ui-file-picker__name">
-              {{ cadUploadFileLabel() }}
-            </span>
-          </label>
-          <app-button
-            type="button"
-            variant="secondary"
-            (click)="uploadCadFiles()"
-            [disabled]="uploadingCadFiles || cadUploadFiles.length === 0"
-          >
-            {{ uploadingCadFiles ? "Upload..." : "Aggiungi file" }}
-          </app-button>
-        </div>
-
-        <div class="cad-file-list" *ngIf="selectedOrder.cadFiles?.length">
-          <div class="cad-file-row" *ngFor="let file of selectedOrder.cadFiles">
-            <div>
-              <strong>{{ file.originalFilename }}</strong>
-              <span>{{ formatFileSize(file.fileSizeBytes) }}</span>
-            </div>
-            <app-button
-              type="button"
-              variant="ghost-danger"
-              size="sm"
-              (click)="deleteCadFile(file.id)"
-              [disabled]="isDeletingCadFile(file.id)"
-            >
-              {{ isDeletingCadFile(file.id) ? "Elimino..." : "Elimina" }}
-            </app-button>
-          </div>
-        </div>
-      </section>
-
-      <div class="items">
-        <div class="item" *ngFor="let item of selectedOrder.items">
+      <details class="order-disclosure ui-subpanel" open>
+        <summary>
+          <span>{{ "ADMIN_ORDERS.ITEMS_AND_FILES" | translate }}</span>
+          <span class="same-address-badge">{{ selectedOrder.items.length }}</span>
+        </summary>
+        <div class="disclosure-content">
+          <div class="items">
+            <div class="item" *ngFor="let item of selectedOrder.items">
           <div class="item-main">
             <div class="item-heading">
               <p class="file-name">
                 <strong>{{ itemDisplayName(item) }}</strong>
               </p>
               <span class="item-kind-badge">
-                {{ isShopItem(item) ? "Shop" : "Calcolatore" }}
+                {{ isShopItem(item) ? "Shop" : isCadOrder(selectedOrder) ? "CAD" : "Calcolatore" }}
               </span>
             </div>
             <p class="item-meta">
@@ -571,6 +310,14 @@
           </div>
           <div class="item-actions">
             <app-button
+              *ngIf="canPreviewItem(item)"
+              type="button"
+              variant="secondary"
+              (click)="openPreview(item)"
+            >
+              {{ "ADMIN_ORDERS.OPEN_3D_PREVIEW" | translate }}
+            </app-button>
+            <app-button
               type="button"
               variant="ghost"
               (click)="
@@ -584,7 +331,134 @@
             </app-button>
           </div>
         </div>
-      </div>
+          </div>
+          <app-button
+            type="button"
+            variant="ghost"
+            (click)="openPrintDetails()"
+            [disabled]="!hasPrintItems(selectedOrder)"
+          >
+            Dettagli stampa
+          </app-button>
+        </div>
+      </details>
+
+      <details class="order-disclosure ui-subpanel">
+        <summary>{{ "ADMIN_ORDERS.CUSTOMER_AND_ADDRESSES" | translate }}</summary>
+        <div class="disclosure-content">
+          <dl class="customer-info-grid ui-meta-grid">
+            <div class="ui-meta-item"><dt>Nome cliente</dt><dd>{{ customerDisplayName(selectedOrder) }}</dd></div>
+            <div class="ui-meta-item"><dt>Tipo cliente</dt><dd>{{ customerTypeLabel(selectedOrder) || "-" }}</dd></div>
+            <div class="ui-meta-item"><dt>Email</dt><dd>{{ selectedOrder.customerEmail || "-" }}</dd></div>
+            <div class="ui-meta-item"><dt>Telefono</dt><dd>{{ selectedOrder.customerPhone || "-" }}</dd></div>
+            <div class="ui-meta-item"><dt>Lingua preferita</dt><dd>{{ preferredLanguageLabel(selectedOrder) }}</dd></div>
+          </dl>
+          <div class="address-grid">
+            <section class="order-info-section ui-subpanel ui-subpanel--soft">
+              <header class="order-info-section__header"><h3>Indirizzo di fatturazione</h3></header>
+              <dl class="address-meta-list">
+                <div><dt>Nominativo</dt><dd>{{ addressDisplayName(selectedOrder.billingAddress) }}</dd></div>
+                <div><dt>Azienda</dt><dd>{{ addressOptionalValue(selectedOrder.billingAddress?.companyName) }}</dd></div>
+                <div><dt>Referente</dt><dd>{{ addressOptionalValue(selectedOrder.billingAddress?.contactPerson) }}</dd></div>
+                <div><dt>Indirizzo</dt><dd>{{ addressStreetLine(selectedOrder.billingAddress) }}</dd></div>
+                <div><dt>Località</dt><dd>{{ addressCityLine(selectedOrder.billingAddress) }}</dd></div>
+              </dl>
+            </section>
+            <section class="order-info-section ui-subpanel ui-subpanel--soft">
+              <header class="order-info-section__header">
+                <h3>Indirizzo di spedizione</h3>
+                <span class="same-address-badge" *ngIf="selectedOrder.shippingSameAsBilling">Uguale alla fatturazione</span>
+              </header>
+              <ng-container *ngIf="effectiveShippingAddress(selectedOrder) as shippingAddress; else missingShippingAddress">
+                <dl class="address-meta-list">
+                  <div><dt>Nominativo</dt><dd>{{ addressDisplayName(shippingAddress) }}</dd></div>
+                  <div><dt>Azienda</dt><dd>{{ addressOptionalValue(shippingAddress.companyName) }}</dd></div>
+                  <div><dt>Referente</dt><dd>{{ addressOptionalValue(shippingAddress.contactPerson) }}</dd></div>
+                  <div><dt>Indirizzo</dt><dd>{{ addressStreetLine(shippingAddress) }}</dd></div>
+                  <div><dt>Località</dt><dd>{{ addressCityLine(shippingAddress) }}</dd></div>
+                </dl>
+              </ng-container>
+              <ng-template #missingShippingAddress><p class="missing-address">Nessun indirizzo di spedizione salvato.</p></ng-template>
+            </section>
+          </div>
+        </div>
+      </details>
+
+      <details class="order-disclosure ui-subpanel">
+        <summary>{{ "ADMIN_ORDERS.PAYMENT_AND_DOCUMENTS" | translate }}</summary>
+        <div class="disclosure-content">
+          <div class="meta-grid ui-meta-grid">
+            <div class="ui-meta-item"><strong>Stato pagamento</strong><span>{{ selectedOrder.paymentStatus || "PENDING" }}</span></div>
+            <div class="ui-meta-item"><strong>Pagato il</strong><span>{{ selectedOrder.paidAt ? (selectedOrder.paidAt | date: "dd.MM.yyyy HH:mm") : "-" }}</span></div>
+            <div class="ui-meta-item"><strong>Tipo ordine</strong><span>{{ orderKindLabel(selectedOrder) }}</span></div>
+          </div>
+          <div class="actions-block">
+            <div class="status-editor">
+              <app-select id="payment-method" [compact]="true" label="Metodo pagamento" [options]="paymentMethodSelectOptions" [ngModel]="selectedPaymentMethod" (ngModelChange)="onPaymentMethodChange($event)"></app-select>
+              <app-button type="button" (click)="updatePaymentMethod()" [disabled]="confirmingPayment">
+                {{ confirmingPayment ? "Salvataggio..." : "Salva metodo" }}
+              </app-button>
+            </div>
+          </div>
+          <div class="doc-actions">
+            <app-button type="button" variant="ghost" (click)="downloadConfirmation()">Scarica conferma + QR bill</app-button>
+            <app-button type="button" variant="ghost" (click)="downloadInvoice()">Scarica fattura</app-button>
+          </div>
+        </div>
+      </details>
+
+      <details class="order-disclosure ui-subpanel" open *ngIf="isCadOrder(selectedOrder)">
+        <summary>
+          <span>File CAD cliente</span>
+          <span class="same-address-badge">{{ selectedOrder.cadFileCount || 0 }}</span>
+        </summary>
+        <div class="disclosure-content cad-files-panel">
+          <div class="cad-file-upload">
+            <input id="cad-deliverable-files" class="sr-only" type="file" multiple (change)="onCadFilesSelected($event)" />
+            <label class="ui-file-picker" for="cad-deliverable-files">
+              <span class="ui-file-picker__button">Scegli file</span>
+              <span class="ui-file-picker__name">{{ cadUploadFileLabel() }}</span>
+            </label>
+            <app-button type="button" variant="secondary" (click)="uploadCadFiles()" [disabled]="uploadingCadFiles || cadUploadFiles.length === 0">
+              {{ uploadingCadFiles ? "Upload..." : "Aggiungi file" }}
+            </app-button>
+          </div>
+          <div class="cad-file-list" *ngIf="selectedOrder.cadFiles?.length">
+            <div class="cad-file-row" *ngFor="let file of selectedOrder.cadFiles">
+              <div><strong>{{ file.originalFilename }}</strong><span>{{ formatFileSize(file.fileSizeBytes) }}</span></div>
+              <app-button type="button" variant="ghost-danger" size="sm" (click)="deleteCadFile(file.id)" [disabled]="isDeletingCadFile(file.id)">
+                {{ isDeletingCadFile(file.id) ? "Elimino..." : "Elimina" }}
+              </app-button>
+            </div>
+          </div>
+        </div>
+      </details>
+
+      <details class="order-disclosure ui-subpanel email-log-panel">
+        <summary>
+          <span>{{ "ADMIN_ORDERS.EMAIL_HISTORY" | translate }}</span>
+          <span class="same-address-badge">{{ emailLogs(selectedOrder).length }}</span>
+        </summary>
+        <div class="disclosure-content">
+          <div class="email-log-list" *ngIf="emailLogs(selectedOrder).length > 0; else noOrderEmailsTpl">
+            <article class="email-log-row" *ngFor="let emailLog of emailLogs(selectedOrder)">
+              <div class="email-log-row__main">
+                <div class="email-log-row__heading">
+                  <strong>{{ emailEventLabel(emailLog.eventType) }}</strong>
+                  <span class="email-status" [ngClass]="emailStatusClass(emailLog.status)">{{ emailStatusLabel(emailLog.status) }}</span>
+                  <span class="email-origin" *ngIf="emailLog.origin === 'ADMIN'">Reinvio admin</span>
+                </div>
+                <p class="email-log-row__meta">A: {{ emailLog.recipient || "-" }} | {{ emailLog.attemptedAt | date: "dd.MM.yyyy HH:mm" }}</p>
+                <p class="email-log-row__subject">{{ emailLog.subject || emailLog.templateName || "-" }}</p>
+                <p class="email-log-row__error" *ngIf="emailLog.errorMessage">{{ emailLog.errorMessage }}</p>
+              </div>
+              <app-button type="button" variant="ghost" size="sm" (click)="resendEmail(emailLog)" [disabled]="isResendingEmailLog(emailLog.id)">
+                {{ isResendingEmailLog(emailLog.id) ? "Reinvio..." : "Reinvia" }}
+              </app-button>
+            </article>
+          </div>
+        </div>
+      </details>
     </section>
 
     <section
@@ -671,4 +545,47 @@
       </div>
     </div>
   </div>
+</div>
+
+<div
+  class="modal-backdrop preview-backdrop"
+  *ngIf="previewItem"
+  (click)="closePreview()"
+  role="presentation"
+>
+  <section
+    class="modal-card preview-modal"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'ADMIN_ORDERS.PREVIEW_TITLE' | translate"
+  >
+    <header class="modal-header">
+      <div>
+        <h3>{{ "ADMIN_ORDERS.PREVIEW_TITLE" | translate }}</h3>
+        <p class="preview-filename">{{ itemDisplayName(previewItem) }}</p>
+      </div>
+      <app-button
+        class="close-btn"
+        type="button"
+        variant="ghost"
+        (click)="closePreview()"
+      >
+        {{ "ADMIN_ORDERS.CLOSE" | translate }}
+      </app-button>
+    </header>
+
+    <div class="preview-loading" *ngIf="previewLoading">
+      {{ "ADMIN_ORDERS.PREVIEW_LOADING" | translate }}
+    </div>
+    <p class="ui-banner ui-banner--error" *ngIf="previewError">
+      {{ "ADMIN_ORDERS.PREVIEW_ERROR" | translate }}
+    </p>
+    <app-stl-viewer
+      *ngIf="previewFile"
+      [file]="previewFile"
+      [color]="getItemColorHex(previewItem) || '#facf0a'"
+      [height]="previewViewerHeight()"
+    ></app-stl-viewer>
+  </section>
 </div>

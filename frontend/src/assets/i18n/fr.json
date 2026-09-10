@@ -1391,6 +1391,29 @@
     "DEFAULT_LABEL": "Glissez les fichiers ici ou cliquez pour téléverser",
     "DEFAULT_SUBTEXT": "Prend en charge .STL, .3MF"
   },
+  "ADMIN_ORDERS": {
+    "PAID_OR_COMPLETED_ORDERS": "commandes payées ou terminées",
+    "FILTERS": "Filtres",
+    "BACK_TO_ORDERS": "Retour aux commandes",
+    "ITEMS_AND_FILES": "Articles et fichiers",
+    "CUSTOMER_AND_ADDRESSES": "Client et adresses",
+    "PAYMENT_AND_DOCUMENTS": "Paiement et documents",
+    "EMAIL_HISTORY": "Historique des e-mails",
+    "OPEN_3D_PREVIEW": "Aperçu 3D",
+    "PREVIEW_TITLE": "Aperçu 3D du modèle",
+    "PREVIEW_LOADING": "Chargement du modèle...",
+    "PREVIEW_ERROR": "Impossible de charger l'aperçu de ce fichier.",
+    "CLOSE": "Fermer",
+    "STATUS": {
+      "PENDING_PAYMENT": "En attente de paiement",
+      "PAID": "Payée",
+      "IN_PRODUCTION": "En production",
+      "SHIPPED": "Expédiée",
+      "COMPLETED": "Terminée",
+      "CANCELLED": "Annulée",
+      "UNKNOWN": "Statut inconnu"
+    }
+  },
   "COLOR": {
     "AVAILABLE_COLORS": "Couleurs disponibles",
     "CATEGORY_GLOSSY": "Brillants",

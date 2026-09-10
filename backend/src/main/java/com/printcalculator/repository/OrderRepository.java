@@ -22,10 +22,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             select count(o)
             from Order o
             where o.status <> 'CANCELLED'
-              and exists (
+              and (o.status = 'COMPLETED' or exists (
                   select p.id from Payment p
                   where p.order = o and p.status in ('RECEIVED', 'COMPLETED')
-              )
+              ))
             """)
     long countPaidNonCancelledForStatistics();
 
@@ -33,10 +33,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             select coalesce(sum(o.totalChf), 0)
             from Order o
             where o.status <> 'CANCELLED'
-              and exists (
+              and (o.status = 'COMPLETED' or exists (
                   select p.id from Payment p
                   where p.order = o and p.status in ('RECEIVED', 'COMPLETED')
-              )
+              ))
             """)
     BigDecimal sumPaidNonCancelledTotalsForStatistics();
 
@@ -44,10 +44,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             select coalesce(avg(o.totalChf), 0)
             from Order o
             where o.status <> 'CANCELLED'
-              and exists (
+              and (o.status = 'COMPLETED' or exists (
                   select p.id from Payment p
                   where p.order = o and p.status in ('RECEIVED', 'COMPLETED')
-              )
+              ))
             """)
     Double averagePaidNonCancelledTotalsForStatistics();
 
@@ -55,10 +55,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
             select count(distinct lower(o.customerEmail))
             from Order o
             where o.status <> 'CANCELLED'
-              and exists (
+              and (o.status = 'COMPLETED' or exists (
                   select p.id from Payment p
                   where p.order = o and p.status in ('RECEIVED', 'COMPLETED')
-              )
+              ))
             """)
     long countUniquePaidNonCancelledCustomersForStatistics();
 }

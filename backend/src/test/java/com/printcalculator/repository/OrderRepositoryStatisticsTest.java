@@ -38,6 +38,21 @@ class OrderRepositoryStatisticsTest {
         assertEquals(1L, orderRepository.countUniquePaidNonCancelledCustomersForStatistics());
     }
 
+    @Test
+    void paidStatistics_includeCompletedOrdersWithoutConfirmedPaymentAndCountEachOrderOnce() {
+        saveOrderWithPayment("completed@example.test", "COMPLETED", null, "10.00");
+        saveOrderWithPayment("COMPLETED@example.test", "COMPLETED", "PENDING", "20.00");
+        saveOrderWithPayment("reported@example.test", "COMPLETED", "REPORTED", "30.00");
+        saveOrderWithPayment("paid@example.test", "COMPLETED", "RECEIVED", "40.00");
+        saveOrderWithPayment("cancelled@example.test", "CANCELLED", "RECEIVED", "100.00");
+        saveOrderWithPayment("pending@example.test", "PENDING_PAYMENT", "PENDING", "200.00");
+
+        assertEquals(4L, orderRepository.countPaidNonCancelledForStatistics());
+        assertEquals(new BigDecimal("100.00"), orderRepository.sumPaidNonCancelledTotalsForStatistics());
+        assertEquals(25.0, orderRepository.averagePaidNonCancelledTotalsForStatistics());
+        assertEquals(3L, orderRepository.countUniquePaidNonCancelledCustomersForStatistics());
+    }
+
     private void saveOrderWithPayment(String email, String orderStatus, String paymentStatus, String totalChf) {
         BigDecimal total = new BigDecimal(totalChf);
         Order order = new Order();
@@ -59,6 +74,10 @@ class OrderRepositoryStatisticsTest {
         order.setCadTotalChf(BigDecimal.ZERO);
         order.setTotalChf(total);
         order = orderRepository.save(order);
+
+        if (paymentStatus == null) {
+            return;
+        }
 
         Payment payment = new Payment();
         payment.setOrder(order);

@@ -1377,6 +1377,29 @@
     "DEFAULT_LABEL": "Drop files here or click to upload",
     "DEFAULT_SUBTEXT": "Supports .stl, .3mf"
   },
+  "ADMIN_ORDERS": {
+    "PAID_OR_COMPLETED_ORDERS": "paid or completed orders",
+    "FILTERS": "Filters",
+    "BACK_TO_ORDERS": "Back to orders",
+    "ITEMS_AND_FILES": "Items and files",
+    "CUSTOMER_AND_ADDRESSES": "Customer and addresses",
+    "PAYMENT_AND_DOCUMENTS": "Payment and documents",
+    "EMAIL_HISTORY": "Email history",
+    "OPEN_3D_PREVIEW": "3D preview",
+    "PREVIEW_TITLE": "3D model preview",
+    "PREVIEW_LOADING": "Loading model...",
+    "PREVIEW_ERROR": "This file's preview could not be loaded.",
+    "CLOSE": "Close",
+    "STATUS": {
+      "PENDING_PAYMENT": "Awaiting payment",
+      "PAID": "Paid",
+      "IN_PRODUCTION": "In production",
+      "SHIPPED": "Shipped",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "UNKNOWN": "Unknown status"
+    }
+  },
   "COLOR": {
     "AVAILABLE_COLORS": "Available colors",
     "CATEGORY_GLOSSY": "Glossy",

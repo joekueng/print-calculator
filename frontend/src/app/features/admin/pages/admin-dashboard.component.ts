@@ -1,6 +1,13 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, PLATFORM_ID, inject, OnInit } from '@angular/core';
+import {
+  Component,
+  HostListener,
+  PLATFORM_ID,
+  inject,
+  OnInit,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   AdminOrder,
   AdminOrderAddress,
@@ -14,6 +21,7 @@ import { AppButtonComponent } from '../../../shared/components/app-button/app-bu
 import { AppInputComponent } from '../../../shared/components/app-input/app-input.component';
 import { AppSelectComponent } from '../../../shared/components/app-select/app-select.component';
 import { downloadBlobInBrowser } from '../../../core/utils/browser-download';
+import { StlViewerComponent } from '../../../shared/components/stl-viewer/stl-viewer.component';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -25,6 +33,8 @@ import { downloadBlobInBrowser } from '../../../core/utils/browser-download';
     AppButtonComponent,
     AppInputComponent,
     AppSelectComponent,
+    StlViewerComponent,
+    TranslateModule,
   ],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.scss',
@@ -44,6 +54,12 @@ export class AdminDashboardComponent implements OnInit {
   orderStatusFilter = 'ALL';
   orderTypeFilter = 'ALL';
   showPrintDetails = false;
+  mobileDetailOpen = false;
+  filtersOpen = false;
+  previewFile: Blob | null = null;
+  previewItem: AdminOrderItem | null = null;
+  previewLoading = false;
+  previewError = false;
   loading = false;
   statisticsLoading = false;
   detailLoading = false;
@@ -85,7 +101,16 @@ export class AdminDashboardComponent implements OnInit {
     'COMPLETED',
     'CANCELLED',
   ];
-  readonly orderTypeFilterOptions = ['ALL', 'SHOP', 'CALCULATOR', 'MIXED'];
+  private listScrollPosition = 0;
+  private previewRequestedItemId: string | null = null;
+
+  readonly orderTypeFilterOptions = [
+    'ALL',
+    'CAD',
+    'SHOP',
+    'CALCULATOR',
+    'MIXED',
+  ];
   readonly paymentMethodSelectOptions = this.paymentMethodOptions.map(
     (option) => ({
       label: option,
@@ -128,7 +153,7 @@ export class AdminDashboardComponent implements OnInit {
         this.refreshFilteredOrders();
 
         if (!this.selectedOrder && this.filteredOrders.length > 0) {
-          this.openDetails(this.filteredOrders[0].id);
+          this.openDetails(this.filteredOrders[0].id, false);
         } else if (this.selectedOrder) {
           const exists = orders.find(
             (order) => order.id === this.selectedOrder?.id,
@@ -137,9 +162,9 @@ export class AdminDashboardComponent implements OnInit {
             (order) => order.id === this.selectedOrder?.id,
           );
           if (exists && selectedIsVisible) {
-            this.openDetails(exists.id);
+            this.openDetails(exists.id, false);
           } else if (this.filteredOrders.length > 0) {
-            this.openDetails(this.filteredOrders[0].id);
+            this.openDetails(this.filteredOrders[0].id, false);
           } else {
             this.selectedOrder = null;
             this.selectedStatus = '';
@@ -188,7 +213,20 @@ export class AdminDashboardComponent implements OnInit {
     this.applyListFiltersAndSelection();
   }
 
-  openDetails(orderId: string): void {
+  openDetails(orderId: string, revealOnMobile = true): void {
+    if (revealOnMobile && this.isMobileViewport()) {
+      this.listScrollPosition = window.scrollY;
+      this.mobileDetailOpen = true;
+      const summaryOrder = this.orders.find((order) => order.id === orderId);
+      if (summaryOrder) {
+        this.selectedOrder = summaryOrder;
+        this.selectedStatus = summaryOrder.status;
+        this.selectedPaymentMethod = summaryOrder.paymentMethod || 'OTHER';
+      }
+      window.setTimeout(() => {
+        document.querySelector('.detail-panel')?.scrollIntoView({ block: 'start' });
+      }, 0);
+    }
     this.detailLoading = true;
     this.cadUploadFiles = [];
     this.adminOrdersService.getOrder(orderId).subscribe({
@@ -205,6 +243,26 @@ export class AdminDashboardComponent implements OnInit {
         this.errorMessage = 'Impossibile caricare il dettaglio ordine.';
       },
     });
+  }
+
+  backToOrders(): void {
+    this.mobileDetailOpen = false;
+    this.closePreview();
+    if (this.isBrowser) {
+      window.setTimeout(
+        () => window.scrollTo({ top: this.listScrollPosition }),
+        0,
+      );
+    }
+  }
+
+  activeFilterCount(): number {
+    return [
+      this.orderSearchTerm.trim(),
+      this.paymentStatusFilter !== 'ALL',
+      this.orderStatusFilter !== 'ALL',
+      this.orderTypeFilter !== 'ALL',
+    ].filter(Boolean).length;
   }
 
   updatePaymentMethod(): void {
@@ -339,6 +397,66 @@ export class AdminDashboardComponent implements OnInit {
           this.errorMessage = 'Download file non riuscito.';
         },
       });
+  }
+
+  canPreviewItem(item: AdminOrderItem): boolean {
+    return (item.originalFilename || '').trim().toLowerCase().endsWith('.stl');
+  }
+
+  openPreview(item: AdminOrderItem): void {
+    if (!this.selectedOrder || !this.canPreviewItem(item)) {
+      return;
+    }
+
+    this.previewItem = item;
+    this.previewFile = null;
+    this.previewError = false;
+    this.previewLoading = true;
+    this.previewRequestedItemId = item.id;
+    this.adminOrdersService
+      .downloadOrderItemFile(this.selectedOrder.id, item.id)
+      .subscribe({
+        next: (blob) => {
+          if (this.previewRequestedItemId !== item.id) {
+            return;
+          }
+          this.previewFile = blob;
+          this.previewLoading = false;
+        },
+        error: () => {
+          if (this.previewRequestedItemId !== item.id) {
+            return;
+          }
+          this.previewLoading = false;
+          this.previewError = true;
+        },
+      });
+  }
+
+  closePreview(): void {
+    this.previewRequestedItemId = null;
+    this.previewFile = null;
+    this.previewItem = null;
+    this.previewLoading = false;
+    this.previewError = false;
+  }
+
+  previewViewerHeight(): number {
+    if (!this.isBrowser || window.innerWidth > 1024) {
+      return 520;
+    }
+    return Math.max(300, window.innerHeight - 170);
+  }
+
+  @HostListener('document:keydown.escape')
+  closeOpenModal(): void {
+    if (this.previewItem) {
+      this.closePreview();
+      return;
+    }
+    if (this.showPrintDetails) {
+      this.closePrintDetails();
+    }
   }
 
   downloadConfirmation(): void {
@@ -571,7 +689,10 @@ export class AdminDashboardComponent implements OnInit {
     return (order?.items || []).filter((item) => !this.isShopItem(item));
   }
 
-  orderKind(order: AdminOrder | null): 'SHOP' | 'CALCULATOR' | 'MIXED' {
+  orderKind(order: AdminOrder | null): 'CAD' | 'SHOP' | 'CALCULATOR' | 'MIXED' {
+    if (this.isCadOrder(order)) {
+      return 'CAD';
+    }
     const hasShop = this.hasShopItems(order);
     const hasPrint = this.hasPrintItems(order);
 
@@ -586,6 +707,8 @@ export class AdminDashboardComponent implements OnInit {
 
   orderKindLabel(order: AdminOrder | null): string {
     switch (this.orderKind(order)) {
+      case 'CAD':
+        return 'CAD';
       case 'SHOP':
         return 'Shop';
       case 'MIXED':
@@ -593,6 +716,16 @@ export class AdminDashboardComponent implements OnInit {
       default:
         return 'Calcolatore';
     }
+  }
+
+  orderStatusTranslationKey(status?: string | null): string {
+    const normalized = (status || 'PENDING_PAYMENT').trim().toUpperCase();
+    return `ADMIN_ORDERS.STATUS.${normalized}`;
+  }
+
+  orderStatusClass(status?: string | null): string {
+    const normalized = (status || '').trim().toLowerCase();
+    return `order-status-badge--${normalized.replace(/_/g, '-')}`;
   }
 
   customerTypeLabel(order: AdminOrder | null): string | null {
@@ -777,7 +910,7 @@ export class AdminDashboardComponent implements OnInit {
       !this.selectedOrder ||
       !this.filteredOrders.some((order) => order.id === this.selectedOrder?.id)
     ) {
-      this.openDetails(this.filteredOrders[0].id);
+      this.openDetails(this.filteredOrders[0].id, false);
     }
   }
 
@@ -819,5 +952,9 @@ export class AdminDashboardComponent implements OnInit {
 
   private cleanValue(value?: string | null): string {
     return (value || '').trim();
+  }
+
+  private isMobileViewport(): boolean {
+    return this.isBrowser && window.matchMedia('(max-width: 1024px)').matches;
   }
 }

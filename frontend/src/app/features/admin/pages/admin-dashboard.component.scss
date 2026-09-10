@@ -164,7 +164,8 @@ tbody tr.no-results:hover {
   align-items: stretch;
   margin: var(--space-3) 0;
   padding: var(--space-3);
-  border: 1px solid color-mix(in srgb, var(--color-brand) 42%, var(--color-border));
+  border: 1px solid
+    color-mix(in srgb, var(--color-brand) 42%, var(--color-border));
   border-radius: var(--radius-lg);
   background: color-mix(in srgb, var(--color-brand) 7%, var(--color-bg-card));
 }
@@ -851,7 +852,11 @@ h4 {
   }
 
   .orders-table tbody tr.selected {
-    border-color: color-mix(in srgb, var(--color-brand) 65%, var(--color-border));
+    border-color: color-mix(
+      in srgb,
+      var(--color-brand) 65%,
+      var(--color-border)
+    );
     background: #fff9d8;
   }
 

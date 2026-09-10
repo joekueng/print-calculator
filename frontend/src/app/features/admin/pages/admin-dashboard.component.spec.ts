@@ -2,7 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { AdminDashboardComponent } from './admin-dashboard.component';
-import { AdminOrder, AdminOrdersService } from '../services/admin-orders.service';
+import {
+  AdminOrder,
+  AdminOrdersService,
+} from '../services/admin-orders.service';
 
 describe('Admin orders responsive layout', () => {
   let fixture: ComponentFixture<AdminDashboardComponent>;
@@ -23,14 +26,16 @@ describe('Admin orders responsive layout', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AdminDashboardComponent, TranslateModule.forRoot()],
-      providers: [{
-        provide: AdminOrdersService,
-        useValue: {
-          listOrders: () => of([order]),
-          getOrder: () => of(order),
-          getStatistics: () => of(null),
+      providers: [
+        {
+          provide: AdminOrdersService,
+          useValue: {
+            listOrders: () => of([order]),
+            getOrder: () => of(order),
+            getStatistics: () => of(null),
+          },
         },
-      }],
+      ],
     }).compileComponents();
     fixture = TestBed.createComponent(AdminDashboardComponent);
     fixture.detectChanges();
@@ -41,9 +46,11 @@ describe('Admin orders responsive layout', () => {
     const target = frame.contentDocument!;
     // Render the actual component and application styles in a viewport whose
     // media queries are independent of the Karma runner's window size.
-    document.querySelectorAll('style, link[rel="stylesheet"]').forEach((style) => {
-      target.head.appendChild(style.cloneNode(true));
-    });
+    document
+      .querySelectorAll('style, link[rel="stylesheet"]')
+      .forEach((style) => {
+        target.head.appendChild(style.cloneNode(true));
+      });
     target.body.style.margin = '0';
     target.body.appendChild(fixture.nativeElement);
   });
@@ -58,15 +65,33 @@ describe('Admin orders responsive layout', () => {
   }
 
   it('keeps desktop cells under their headers and filters visible', () => {
-    const cells = Array.from(frame.contentDocument!.querySelectorAll('tbody td'));
-    const headers = Array.from(frame.contentDocument!.querySelectorAll('thead th'));
+    const cells = Array.from(
+      frame.contentDocument!.querySelectorAll('tbody td'),
+    );
+    const headers = Array.from(
+      frame.contentDocument!.querySelectorAll('thead th'),
+    );
     expect(cells.length).toBe(4);
     cells.forEach((cell, index) => {
-      expect(frame.contentWindow!.getComputedStyle(cell).display).toBe('table-cell');
-      expect(Math.abs(cell.getBoundingClientRect().left - headers[index].getBoundingClientRect().left)).toBeLessThan(1);
-      expect(Math.abs(cell.getBoundingClientRect().top - cells[0].getBoundingClientRect().top)).toBeLessThan(1);
+      expect(frame.contentWindow!.getComputedStyle(cell).display).toBe(
+        'table-cell',
+      );
+      expect(
+        Math.abs(
+          cell.getBoundingClientRect().left -
+            headers[index].getBoundingClientRect().left,
+        ),
+      ).toBeLessThan(1);
+      expect(
+        Math.abs(
+          cell.getBoundingClientRect().top -
+            cells[0].getBoundingClientRect().top,
+        ),
+      ).toBeLessThan(1);
     });
-    expect(element('#order-filters').getBoundingClientRect().height).toBeGreaterThan(0);
+    expect(
+      element('#order-filters').getBoundingClientRect().height,
+    ).toBeGreaterThan(0);
     expect(element('.filters-toggle').getBoundingClientRect().height).toBe(0);
   });
 
@@ -75,13 +100,23 @@ describe('Admin orders responsive layout', () => {
     expect(element('#order-filters').getBoundingClientRect().height).toBe(0);
     element('.filters-toggle').click();
     fixture.detectChanges();
-    expect(element('#order-filters').getBoundingClientRect().height).toBeGreaterThan(0);
-    expect(element('.filters-toggle').getAttribute('aria-expanded')).toBe('true');
-    expect(element('.orders-table').scrollWidth).toBeLessThanOrEqual(element('.list-panel').clientWidth);
+    expect(
+      element('#order-filters').getBoundingClientRect().height,
+    ).toBeGreaterThan(0);
+    expect(element('.filters-toggle').getAttribute('aria-expanded')).toBe(
+      'true',
+    );
+    expect(element('.orders-table').scrollWidth).toBeLessThanOrEqual(
+      element('.list-panel').clientWidth,
+    );
     fixture.componentInstance.mobileDetailOpen = true;
     fixture.detectChanges();
     expect(element('.list-panel').getBoundingClientRect().height).toBe(0);
-    expect(element('.mobile-back-button').getBoundingClientRect().height).toBeGreaterThan(0);
-    expect(element('.detail-panel').scrollWidth).toBeLessThanOrEqual(element('.detail-panel').clientWidth);
+    expect(
+      element('.mobile-back-button').getBoundingClientRect().height,
+    ).toBeGreaterThan(0);
+    expect(element('.detail-panel').scrollWidth).toBeLessThanOrEqual(
+      element('.detail-panel').clientWidth,
+    );
   });
 });

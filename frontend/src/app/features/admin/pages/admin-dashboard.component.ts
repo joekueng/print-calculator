@@ -224,7 +224,9 @@ export class AdminDashboardComponent implements OnInit {
         this.selectedPaymentMethod = summaryOrder.paymentMethod || 'OTHER';
       }
       window.setTimeout(() => {
-        document.querySelector('.detail-panel')?.scrollIntoView({ block: 'start' });
+        document
+          .querySelector('.detail-panel')
+          ?.scrollIntoView({ block: 'start' });
       }, 0);
     }
     this.detailLoading = true;

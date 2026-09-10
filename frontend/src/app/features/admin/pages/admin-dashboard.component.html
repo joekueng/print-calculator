@@ -54,51 +54,60 @@
         <h2>Lista ordini</h2>
         <span class="order-count">{{ filteredOrders.length }}</span>
       </div>
-      <section class="filters-disclosure" [class.filters-disclosure--open]="filtersOpen">
-        <button type="button" class="filters-toggle" (click)="filtersOpen = !filtersOpen" [attr.aria-expanded]="filtersOpen" aria-controls="order-filters">
+      <section
+        class="filters-disclosure"
+        [class.filters-disclosure--open]="filtersOpen"
+      >
+        <button
+          type="button"
+          class="filters-toggle"
+          (click)="filtersOpen = !filtersOpen"
+          [attr.aria-expanded]="filtersOpen"
+          aria-controls="order-filters"
+        >
           <span>{{ "ADMIN_ORDERS.FILTERS" | translate }}</span>
           <span class="active-filter-count" *ngIf="activeFilterCount() > 0">
             {{ activeFilterCount() }}
           </span>
         </button>
         <div class="list-toolbar" id="order-filters">
-        <app-input
-          class="toolbar-field"
-          id="order-search"
-          [compact]="true"
-          label="Cerca UUID"
-          type="search"
-          [ngModel]="orderSearchTerm"
-          (ngModelChange)="onSearchChange($event)"
-          placeholder="UUID completo o prefisso (es. 738131d8)"
-        ></app-input>
-        <app-select
-          class="toolbar-field"
-          id="payment-status-filter"
-          [compact]="true"
-          label="Stato pagamento"
-          [options]="paymentStatusFilterSelectOptions"
-          [ngModel]="paymentStatusFilter"
-          (ngModelChange)="onPaymentStatusFilterChange($event)"
-        ></app-select>
-        <app-select
-          class="toolbar-field"
-          id="order-status-filter"
-          [compact]="true"
-          label="Stato ordine"
-          [options]="orderStatusFilterSelectOptions"
-          [ngModel]="orderStatusFilter"
-          (ngModelChange)="onOrderStatusFilterChange($event)"
-        ></app-select>
-        <app-select
-          class="toolbar-field"
-          id="order-type-filter"
-          [compact]="true"
-          label="Tipo ordine"
-          [options]="orderTypeFilterSelectOptions"
-          [ngModel]="orderTypeFilter"
-          (ngModelChange)="onOrderTypeFilterChange($event)"
-        ></app-select>
+          <app-input
+            class="toolbar-field"
+            id="order-search"
+            [compact]="true"
+            label="Cerca UUID"
+            type="search"
+            [ngModel]="orderSearchTerm"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="UUID completo o prefisso (es. 738131d8)"
+          ></app-input>
+          <app-select
+            class="toolbar-field"
+            id="payment-status-filter"
+            [compact]="true"
+            label="Stato pagamento"
+            [options]="paymentStatusFilterSelectOptions"
+            [ngModel]="paymentStatusFilter"
+            (ngModelChange)="onPaymentStatusFilterChange($event)"
+          ></app-select>
+          <app-select
+            class="toolbar-field"
+            id="order-status-filter"
+            [compact]="true"
+            label="Stato ordine"
+            [options]="orderStatusFilterSelectOptions"
+            [ngModel]="orderStatusFilter"
+            (ngModelChange)="onOrderStatusFilterChange($event)"
+          ></app-select>
+          <app-select
+            class="toolbar-field"
+            id="order-type-filter"
+            [compact]="true"
+            label="Tipo ordine"
+            [options]="orderTypeFilterSelectOptions"
+            [ngModel]="orderTypeFilter"
+            (ngModelChange)="onOrderTypeFilterChange($event)"
+          ></app-select>
         </div>
       </section>
       <div class="table-wrap ui-table-wrap">
@@ -128,7 +137,9 @@
                       : "-"
                   }}
                 </span>
-                <span class="order-table__email">{{ order.customerEmail }}</span>
+                <span class="order-table__email">{{
+                  order.customerEmail
+                }}</span>
               </td>
               <td class="order-table__status" data-label="Stato ordine">
                 <span
@@ -248,7 +259,9 @@
           <app-button
             type="button"
             (click)="updateStatus()"
-            [disabled]="updatingStatus || selectedStatus === selectedOrder.status"
+            [disabled]="
+              updatingStatus || selectedStatus === selectedOrder.status
+            "
           >
             {{ updatingStatus ? "Salvataggio..." : "Aggiorna stato" }}
           </app-button>
@@ -258,79 +271,87 @@
       <details class="order-disclosure ui-subpanel" open>
         <summary>
           <span>{{ "ADMIN_ORDERS.ITEMS_AND_FILES" | translate }}</span>
-          <span class="same-address-badge">{{ selectedOrder.items.length }}</span>
+          <span class="same-address-badge">{{
+            selectedOrder.items.length
+          }}</span>
         </summary>
         <div class="disclosure-content">
           <div class="items">
             <div class="item" *ngFor="let item of selectedOrder.items">
-          <div class="item-main">
-            <div class="item-heading">
-              <p class="file-name">
-                <strong>{{ itemDisplayName(item) }}</strong>
-              </p>
-              <span class="item-kind-badge">
-                {{ isShopItem(item) ? "Shop" : isCadOrder(selectedOrder) ? "CAD" : "Calcolatore" }}
-              </span>
+              <div class="item-main">
+                <div class="item-heading">
+                  <p class="file-name">
+                    <strong>{{ itemDisplayName(item) }}</strong>
+                  </p>
+                  <span class="item-kind-badge">
+                    {{
+                      isShopItem(item)
+                        ? "Shop"
+                        : isCadOrder(selectedOrder)
+                          ? "CAD"
+                          : "Calcolatore"
+                    }}
+                  </span>
+                </div>
+                <p class="item-meta">
+                  <span>Qta: {{ item.quantity }}</span>
+                  <span *ngIf="showItemMaterial(item)">
+                    Materiale: {{ getItemMaterialLabel(item) }}
+                  </span>
+                  <span *ngIf="itemVariantLabel(item) as variantLabel">
+                    Variante: {{ variantLabel }}
+                  </span>
+                  <span class="item-meta__color">
+                    Colore:
+                    <span
+                      class="color-swatch"
+                      *ngIf="getItemColorHex(item) as colorHex"
+                      [style.background-color]="colorHex"
+                    ></span>
+                    <span>
+                      {{ getItemColorLabel(item) }}
+                      <ng-container
+                        *ngIf="getItemColorCodeSuffix(item) as colorCode"
+                      >
+                        ({{ colorCode }})
+                      </ng-container>
+                    </span>
+                  </span>
+                </p>
+                <p class="item-tech" *ngIf="showItemPrintDetails(item)">
+                  Nozzle: {{ item.nozzleDiameterMm ?? "-" }} mm | Layer:
+                  {{ item.layerHeightMm ?? "-" }} mm | Infill:
+                  {{ item.infillPercent ?? "-" }}% | Supporti:
+                  {{ formatSupports(item.supportsEnabled) }}
+                </p>
+                <p class="item-total">
+                  Riga:
+                  {{ item.lineTotalChf | currency: "CHF" : "symbol" : "1.2-2" }}
+                </p>
+              </div>
+              <div class="item-actions">
+                <app-button
+                  *ngIf="canPreviewItem(item)"
+                  type="button"
+                  variant="secondary"
+                  (click)="openPreview(item)"
+                >
+                  {{ "ADMIN_ORDERS.OPEN_3D_PREVIEW" | translate }}
+                </app-button>
+                <app-button
+                  type="button"
+                  variant="ghost"
+                  (click)="
+                    downloadItemFile(
+                      item.id,
+                      item.originalFilename || itemDisplayName(item)
+                    )
+                  "
+                >
+                  {{ downloadItemLabel(item) }}
+                </app-button>
+              </div>
             </div>
-            <p class="item-meta">
-              <span>Qta: {{ item.quantity }}</span>
-              <span *ngIf="showItemMaterial(item)">
-                Materiale: {{ getItemMaterialLabel(item) }}
-              </span>
-              <span *ngIf="itemVariantLabel(item) as variantLabel">
-                Variante: {{ variantLabel }}
-              </span>
-              <span class="item-meta__color">
-                Colore:
-                <span
-                  class="color-swatch"
-                  *ngIf="getItemColorHex(item) as colorHex"
-                  [style.background-color]="colorHex"
-                ></span>
-                <span>
-                  {{ getItemColorLabel(item) }}
-                  <ng-container
-                    *ngIf="getItemColorCodeSuffix(item) as colorCode"
-                  >
-                    ({{ colorCode }})
-                  </ng-container>
-                </span>
-              </span>
-            </p>
-            <p class="item-tech" *ngIf="showItemPrintDetails(item)">
-              Nozzle: {{ item.nozzleDiameterMm ?? "-" }} mm | Layer:
-              {{ item.layerHeightMm ?? "-" }} mm | Infill:
-              {{ item.infillPercent ?? "-" }}% | Supporti:
-              {{ formatSupports(item.supportsEnabled) }}
-            </p>
-            <p class="item-total">
-              Riga:
-              {{ item.lineTotalChf | currency: "CHF" : "symbol" : "1.2-2" }}
-            </p>
-          </div>
-          <div class="item-actions">
-            <app-button
-              *ngIf="canPreviewItem(item)"
-              type="button"
-              variant="secondary"
-              (click)="openPreview(item)"
-            >
-              {{ "ADMIN_ORDERS.OPEN_3D_PREVIEW" | translate }}
-            </app-button>
-            <app-button
-              type="button"
-              variant="ghost"
-              (click)="
-                downloadItemFile(
-                  item.id,
-                  item.originalFilename || itemDisplayName(item)
-                )
-              "
-            >
-              {{ downloadItemLabel(item) }}
-            </app-button>
-          </div>
-        </div>
           </div>
           <app-button
             type="button"
@@ -344,89 +365,236 @@
       </details>
 
       <details class="order-disclosure ui-subpanel">
-        <summary>{{ "ADMIN_ORDERS.CUSTOMER_AND_ADDRESSES" | translate }}</summary>
+        <summary>
+          {{ "ADMIN_ORDERS.CUSTOMER_AND_ADDRESSES" | translate }}
+        </summary>
         <div class="disclosure-content">
           <dl class="customer-info-grid ui-meta-grid">
-            <div class="ui-meta-item"><dt>Nome cliente</dt><dd>{{ customerDisplayName(selectedOrder) }}</dd></div>
-            <div class="ui-meta-item"><dt>Tipo cliente</dt><dd>{{ customerTypeLabel(selectedOrder) || "-" }}</dd></div>
-            <div class="ui-meta-item"><dt>Email</dt><dd>{{ selectedOrder.customerEmail || "-" }}</dd></div>
-            <div class="ui-meta-item"><dt>Telefono</dt><dd>{{ selectedOrder.customerPhone || "-" }}</dd></div>
-            <div class="ui-meta-item"><dt>Lingua preferita</dt><dd>{{ preferredLanguageLabel(selectedOrder) }}</dd></div>
+            <div class="ui-meta-item">
+              <dt>Nome cliente</dt>
+              <dd>{{ customerDisplayName(selectedOrder) }}</dd>
+            </div>
+            <div class="ui-meta-item">
+              <dt>Tipo cliente</dt>
+              <dd>{{ customerTypeLabel(selectedOrder) || "-" }}</dd>
+            </div>
+            <div class="ui-meta-item">
+              <dt>Email</dt>
+              <dd>{{ selectedOrder.customerEmail || "-" }}</dd>
+            </div>
+            <div class="ui-meta-item">
+              <dt>Telefono</dt>
+              <dd>{{ selectedOrder.customerPhone || "-" }}</dd>
+            </div>
+            <div class="ui-meta-item">
+              <dt>Lingua preferita</dt>
+              <dd>{{ preferredLanguageLabel(selectedOrder) }}</dd>
+            </div>
           </dl>
           <div class="address-grid">
             <section class="order-info-section ui-subpanel ui-subpanel--soft">
-              <header class="order-info-section__header"><h3>Indirizzo di fatturazione</h3></header>
+              <header class="order-info-section__header">
+                <h3>Indirizzo di fatturazione</h3>
+              </header>
               <dl class="address-meta-list">
-                <div><dt>Nominativo</dt><dd>{{ addressDisplayName(selectedOrder.billingAddress) }}</dd></div>
-                <div><dt>Azienda</dt><dd>{{ addressOptionalValue(selectedOrder.billingAddress?.companyName) }}</dd></div>
-                <div><dt>Referente</dt><dd>{{ addressOptionalValue(selectedOrder.billingAddress?.contactPerson) }}</dd></div>
-                <div><dt>Indirizzo</dt><dd>{{ addressStreetLine(selectedOrder.billingAddress) }}</dd></div>
-                <div><dt>Località</dt><dd>{{ addressCityLine(selectedOrder.billingAddress) }}</dd></div>
+                <div>
+                  <dt>Nominativo</dt>
+                  <dd>
+                    {{ addressDisplayName(selectedOrder.billingAddress) }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Azienda</dt>
+                  <dd>
+                    {{
+                      addressOptionalValue(
+                        selectedOrder.billingAddress?.companyName
+                      )
+                    }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Referente</dt>
+                  <dd>
+                    {{
+                      addressOptionalValue(
+                        selectedOrder.billingAddress?.contactPerson
+                      )
+                    }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Indirizzo</dt>
+                  <dd>{{ addressStreetLine(selectedOrder.billingAddress) }}</dd>
+                </div>
+                <div>
+                  <dt>Località</dt>
+                  <dd>{{ addressCityLine(selectedOrder.billingAddress) }}</dd>
+                </div>
               </dl>
             </section>
             <section class="order-info-section ui-subpanel ui-subpanel--soft">
               <header class="order-info-section__header">
                 <h3>Indirizzo di spedizione</h3>
-                <span class="same-address-badge" *ngIf="selectedOrder.shippingSameAsBilling">Uguale alla fatturazione</span>
+                <span
+                  class="same-address-badge"
+                  *ngIf="selectedOrder.shippingSameAsBilling"
+                  >Uguale alla fatturazione</span
+                >
               </header>
-              <ng-container *ngIf="effectiveShippingAddress(selectedOrder) as shippingAddress; else missingShippingAddress">
+              <ng-container
+                *ngIf="
+                  effectiveShippingAddress(selectedOrder) as shippingAddress;
+                  else missingShippingAddress
+                "
+              >
                 <dl class="address-meta-list">
-                  <div><dt>Nominativo</dt><dd>{{ addressDisplayName(shippingAddress) }}</dd></div>
-                  <div><dt>Azienda</dt><dd>{{ addressOptionalValue(shippingAddress.companyName) }}</dd></div>
-                  <div><dt>Referente</dt><dd>{{ addressOptionalValue(shippingAddress.contactPerson) }}</dd></div>
-                  <div><dt>Indirizzo</dt><dd>{{ addressStreetLine(shippingAddress) }}</dd></div>
-                  <div><dt>Località</dt><dd>{{ addressCityLine(shippingAddress) }}</dd></div>
+                  <div>
+                    <dt>Nominativo</dt>
+                    <dd>{{ addressDisplayName(shippingAddress) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Azienda</dt>
+                    <dd>
+                      {{ addressOptionalValue(shippingAddress.companyName) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Referente</dt>
+                    <dd>
+                      {{ addressOptionalValue(shippingAddress.contactPerson) }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Indirizzo</dt>
+                    <dd>{{ addressStreetLine(shippingAddress) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Località</dt>
+                    <dd>{{ addressCityLine(shippingAddress) }}</dd>
+                  </div>
                 </dl>
               </ng-container>
-              <ng-template #missingShippingAddress><p class="missing-address">Nessun indirizzo di spedizione salvato.</p></ng-template>
+              <ng-template #missingShippingAddress
+                ><p class="missing-address">
+                  Nessun indirizzo di spedizione salvato.
+                </p></ng-template
+              >
             </section>
           </div>
         </div>
       </details>
 
       <details class="order-disclosure ui-subpanel">
-        <summary>{{ "ADMIN_ORDERS.PAYMENT_AND_DOCUMENTS" | translate }}</summary>
+        <summary>
+          {{ "ADMIN_ORDERS.PAYMENT_AND_DOCUMENTS" | translate }}
+        </summary>
         <div class="disclosure-content">
           <div class="meta-grid ui-meta-grid">
-            <div class="ui-meta-item"><strong>Stato pagamento</strong><span>{{ selectedOrder.paymentStatus || "PENDING" }}</span></div>
-            <div class="ui-meta-item"><strong>Pagato il</strong><span>{{ selectedOrder.paidAt ? (selectedOrder.paidAt | date: "dd.MM.yyyy HH:mm") : "-" }}</span></div>
-            <div class="ui-meta-item"><strong>Tipo ordine</strong><span>{{ orderKindLabel(selectedOrder) }}</span></div>
+            <div class="ui-meta-item">
+              <strong>Stato pagamento</strong
+              ><span>{{ selectedOrder.paymentStatus || "PENDING" }}</span>
+            </div>
+            <div class="ui-meta-item">
+              <strong>Pagato il</strong
+              ><span>{{
+                selectedOrder.paidAt
+                  ? (selectedOrder.paidAt | date: "dd.MM.yyyy HH:mm")
+                  : "-"
+              }}</span>
+            </div>
+            <div class="ui-meta-item">
+              <strong>Tipo ordine</strong
+              ><span>{{ orderKindLabel(selectedOrder) }}</span>
+            </div>
           </div>
           <div class="actions-block">
             <div class="status-editor">
-              <app-select id="payment-method" [compact]="true" label="Metodo pagamento" [options]="paymentMethodSelectOptions" [ngModel]="selectedPaymentMethod" (ngModelChange)="onPaymentMethodChange($event)"></app-select>
-              <app-button type="button" (click)="updatePaymentMethod()" [disabled]="confirmingPayment">
+              <app-select
+                id="payment-method"
+                [compact]="true"
+                label="Metodo pagamento"
+                [options]="paymentMethodSelectOptions"
+                [ngModel]="selectedPaymentMethod"
+                (ngModelChange)="onPaymentMethodChange($event)"
+              ></app-select>
+              <app-button
+                type="button"
+                (click)="updatePaymentMethod()"
+                [disabled]="confirmingPayment"
+              >
                 {{ confirmingPayment ? "Salvataggio..." : "Salva metodo" }}
               </app-button>
             </div>
           </div>
           <div class="doc-actions">
-            <app-button type="button" variant="ghost" (click)="downloadConfirmation()">Scarica conferma + QR bill</app-button>
-            <app-button type="button" variant="ghost" (click)="downloadInvoice()">Scarica fattura</app-button>
+            <app-button
+              type="button"
+              variant="ghost"
+              (click)="downloadConfirmation()"
+              >Scarica conferma + QR bill</app-button
+            >
+            <app-button
+              type="button"
+              variant="ghost"
+              (click)="downloadInvoice()"
+              >Scarica fattura</app-button
+            >
           </div>
         </div>
       </details>
 
-      <details class="order-disclosure ui-subpanel" open *ngIf="isCadOrder(selectedOrder)">
+      <details
+        class="order-disclosure ui-subpanel"
+        open
+        *ngIf="isCadOrder(selectedOrder)"
+      >
         <summary>
           <span>File CAD cliente</span>
-          <span class="same-address-badge">{{ selectedOrder.cadFileCount || 0 }}</span>
+          <span class="same-address-badge">{{
+            selectedOrder.cadFileCount || 0
+          }}</span>
         </summary>
         <div class="disclosure-content cad-files-panel">
           <div class="cad-file-upload">
-            <input id="cad-deliverable-files" class="sr-only" type="file" multiple (change)="onCadFilesSelected($event)" />
+            <input
+              id="cad-deliverable-files"
+              class="sr-only"
+              type="file"
+              multiple
+              (change)="onCadFilesSelected($event)"
+            />
             <label class="ui-file-picker" for="cad-deliverable-files">
               <span class="ui-file-picker__button">Scegli file</span>
-              <span class="ui-file-picker__name">{{ cadUploadFileLabel() }}</span>
+              <span class="ui-file-picker__name">{{
+                cadUploadFileLabel()
+              }}</span>
             </label>
-            <app-button type="button" variant="secondary" (click)="uploadCadFiles()" [disabled]="uploadingCadFiles || cadUploadFiles.length === 0">
+            <app-button
+              type="button"
+              variant="secondary"
+              (click)="uploadCadFiles()"
+              [disabled]="uploadingCadFiles || cadUploadFiles.length === 0"
+            >
               {{ uploadingCadFiles ? "Upload..." : "Aggiungi file" }}
             </app-button>
           </div>
           <div class="cad-file-list" *ngIf="selectedOrder.cadFiles?.length">
-            <div class="cad-file-row" *ngFor="let file of selectedOrder.cadFiles">
-              <div><strong>{{ file.originalFilename }}</strong><span>{{ formatFileSize(file.fileSizeBytes) }}</span></div>
-              <app-button type="button" variant="ghost-danger" size="sm" (click)="deleteCadFile(file.id)" [disabled]="isDeletingCadFile(file.id)">
+            <div
+              class="cad-file-row"
+              *ngFor="let file of selectedOrder.cadFiles"
+            >
+              <div>
+                <strong>{{ file.originalFilename }}</strong
+                ><span>{{ formatFileSize(file.fileSizeBytes) }}</span>
+              </div>
+              <app-button
+                type="button"
+                variant="ghost-danger"
+                size="sm"
+                (click)="deleteCadFile(file.id)"
+                [disabled]="isDeletingCadFile(file.id)"
+              >
                 {{ isDeletingCadFile(file.id) ? "Elimino..." : "Elimina" }}
               </app-button>
             </div>
@@ -437,23 +605,52 @@
       <details class="order-disclosure ui-subpanel email-log-panel">
         <summary>
           <span>{{ "ADMIN_ORDERS.EMAIL_HISTORY" | translate }}</span>
-          <span class="same-address-badge">{{ emailLogs(selectedOrder).length }}</span>
+          <span class="same-address-badge">{{
+            emailLogs(selectedOrder).length
+          }}</span>
         </summary>
         <div class="disclosure-content">
-          <div class="email-log-list" *ngIf="emailLogs(selectedOrder).length > 0; else noOrderEmailsTpl">
-            <article class="email-log-row" *ngFor="let emailLog of emailLogs(selectedOrder)">
+          <div
+            class="email-log-list"
+            *ngIf="emailLogs(selectedOrder).length > 0; else noOrderEmailsTpl"
+          >
+            <article
+              class="email-log-row"
+              *ngFor="let emailLog of emailLogs(selectedOrder)"
+            >
               <div class="email-log-row__main">
                 <div class="email-log-row__heading">
                   <strong>{{ emailEventLabel(emailLog.eventType) }}</strong>
-                  <span class="email-status" [ngClass]="emailStatusClass(emailLog.status)">{{ emailStatusLabel(emailLog.status) }}</span>
-                  <span class="email-origin" *ngIf="emailLog.origin === 'ADMIN'">Reinvio admin</span>
+                  <span
+                    class="email-status"
+                    [ngClass]="emailStatusClass(emailLog.status)"
+                    >{{ emailStatusLabel(emailLog.status) }}</span
+                  >
+                  <span class="email-origin" *ngIf="emailLog.origin === 'ADMIN'"
+                    >Reinvio admin</span
+                  >
                 </div>
-                <p class="email-log-row__meta">A: {{ emailLog.recipient || "-" }} | {{ emailLog.attemptedAt | date: "dd.MM.yyyy HH:mm" }}</p>
-                <p class="email-log-row__subject">{{ emailLog.subject || emailLog.templateName || "-" }}</p>
-                <p class="email-log-row__error" *ngIf="emailLog.errorMessage">{{ emailLog.errorMessage }}</p>
+                <p class="email-log-row__meta">
+                  A: {{ emailLog.recipient || "-" }} |
+                  {{ emailLog.attemptedAt | date: "dd.MM.yyyy HH:mm" }}
+                </p>
+                <p class="email-log-row__subject">
+                  {{ emailLog.subject || emailLog.templateName || "-" }}
+                </p>
+                <p class="email-log-row__error" *ngIf="emailLog.errorMessage">
+                  {{ emailLog.errorMessage }}
+                </p>
               </div>
-              <app-button type="button" variant="ghost" size="sm" (click)="resendEmail(emailLog)" [disabled]="isResendingEmailLog(emailLog.id)">
-                {{ isResendingEmailLog(emailLog.id) ? "Reinvio..." : "Reinvia" }}
+              <app-button
+                type="button"
+                variant="ghost"
+                size="sm"
+                (click)="resendEmail(emailLog)"
+                [disabled]="isResendingEmailLog(emailLog.id)"
+              >
+                {{
+                  isResendingEmailLog(emailLog.id) ? "Reinvio..." : "Reinvia"
+                }}
               </app-button>
             </article>
           </div>

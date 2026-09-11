@@ -1,16 +1,28 @@
 <div class="card-controls" (click)="$event.stopPropagation()">
   <label class="qty-group">
-    <span>{{ 'CALC.QTY_SHORT' | translate }}</span>
-    <input type="number" min="1" step="1" class="qty-input"
+    <span>{{ "CALC.QTY_SHORT" | translate }}</span>
+    <input
+      type="number"
+      min="1"
+      step="1"
+      class="qty-input"
       [ngModel]="quantity()"
-      [ngModelOptions]="{standalone: true, updateOn: commitOnBlur() ? 'blur' : 'change'}"
+      [ngModelOptions]="{
+        standalone: true,
+        updateOn: commitOnBlur() ? 'blur' : 'change',
+      }"
       (ngModelChange)="quantityChange.emit($event)"
-      [disabled]="disabled()" />
+      [disabled]="disabled()"
+    />
   </label>
   <div class="color-group">
-    <span>{{ 'CALC.COLOR_LABEL' | translate }}</span>
-    <app-color-selector [selectedColor]="color()" [selectedVariantId]="variantId()"
-      [variants]="variants()" [disabled]="disabled() || !variants().length"
-      (colorSelected)="colorChange.emit($event)" />
+    <span>{{ "CALC.COLOR_LABEL" | translate }}</span>
+    <app-color-selector
+      [selectedColor]="color()"
+      [selectedVariantId]="variantId()"
+      [variants]="variants()"
+      [disabled]="disabled() || !variants().length"
+      (colorSelected)="colorChange.emit($event)"
+    />
   </div>
 </div>

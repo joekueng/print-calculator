@@ -54,11 +54,13 @@
 
             <div class="card-body">
               <app-print-item-controls
-                [quantity]="item.quantity" [color]="item.color"
+                [quantity]="item.quantity"
+                [color]="item.color"
                 [variantId]="item.filamentVariantId ?? null"
                 [variants]="getVariantsForMaterial(item.material)"
                 (quantityChange)="updateItemQuantityValue(i, $event)"
-                (colorChange)="updateItemColor(i, $event)" />
+                (colorChange)="updateItemColor(i, $event)"
+              />
 
               <button
                 type="button"

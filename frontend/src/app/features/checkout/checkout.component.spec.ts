@@ -27,8 +27,15 @@ describe('CheckoutComponent', () => {
     const item = { id: 'item', quantity: 1, filamentVariantId: 1 };
     component.updateCadItem(item, 3, 2);
     expect(component.updatingItem()).toBeTrue();
-    expect(quoteService.updateCadCheckoutItem).toHaveBeenCalledWith('cad-session', 'item', { quantity: 3, filamentVariantId: 2 });
-    const session = { grandTotalChf: 42, items: [{ ...item, quantity: 3, filamentVariantId: 2 }] };
+    expect(quoteService.updateCadCheckoutItem).toHaveBeenCalledWith(
+      'cad-session',
+      'item',
+      { quantity: 3, filamentVariantId: 2 },
+    );
+    const session = {
+      grandTotalChf: 42,
+      items: [{ ...item, quantity: 3, filamentVariantId: 2 }],
+    };
     response.next(session);
     expect(component.quoteSession()).toBe(session);
     expect(component.updatingItem()).toBeFalse();
@@ -41,7 +48,9 @@ describe('CheckoutComponent', () => {
     component.updateCadItem(item, 1.5, 1);
     expect(quoteService.updateCadCheckoutItem).not.toHaveBeenCalled();
     expect(component.itemEditError()).toBeTrue();
-    quoteService.updateCadCheckoutItem.and.returnValue(throwError(() => new Error('failed')));
+    quoteService.updateCadCheckoutItem.and.returnValue(
+      throwError(() => new Error('failed')),
+    );
     component.updateCadItem(item, 3, 1);
     expect(component.itemEditError()).toBeTrue();
     expect(component.updatingItem()).toBeFalse();
@@ -55,7 +64,12 @@ describe('CheckoutComponent', () => {
 
     const quoteService = jasmine.createSpyObj<QuoteEstimatorService>(
       'QuoteEstimatorService',
-      ['getQuoteSession', 'getOptions', 'getLineItemStlPreview', 'updateCadCheckoutItem'],
+      [
+        'getQuoteSession',
+        'getOptions',
+        'getLineItemStlPreview',
+        'updateCadCheckoutItem',
+      ],
     );
 
     quoteService.getOptions.and.returnValue(of({ materials: [] } as any));

@@ -166,5 +166,11 @@
   text-overflow: ellipsis;
 }
 
-.trigger { padding: 0; display: block; }
-.trigger:disabled { cursor: default; opacity: 0.6; }
+.trigger {
+  padding: 0;
+  display: block;
+}
+.trigger:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

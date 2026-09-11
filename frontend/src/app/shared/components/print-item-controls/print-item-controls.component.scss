@@ -1,4 +1,7 @@
-:host { display: block; min-width: 0; }
+:host {
+  display: block;
+  min-width: 0;
+}
 
 .card-controls {
   display: flex;
@@ -43,4 +46,3 @@
     border-color: var(--color-brand);
   }
 }
-

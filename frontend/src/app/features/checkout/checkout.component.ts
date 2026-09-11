@@ -16,7 +16,11 @@ import {
 } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { MaterialOption, VariantOption, QuoteEstimatorService } from '../calculator/services/quote-estimator.service';
+import {
+  MaterialOption,
+  VariantOption,
+  QuoteEstimatorService,
+} from '../calculator/services/quote-estimator.service';
 import { PrintItemControlsComponent } from '../../shared/components/print-item-controls/print-item-controls.component';
 import { AppInputComponent } from '../../shared/components/app-input/app-input.component';
 import { AppButtonComponent } from '../../shared/components/app-button/app-button.component';
@@ -230,35 +234,57 @@ export class CheckoutComponent implements OnInit {
   }
 
   cadVariants(item: { materialCode?: string }): VariantOption[] {
-    const materialCode = (item.materialCode ?? this.quoteSession()?.session?.materialCode ?? '').trim().toUpperCase();
-    return this.materialOptions().find(material => material.code.trim().toUpperCase() === materialCode)?.variants ?? [];
+    const materialCode = (
+      item.materialCode ??
+      this.quoteSession()?.session?.materialCode ??
+      ''
+    )
+      .trim()
+      .toUpperCase();
+    return (
+      this.materialOptions().find(
+        (material) => material.code.trim().toUpperCase() === materialCode,
+      )?.variants ?? []
+    );
   }
 
-  updateCadItem(item: { id: string; quantity: number; filamentVariantId: number }, quantity: number | string, variantId: number | string): void {
+  updateCadItem(
+    item: { id: string; quantity: number; filamentVariantId: number },
+    quantity: number | string,
+    variantId: number | string,
+  ): void {
     if (!this.sessionId || this.updatingItem() || this.isSubmitting()) return;
     const parsedQuantity = Number(quantity);
     const parsedVariant = Number(variantId);
-    if (!Number.isInteger(parsedQuantity) || parsedQuantity < 1 || parsedQuantity > 2147483647 || !parsedVariant) {
+    if (
+      !Number.isInteger(parsedQuantity) ||
+      parsedQuantity < 1 ||
+      parsedQuantity > 2147483647 ||
+      !parsedVariant
+    ) {
       this.itemEditError.set(true);
       this.error = 'CHECKOUT.ERR_UPDATE_ITEM';
       return;
     }
     this.updatingItem.set(true);
     this.error = null;
-    this.quoteService.updateCadCheckoutItem(this.sessionId, item.id, {
-      quantity: parsedQuantity, filamentVariantId: parsedVariant,
-    }).subscribe({
-      next: session => {
-        this.quoteSession.set(session);
-        this.itemEditError.set(false);
-        this.updatingItem.set(false);
-      },
-      error: () => {
-        this.itemEditError.set(true);
-        this.error = 'CHECKOUT.ERR_UPDATE_ITEM';
-        this.updatingItem.set(false);
-      },
-    });
+    this.quoteService
+      .updateCadCheckoutItem(this.sessionId, item.id, {
+        quantity: parsedQuantity,
+        filamentVariantId: parsedVariant,
+      })
+      .subscribe({
+        next: (session) => {
+          this.quoteSession.set(session);
+          this.itemEditError.set(false);
+          this.updatingItem.set(false);
+        },
+        error: () => {
+          this.itemEditError.set(true);
+          this.error = 'CHECKOUT.ERR_UPDATE_ITEM';
+          this.updatingItem.set(false);
+        },
+      });
   }
 
   cadRequestId(): string | null {
@@ -526,7 +552,14 @@ export class CheckoutComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.checkoutForm.invalid || this.shippingUnavailable() || this.updatingItem() || this.itemEditError() || this.isSubmitting() || this.loading) {
+    if (
+      this.checkoutForm.invalid ||
+      this.shippingUnavailable() ||
+      this.updatingItem() ||
+      this.itemEditError() ||
+      this.isSubmitting() ||
+      this.loading
+    ) {
       return;
     }
 

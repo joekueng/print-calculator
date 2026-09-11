@@ -287,3 +287,10 @@ app-toggle-selector.user-type-selector-compact {
 .mb-6 {
   margin-bottom: var(--space-6);
 }
+
+.cad-item-controls {
+  display: grid;
+  gap: var(--spacing-sm, 0.75rem);
+  margin-block: 0.75rem;
+  min-width: 0;
+}

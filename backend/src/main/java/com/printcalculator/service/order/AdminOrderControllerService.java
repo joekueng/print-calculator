@@ -426,19 +426,6 @@ public class AdminOrderControllerService {
 
     private ResponseEntity<byte[]> generateDocument(Order order, boolean isConfirmation) {
         String displayOrderNumber = getDisplayOrderNumber(order);
-        if (isConfirmation) {
-            Path relativePath = buildConfirmationPdfRelativePath(order.getId(), displayOrderNumber);
-            try {
-                byte[] existingPdf = storageService.loadAsResource(relativePath).getInputStream().readAllBytes();
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"confirmation-" + displayOrderNumber + ".pdf\"")
-                        .contentType(MediaType.APPLICATION_PDF)
-                        .body(existingPdf);
-            } catch (Exception ignored) {
-                // fallback to generated confirmation document
-            }
-        }
-
         List<OrderItem> items = orderItemRepo.findByOrder_Id(order.getId());
         Payment payment = paymentRepo.findByOrder_Id(order.getId()).orElse(null);
         byte[] pdf = invoiceService.generateDocumentPdf(order, items, isConfirmation, qrBillService, payment);
@@ -447,6 +434,7 @@ public class AdminOrderControllerService {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + prefix + displayOrderNumber + ".pdf\"")
                 .contentType(MediaType.APPLICATION_PDF)
+                .cacheControl(org.springframework.http.CacheControl.noStore())
                 .body(pdf);
     }
 
@@ -558,7 +546,4 @@ public class AdminOrderControllerService {
         }
     }
 
-    private Path buildConfirmationPdfRelativePath(UUID orderId, String orderNumber) {
-        return Path.of("orders", orderId.toString(), "documents", "confirmation-" + orderNumber + ".pdf");
-    }
 }

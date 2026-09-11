@@ -27,6 +27,7 @@ import { LanguageService } from '../../../core/services/language.service';
 })
 export class ColorSelectorComponent {
   private readonly languageService = inject(LanguageService);
+  disabled = input(false);
   selectedColor = input<string>('Black');
   selectedVariantId = input<number | null>(null);
   variants = input<VariantOption[]>([]);
@@ -67,11 +68,12 @@ export class ColorSelectorComponent {
   });
 
   toggleOpen() {
+    if (this.disabled()) return;
     this.isOpen.update((v) => !v);
   }
 
   selectColor(color: ColorOption) {
-    if (color.outOfStock) return;
+    if (this.disabled() || color.outOfStock) return;
 
     this.colorSelected.emit({
       colorName: color.value,

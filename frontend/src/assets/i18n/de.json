@@ -1188,6 +1188,8 @@
     "HERO_SUBTITLE": "Wir sind hier, um Ihnen zu helfen. Füllen Sie das untenstehende Formular für jede Anfrage aus."
   },
   "CHECKOUT": {
+    "COLOR": "Farbe",
+    "ERR_UPDATE_ITEM": "Der Artikel konnte nicht aktualisiert werden. Bitte Menge und Farbe prüfen und erneut versuchen.",
     "TITLE": "Checkout",
     "SUBTITLE": "Schließen Sie Ihre Bestellung ab, indem Sie Versand- und Zahlungsdetails eingeben.",
     "CAD_SERVICE": "CAD-Service",

@@ -1,5 +1,6 @@
 package com.printcalculator.service.quote;
 
+import com.printcalculator.dto.QuoteSessionDto;
 import com.printcalculator.entity.QuoteLineItem;
 import com.printcalculator.entity.QuoteSession;
 import com.printcalculator.service.QuoteSessionTotalsService;
@@ -29,7 +30,7 @@ public class QuoteSessionResponseAssembler {
         }
 
         Map<String, Object> response = new HashMap<>();
-        response.put("session", session);
+        response.put("session", QuoteSessionDto.from(session));
         response.put("items", itemsDto);
         response.put("printItemsTotalChf", totals.printItemsTotalChf());
         response.put("cadTotalChf", totals.cadTotalChf());

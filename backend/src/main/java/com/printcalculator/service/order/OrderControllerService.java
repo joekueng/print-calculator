@@ -15,14 +15,12 @@ import com.printcalculator.service.payment.InvoicePdfRenderingService;
 import com.printcalculator.service.payment.PaymentService;
 import com.printcalculator.service.payment.QrBillService;
 import com.printcalculator.service.payment.TwintPaymentService;
-import com.printcalculator.service.storage.StorageService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +43,6 @@ public class OrderControllerService {
     private final OrderService orderService;
     private final OrderRepository orderRepo;
     private final OrderItemRepository orderItemRepo;
-    private final StorageService storageService;
     private final InvoicePdfRenderingService invoiceService;
     private final QrBillService qrBillService;
     private final TwintPaymentService twintPaymentService;
@@ -56,7 +53,6 @@ public class OrderControllerService {
     public OrderControllerService(OrderService orderService,
                                   OrderRepository orderRepo,
                                   OrderItemRepository orderItemRepo,
-                                  StorageService storageService,
                                   InvoicePdfRenderingService invoiceService,
                                   QrBillService qrBillService,
                                   TwintPaymentService twintPaymentService,
@@ -66,7 +62,6 @@ public class OrderControllerService {
         this.orderService = orderService;
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
-        this.storageService = storageService;
         this.invoiceService = invoiceService;
         this.qrBillService = qrBillService;
         this.twintPaymentService = twintPaymentService;
@@ -150,19 +145,6 @@ public class OrderControllerService {
         Order order = orderRepo.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if (isConfirmation) {
-            Path relativePath = buildConfirmationPdfRelativePath(order);
-            try {
-                byte[] existingPdf = storageService.loadAsResource(relativePath).getInputStream().readAllBytes();
-                return ResponseEntity.ok()
-                        .header("Content-Disposition", "attachment; filename=\"confirmation-" + getDisplayOrderNumber(order) + ".pdf\"")
-                        .contentType(MediaType.APPLICATION_PDF)
-                        .body(existingPdf);
-            } catch (Exception ignored) {
-                // Fallback to on-the-fly generation if the stored file is missing or unreadable.
-            }
-        }
-
         List<OrderItem> items = orderItemRepo.findByOrder_Id(orderId);
         Payment payment = paymentRepo.findByOrder_Id(orderId).orElse(null);
 
@@ -172,16 +154,8 @@ public class OrderControllerService {
         return ResponseEntity.ok()
                 .header("Content-Disposition", "attachment; filename=\"" + typePrefix + truncatedUuid + ".pdf\"")
                 .contentType(MediaType.APPLICATION_PDF)
+                .cacheControl(org.springframework.http.CacheControl.noStore())
                 .body(pdf);
-    }
-
-    private Path buildConfirmationPdfRelativePath(Order order) {
-        return Path.of(
-                "orders",
-                order.getId().toString(),
-                "documents",
-                "confirmation-" + getDisplayOrderNumber(order) + ".pdf"
-        );
     }
 
     private OrderDto convertToDto(Order order, List<OrderItem> items) {

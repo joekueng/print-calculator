@@ -221,7 +221,10 @@ class OrderServiceTest {
                 .thenReturn("pdf".getBytes(StandardCharsets.UTF_8));
         when(paymentService.getOrCreatePaymentForOrder(any(Order.class), eq("OTHER"))).thenReturn(new Payment());
 
-        Order order = service.createOrderFromQuote(sessionId, buildRequest());
+        CreateOrderRequest request = buildRequest();
+        request.setLanguage("fr");
+        Order order = service.createOrderFromQuote(sessionId, request);
+        assertEquals("fr", order.getPreferredLanguage());
 
         assertEquals(orderId, order.getId());
         assertEquals("SHOP", order.getSourceType());

@@ -22,7 +22,7 @@ import { AppDropzoneComponent } from '../../../../shared/components/app-dropzone
 import { AppButtonComponent } from '../../../../shared/components/app-button/app-button.component';
 import { AppCheckboxComponent } from '../../../../shared/components/app-checkbox/app-checkbox.component';
 import { StlViewerComponent } from '../../../../shared/components/stl-viewer/stl-viewer.component';
-import { ColorSelectorComponent } from '../../../../shared/components/color-selector/color-selector.component';
+import { PrintItemControlsComponent } from '../../../../shared/components/print-item-controls/print-item-controls.component';
 import {
   QuoteRequest,
   QuoteRequestItem,
@@ -63,7 +63,7 @@ import {
     AppButtonComponent,
     AppCheckboxComponent,
     StlViewerComponent,
-    ColorSelectorComponent,
+    PrintItemControlsComponent,
   ],
   templateUrl: './upload-form.component.html',
   styleUrl: './upload-form.component.scss',
@@ -391,6 +391,10 @@ export class UploadFormComponent implements OnInit {
     const parsed = parseInt(input.value, 10);
     const quantity = Number.isFinite(parsed) ? parsed : 1;
 
+    this.updateItemQuantityValue(index, quantity);
+  }
+
+  updateItemQuantityValue(index: number, quantity: number) {
     const currentItem = this.items()[index];
     if (!currentItem) {
       return;

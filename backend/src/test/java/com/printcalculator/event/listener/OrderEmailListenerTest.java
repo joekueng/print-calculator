@@ -10,7 +10,6 @@ import com.printcalculator.service.email.EmailAuditService;
 import com.printcalculator.service.email.EmailSendResult;
 import com.printcalculator.service.payment.InvoicePdfRenderingService;
 import com.printcalculator.service.payment.QrBillService;
-import com.printcalculator.service.storage.StorageService;
 import com.printcalculator.service.email.EmailNotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +19,6 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
@@ -64,9 +62,6 @@ class OrderEmailListenerTest {
     private QrBillService qrBillService;
 
     @Mock
-    private StorageService storageService;
-
-    @Mock
     private EmailAuditService emailAuditService;
 
     @InjectMocks
@@ -102,7 +97,8 @@ class OrderEmailListenerTest {
         ReflectionTestUtils.setField(orderEmailListener, "adminMailAddress", "admin@printcalculator.local");
         ReflectionTestUtils.setField(orderEmailListener, "frontendBaseUrl", "https://3d-fab.ch");
 
-        when(storageService.loadAsResource(any())).thenReturn(new ByteArrayResource("PDF".getBytes(StandardCharsets.UTF_8)));
+        when(invoicePdfRenderingService.generateDocumentPdf(eq(order), anyList(), eq(true), eq(qrBillService), isNull()))
+                .thenReturn("PDF".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test

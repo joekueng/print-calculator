@@ -189,6 +189,17 @@ export class QuoteEstimatorService {
     );
   }
 
+  updateCadCheckoutItem(
+    sessionId: string,
+    itemId: string,
+    changes: { quantity: number; filamentVariantId: number },
+  ): Observable<unknown> {
+    return this.http.patch(
+      `${environment.apiUrl}/api/quote-sessions/${sessionId}/cad-items/${itemId}`,
+      changes,
+    );
+  }
+
   createOrder(sessionId: string, orderDetails: any): Observable<any> {
     const headers: any = {};
     return this.http.post(

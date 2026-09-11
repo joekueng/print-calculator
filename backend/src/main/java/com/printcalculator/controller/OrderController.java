@@ -5,6 +5,8 @@ import com.printcalculator.dto.OrderDto;
 import com.printcalculator.service.order.OrderControllerService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.Resource;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -60,8 +62,20 @@ public class OrderController {
     }
 
     @GetMapping("/{orderId}/cad-files/download")
-    public ResponseEntity<?> downloadCadFiles(@PathVariable UUID orderId) {
-        return orderControllerService.downloadCadFiles(orderId);
+    public ResponseEntity<StreamingResponseBody> downloadCadFiles(@PathVariable UUID orderId) {
+        ResponseEntity<?> response = orderControllerService.downloadCadFiles(orderId);
+        Object body = response.getBody();
+        StreamingResponseBody stream;
+        if (body instanceof StreamingResponseBody streaming) {
+            stream = streaming;
+        } else if (body instanceof Resource resource) {
+            stream = output -> {
+                try (var input = resource.getInputStream()) { input.transferTo(output); }
+            };
+        } else {
+            throw new IllegalStateException("Unsupported CAD download response");
+        }
+        return new ResponseEntity<>(stream, response.getHeaders(), response.getStatusCode());
     }
 
     @GetMapping("/{orderId}/invoice")

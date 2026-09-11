@@ -32,7 +32,7 @@ public class InvoicePdfRenderingService {
 
     public byte[] generateInvoicePdfBytesFromTemplate(Map<String, Object> invoiceTemplateVariables, String qrBillSvg) {
         try {
-            Context thymeleafContextWithInvoiceData = new Context(Locale.ITALY);
+            Context thymeleafContextWithInvoiceData = new Context(InvoiceLanguage.resolve((String) invoiceTemplateVariables.get("language")).locale());
             thymeleafContextWithInvoiceData.setVariables(invoiceTemplateVariables);
             thymeleafContextWithInvoiceData.setVariable("qrBillSvg", qrBillSvg);
 
@@ -57,22 +57,25 @@ public class InvoicePdfRenderingService {
 
     public byte[] generateDocumentPdf(Order order, List<OrderItem> items, boolean isConfirmation, QrBillService qrBillService, Payment payment) {
         Map<String, Object> vars = new HashMap<>();
+        InvoiceLanguage language = InvoiceLanguage.resolve(order.getPreferredLanguage());
+        vars.put("language", language.code());
+        vars.put("labels", language.labels());
         vars.put("isConfirmation", isConfirmation);
         vars.put("sellerDisplayName", "3D Fab Küng Caletti");
-        vars.put("sellerAddressLine1", "Joe Küng e Matteo Caletti");
-        vars.put("sellerAddressLine2", "Sede Bienne, Svizzera");
+        vars.put("sellerAddressLine1", "Joe Küng · Matteo Caletti");
+        vars.put("sellerAddressLine2", language.text("location"));
         vars.put("sellerEmail", "info@3dfab.ch");
 
-        String displayOrderNumber = order.getOrderNumber() != null && !order.getOrderNumber().isBlank() 
-            ? order.getOrderNumber() 
+        String displayOrderNumber = order.getOrderNumber() != null && !order.getOrderNumber().isBlank()
+            ? order.getOrderNumber()
             : order.getId().toString();
 
         vars.put("invoiceNumber", "INV-" + displayOrderNumber.toUpperCase());
-        vars.put("invoiceDate", order.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE));
-        vars.put("dueDate", order.getCreatedAt().plusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE));
+        vars.put("invoiceDate", order.getCreatedAt().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+        vars.put("dueDate", order.getCreatedAt().plusDays(30).format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
 
-        String buyerName = order.getBillingCustomerType().equals("BUSINESS") 
-            ? order.getBillingCompanyName() 
+        String buyerName = "BUSINESS".equals(order.getBillingCustomerType())
+            ? order.getBillingCompanyName()
             : order.getBillingFirstName() + " " + order.getBillingLastName();
         vars.put("buyerDisplayName", buyerName);
         vars.put("buyerAddressLine1", order.getBillingAddressLine1());
@@ -89,46 +92,46 @@ public class InvoicePdfRenderingService {
         }
 
         List<Map<String, Object>> invoiceLineItems = items.stream()
-                .map(this::toInvoiceLineItem)
+                .map(item -> toInvoiceLineItem(item, language))
                 .collect(Collectors.toList());
 
         if (order.getCadTotalChf() != null && order.getCadTotalChf().compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal cadHours = order.getCadHours() != null ? order.getCadHours() : BigDecimal.ZERO;
             BigDecimal cadHourlyRate = order.getCadHourlyRateChf() != null ? order.getCadHourlyRateChf() : BigDecimal.ZERO;
             Map<String, Object> cadLine = new HashMap<>();
-            cadLine.put("description", "Servizio CAD (" + formatCadHours(cadHours) + "h)");
-            cadLine.put("quantity", 1);
-            cadLine.put("unitPriceFormatted", String.format("CHF %.2f", cadHourlyRate));
-            cadLine.put("lineTotalFormatted", String.format("CHF %.2f", order.getCadTotalChf()));
+            cadLine.put("description", language.text("cad"));
+            cadLine.put("quantity", formatCadHours(cadHours) + " h");
+            cadLine.put("unitPriceFormatted", money(cadHourlyRate));
+            cadLine.put("lineTotalFormatted", money(order.getCadTotalChf()));
             invoiceLineItems.add(cadLine);
         }
 
         Map<String, Object> setupLine = new HashMap<>();
-        setupLine.put("description", "Costo Setup");
+        setupLine.put("description", language.text("setup"));
         setupLine.put("quantity", 1);
-        setupLine.put("unitPriceFormatted", String.format("CHF %.2f", order.getSetupCostChf()));
-        setupLine.put("lineTotalFormatted", String.format("CHF %.2f", order.getSetupCostChf()));
+        setupLine.put("unitPriceFormatted", money(order.getSetupCostChf()));
+        setupLine.put("lineTotalFormatted", money(order.getSetupCostChf()));
         invoiceLineItems.add(setupLine);
 
         Map<String, Object> shippingLine = new HashMap<>();
-        shippingLine.put("description", "Spedizione");
+        shippingLine.put("description", language.text("delivery"));
         shippingLine.put("quantity", 1);
-        shippingLine.put("unitPriceFormatted", String.format("CHF %.2f", order.getShippingCostChf()));
-        shippingLine.put("lineTotalFormatted", String.format("CHF %.2f", order.getShippingCostChf()));
+        shippingLine.put("unitPriceFormatted", money(order.getShippingCostChf()));
+        shippingLine.put("lineTotalFormatted", money(order.getShippingCostChf()));
         invoiceLineItems.add(shippingLine);
 
         vars.put("invoiceLineItems", invoiceLineItems);
-        vars.put("subtotalFormatted", String.format("CHF %.2f", order.getSubtotalChf()));
-        vars.put("grandTotalFormatted", String.format("CHF %.2f", order.getTotalChf()));
-        vars.put("paymentTermsText", isConfirmation ? "Pagamento entro 7 giorni via Bonifico o TWINT. Grazie." : "Pagato. Grazie per l'acquisto.");
-        
-        String paymentMethodText = "QR / Bonifico oppure TWINT";
+        vars.put("subtotalFormatted", money(order.getSubtotalChf()));
+        vars.put("grandTotalFormatted", money(order.getTotalChf()));
+        vars.put("paymentTermsText", isConfirmation ? language.text("terms") : language.text("thanks"));
+
+        String paymentMethodText = language.text("defaultPayment");
         if (payment != null && payment.getMethod() != null) {
             paymentMethodText = switch (payment.getMethod().toUpperCase()) {
                 case "TWINT" -> "TWINT";
-                case "BANK_TRANSFER", "BONIFICO" -> "Bonifico Bancario";
+                case "BANK_TRANSFER", "BONIFICO" -> language.text("transfer");
                 case "QR_BILL", "QR" -> "QR Bill";
-                case "CASH" -> "Contanti";
+                case "CASH" -> language.text("cash");
                 default -> payment.getMethod();
             };
         }
@@ -137,7 +140,7 @@ public class InvoicePdfRenderingService {
         String qrBillSvg = null;
         if (isConfirmation) {
             qrBillSvg = new String(qrBillService.generateQrBillSvg(order), java.nio.charset.StandardCharsets.UTF_8);
-            
+
             if (qrBillSvg.contains("<?xml")) {
                 int svgStartIndex = qrBillSvg.indexOf("<svg");
                 if (svgStartIndex != -1) {
@@ -145,26 +148,52 @@ public class InvoicePdfRenderingService {
                 }
             }
         }
-        
+
         return generateInvoicePdfBytesFromTemplate(vars, qrBillSvg);
+    }
+
+    private String money(BigDecimal amount) {
+        java.text.DecimalFormat format = new java.text.DecimalFormat("#,##0.00",
+                java.text.DecimalFormatSymbols.getInstance(Locale.forLanguageTag("de-CH")));
+        return "CHF " + format.format(amount != null ? amount : BigDecimal.ZERO).replace('’', '\'');
     }
 
     private String formatCadHours(BigDecimal hours) {
         return hours.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
     }
 
-    private Map<String, Object> toInvoiceLineItem(OrderItem item) {
+    private Map<String, Object> toInvoiceLineItem(OrderItem item, InvoiceLanguage language) {
         Map<String, Object> line = new HashMap<>();
-        line.put("description", buildLineDescription(item));
+        line.put("description", buildLineDescription(item, language));
+        line.put("printSettings", printSettings(item, language));
         line.put("quantity", item.getQuantity());
-        line.put("unitPriceFormatted", String.format("CHF %.2f", item.getUnitPriceChf()));
-        line.put("lineTotalFormatted", String.format("CHF %.2f", item.getLineTotalChf()));
+        line.put("unitPriceFormatted", money(item.getUnitPriceChf()));
+        line.put("lineTotalFormatted", money(item.getLineTotalChf()));
         return line;
     }
 
-    private String buildLineDescription(OrderItem item) {
+    private String printSettings(OrderItem item, InvoiceLanguage language) {
+        if ("SHOP_PRODUCT".equalsIgnoreCase(item.getItemType())) return null;
+        java.util.List<String> details = new java.util.ArrayList<>();
+        addSetting(details, language.text("material"), item.getMaterialCode(), "");
+        addSetting(details, language.text("color"), language.setting("color", item.getColorCode()), "");
+        addSetting(details, language.text("quality"), language.setting("quality", item.getQuality()), "");
+        addSetting(details, language.text("nozzle"), item.getNozzleDiameterMm(), " mm");
+        addSetting(details, language.text("layer"), item.getLayerHeightMm(), " mm");
+        addSetting(details, language.text("infill"), item.getInfillPercent(), "%");
+        addSetting(details, language.text("pattern"), language.setting("pattern", item.getInfillPattern()), "");
+        addSetting(details, language.text("supports"), item.getSupportsEnabled() == null ? null : item.getSupportsEnabled() ? language.text("yes") : language.text("no"), "");
+        addSetting(details, language.text("split"), item.getRequiresSplitPrinting() == null ? null : item.getRequiresSplitPrinting() ? language.text("yes") : language.text("no"), "");
+        return String.join(" · ", details);
+    }
+
+    private void addSetting(java.util.List<String> details, String label, Object value, String unit) {
+        if (value != null && !value.toString().isBlank()) details.add(label + ": " + value + unit);
+    }
+
+    private String buildLineDescription(OrderItem item, InvoiceLanguage language) {
         if (item == null) {
-            return "Articolo";
+            return language.text("item");
         }
 
         if ("SHOP_PRODUCT".equalsIgnoreCase(item.getItemType())) {
@@ -172,14 +201,14 @@ public class InvoicePdfRenderingService {
                     item.getDisplayName(),
                     item.getShopProductName(),
                     item.getOriginalFilename(),
-                    "Prodotto shop"
+                    language.text("shop")
             );
             String variantLabel = firstNonBlank(item.getShopVariantLabel(), item.getShopVariantColorName(), null);
             return variantLabel != null ? productName + " - " + variantLabel : productName;
         }
 
-        String fileName = firstNonBlank(item.getDisplayName(), item.getOriginalFilename(), "File 3D");
-        return "Stampa 3D: " + fileName;
+        String fileName = firstNonBlank(item.getDisplayName(), item.getOriginalFilename(), language.text("file"));
+        return language.text("print") + ": " + fileName;
     }
 
     private String firstNonBlank(String... values) {

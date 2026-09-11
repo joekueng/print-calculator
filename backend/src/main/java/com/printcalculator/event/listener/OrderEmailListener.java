@@ -15,7 +15,6 @@ import com.printcalculator.service.email.EmailAuditService;
 import com.printcalculator.service.email.EmailSendResult;
 import com.printcalculator.service.payment.InvoicePdfRenderingService;
 import com.printcalculator.service.payment.QrBillService;
-import com.printcalculator.service.storage.StorageService;
 import com.printcalculator.service.email.EmailNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.nio.file.Paths;
 import java.util.UUID;
 
 @Slf4j
@@ -51,7 +49,6 @@ public class OrderEmailListener {
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final QrBillService qrBillService;
-    private final StorageService storageService;
     private final EmailAuditService emailAuditService;
 
     @Value("${app.mail.admin.enabled:true}")
@@ -135,7 +132,7 @@ public class OrderEmailListener {
 
         Map<String, Object> templateData = buildBaseTemplateData(order, language);
         String subject = applyOrderConfirmationTexts(templateData, language, orderNumber);
-        byte[] confirmationPdf = loadOrGenerateConfirmationPdf(order);
+        byte[] confirmationPdf = generateConfirmationPdf(order);
         String attachmentName = buildConfirmationAttachmentName(language, orderNumber);
 
         EmailSendResult result = emailNotificationService.sendEmailWithAttachment(
@@ -687,33 +684,14 @@ public class OrderEmailListener {
         };
     }
 
-    private byte[] loadOrGenerateConfirmationPdf(Order order) {
-        byte[] stored = loadStoredConfirmationPdf(order);
-        if (stored != null) {
-            return stored;
-        }
-
+    private byte[] generateConfirmationPdf(Order order) {
         try {
             List<OrderItem> items = orderItemRepository.findByOrder_Id(order.getId());
             return invoicePdfRenderingService.generateDocumentPdf(order, items, true, qrBillService, null);
         } catch (Exception e) {
-            log.error("Failed to generate fallback confirmation PDF for order id: {}", order.getId(), e);
+            log.error("Failed to generate confirmation PDF for order id: {}", order.getId(), e);
             return null;
         }
-    }
-
-    private byte[] loadStoredConfirmationPdf(Order order) {
-        String relativePath = buildConfirmationPdfRelativePath(order);
-        try {
-            return storageService.loadAsResource(Paths.get(relativePath)).getInputStream().readAllBytes();
-        } catch (Exception e) {
-            log.warn("Confirmation PDF not found for order id {} at {}", order.getId(), relativePath);
-            return null;
-        }
-    }
-
-    private String buildConfirmationPdfRelativePath(Order order) {
-        return "orders/" + order.getId() + "/documents/confirmation-" + getDisplayOrderNumber(order) + ".pdf";
     }
 
     private String buildCustomerFirstName(Order order, String language) {

@@ -1254,6 +1254,8 @@
     "REMOVE_FILE": "Supprimer le fichier joint"
   },
   "CHECKOUT": {
+    "COLOR": "Couleur",
+    "ERR_UPDATE_ITEM": "Impossible de mettre à jour la pièce. Vérifiez la quantité et la couleur et réessayez.",
     "TITLE": "Checkout",
     "SUBTITLE": "Complétez votre commande en saisissant les détails de livraison et de paiement.",
     "CAD_SERVICE": "Service CAD",

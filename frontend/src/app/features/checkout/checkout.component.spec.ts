@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { FormBuilder } from '@angular/forms';
 import { PLATFORM_ID } from '@angular/core';
 import { CheckoutComponent } from './checkout.component';
@@ -19,6 +19,34 @@ describe('CheckoutComponent', () => {
     component.quoteSession.set({ session: { sessionType: 'SHOP_CART' } });
     expect(component.shippingUnavailable()).toBeFalse();
   });
+  it('waits for backend totals after changing CAD quantity or color', () => {
+    const { component, quoteService } = createComponent();
+    component.sessionId = 'cad-session';
+    const response = new Subject<unknown>();
+    quoteService.updateCadCheckoutItem.and.returnValue(response);
+    const item = { id: 'item', quantity: 1, filamentVariantId: 1 };
+    component.updateCadItem(item, 3, 2);
+    expect(component.updatingItem()).toBeTrue();
+    expect(quoteService.updateCadCheckoutItem).toHaveBeenCalledWith('cad-session', 'item', { quantity: 3, filamentVariantId: 2 });
+    const session = { grandTotalChf: 42, items: [{ ...item, quantity: 3, filamentVariantId: 2 }] };
+    response.next(session);
+    expect(component.quoteSession()).toBe(session);
+    expect(component.updatingItem()).toBeFalse();
+  });
+
+  it('blocks checkout on invalid quantities and failed CAD changes', () => {
+    const { component, quoteService } = createComponent();
+    component.sessionId = 'cad-session';
+    const item = { id: 'item', quantity: 1, filamentVariantId: 1 };
+    component.updateCadItem(item, 1.5, 1);
+    expect(quoteService.updateCadCheckoutItem).not.toHaveBeenCalled();
+    expect(component.itemEditError()).toBeTrue();
+    quoteService.updateCadCheckoutItem.and.returnValue(throwError(() => new Error('failed')));
+    component.updateCadItem(item, 3, 1);
+    expect(component.itemEditError()).toBeTrue();
+    expect(component.updatingItem()).toBeFalse();
+  });
+
   function createComponent(
     platformId: Object = 'browser',
     queryParams: Record<string, unknown> = {},
@@ -27,7 +55,7 @@ describe('CheckoutComponent', () => {
 
     const quoteService = jasmine.createSpyObj<QuoteEstimatorService>(
       'QuoteEstimatorService',
-      ['getQuoteSession', 'getOptions', 'getLineItemStlPreview'],
+      ['getQuoteSession', 'getOptions', 'getLineItemStlPreview', 'updateCadCheckoutItem'],
     );
 
     quoteService.getOptions.and.returnValue(of({ materials: [] } as any));

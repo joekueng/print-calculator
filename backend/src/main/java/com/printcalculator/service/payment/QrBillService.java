@@ -15,6 +15,10 @@ public class QrBillService {
     
     public Bill createBillFromOrder(Order order) {
         Bill bill = new Bill();
+        bill.getFormat().setLanguage(net.codecrete.qrbill.generator.Language.valueOf(
+                InvoiceLanguage.resolve(order.getPreferredLanguage()).code().toUpperCase(java.util.Locale.ROOT)));
+        bill.getFormat().setGraphicsFormat(net.codecrete.qrbill.generator.GraphicsFormat.SVG);
+        bill.getFormat().setOutputSize(net.codecrete.qrbill.generator.OutputSize.QR_BILL_ONLY);
 
         // Creditor (Merchant)
         bill.setAccount("CH7409000000154821581"); // TODO: Configurable IBAN
@@ -46,7 +50,10 @@ public class QrBillService {
         bill.setAmount(order.getTotalChf());
         bill.setCurrency("CHF");
 
-        bill.setUnstructuredMessage(order.getId().toString());
+        String number = order.getOrderNumber() != null && !order.getOrderNumber().isBlank()
+                ? order.getOrderNumber() : order.getId().toString();
+        bill.setUnstructuredMessage(InvoiceLanguage.resolve(order.getPreferredLanguage()).text("invoice")
+                + " INV-" + number.toUpperCase(java.util.Locale.ROOT));
 
         return bill;
     }

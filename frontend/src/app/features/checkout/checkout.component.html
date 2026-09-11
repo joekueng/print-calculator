@@ -247,7 +247,7 @@
             <app-button
               type="submit"
               [disabled]="
-                checkoutForm.invalid || isSubmitting() || shippingUnavailable()
+                checkoutForm.invalid || isSubmitting() || updatingItem() || itemEditError() || loading || shippingUnavailable()
               "
               [fullWidth]="true"
             >
@@ -307,6 +307,12 @@
                     }}</span>
                   </span>
                 </div>
+                <app-print-item-controls class="cad-item-controls" *ngIf="isCadSession() && !isShopItem(item)"
+                  [quantity]="item.quantity" [color]="item.colorCode"
+                  [variantId]="item.filamentVariantId ?? null" [variants]="cadVariants(item)"
+                  [commitOnBlur]="true" [disabled]="updatingItem() || isSubmitting()"
+                  (quantityChange)="updateCadItem(item, $event, item.filamentVariantId)"
+                  (colorChange)="updateCadItem(item, item.quantity, $event.filamentVariantId ?? item.filamentVariantId)" />
                 <div class="item-specs-sub" *ngIf="showItemPrintMetrics(item)">
                   {{ item.printTimeSeconds / 3600 | number: "1.1-1" }}h |
                   {{ item.materialGrams | number: "1.0-0" }}g

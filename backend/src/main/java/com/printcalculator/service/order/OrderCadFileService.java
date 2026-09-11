@@ -436,17 +436,16 @@ public class OrderCadFileService {
     }
 
     private String uniqueZipEntryName(String filename, Map<String, Integer> usedNames) {
-        int count = usedNames.getOrDefault(filename, 0);
-        usedNames.put(filename, count + 1);
-        if (count == 0) {
-            return filename;
-        }
-
+        String candidate = filename;
+        int count = 1;
         int dot = filename.lastIndexOf('.');
-        if (dot > 0) {
-            return filename.substring(0, dot) + "-" + (count + 1) + filename.substring(dot);
+        while (usedNames.containsKey(candidate)) {
+            count++;
+            candidate = dot > 0 ? filename.substring(0, dot) + "-" + count + filename.substring(dot)
+                    : filename + "-" + count;
         }
-        return filename + "-" + (count + 1);
+        usedNames.put(candidate, 1);
+        return candidate;
     }
 
     private String safeZipEntryName(String filename) {

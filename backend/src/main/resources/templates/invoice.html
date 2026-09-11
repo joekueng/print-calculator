@@ -1,413 +1,89 @@
 <!DOCTYPE html>
-<html lang="it" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${language}">
 <head>
-    <meta charset="utf-8"/>
-    <style>
-        @page invoice {
-            size: A4;
-            margin: 12mm 12mm 12mm 12mm;
-        }
-
-        @page qrpage {
-            size: A4;
-            margin: 0;
-        }
-
-        *, *:before, *:after {
-            box-sizing: border-box;
-        }
-
-        body {
-            page: invoice;
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 8.5pt;
-            margin: 0;
-            padding: 0;
-            background: #fff;
-            color: #000;
-            line-height: 1.35;
-        }
-
-        .invoice-page {
-            page: invoice;
-            width: 100%;
-            page-break-after: always;
-        }
-
-        /* Top Header Layout */
-        .header-layout {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-bottom: 25mm;
-        }
-
-        .header-layout td {
-            vertical-align: top;
-            padding: 0;
-        }
-
-        .logo-block {
-            width: 33%;
-            font-size: 24pt;
-            font-weight: bold;
-            letter-spacing: -0.5px;
-        }
-
-        .logo-3d {
-            color: #111827; /* Dark black/blue */
-        }
-
-        .logo-fab {
-            color: #eab308; /* Yellow/Gold */
-        }
-
-        .seller-block {
-            width: 33%;
-            font-size: 9pt;
-            line-height: 1.4;
-        }
-
-        .website-block {
-            width: 33%;
-            text-align: right;
-            font-size: 9pt;
-        }
-
-        /* Document Title */
-        .doc-title {
-            font-size: 20pt;
-            font-weight: normal;
-            margin: 0 0 10mm 0;
-            letter-spacing: -0.5px;
-        }
-
-        /* Meta and Customer Details Layout */
-        .details-layout {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-bottom: 15mm;
-        }
-
-        .details-layout td {
-            vertical-align: top;
-            padding: 0;
-        }
-
-        .meta-container {
-            width: 50%;
-        }
-
-        .customer-container {
-            width: 50%;
-            font-size: 10pt;
-            line-height: 1.5;
-        }
-
-        .meta-table {
-            border-collapse: collapse;
-            font-size: 8.5pt;
-        }
-
-        .meta-table td {
-            padding: 1.5mm 0;
-            vertical-align: top;
-        }
-
-        .meta-label {
-            width: 45mm;
-            padding-right: 2mm;
-        }
-
-        .meta-value {
-            /* allow wrapping just in case */
-        }
-        
-        /* Line Items Table */
-        .line-items {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-top: 5mm;
-            font-size: 8.5pt;
-        }
-
-        .line-items th,
-        .line-items td {
-            padding: 1.5mm 0;
-            vertical-align: top;
-        }
-
-        .line-items th {
-            text-align: left;
-            font-weight: normal;
-            border-bottom: 1pt solid #000;
-        }
-
-        .line-items tbody td {
-            border-bottom: 0.5pt solid #e0e0e0;
-        }
-
-        .line-items tbody tr:last-child td {
-            border-bottom: 1pt solid #000;
-        }
-
-        .line-items th.center,
-        .line-items td.center {
-            text-align: center;
-        }
-
-        .line-items th.right,
-        .line-items td.right {
-            text-align: right;
-        }
-
-        .col-desc { width: 45%; }
-        .col-qty { width: 10%; }
-        .col-price { width: 22%; }
-        .col-total { width: 23%; }
-        
-        .item-desc {
-            padding-right: 4mm;
-        }
-
-        /* Totals Block */
-        .totals-table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-top: 0;
-            font-size: 8.5pt;
-        }
-
-        .totals-table td {
-            padding: 1.5mm 0;
-            border-bottom: 0.5pt solid #000;
-        }
-
-        .totals-label {
-            text-align: left;
-        }
-
-        .totals-value {
-            text-align: right;
-            width: 30%;
-        }
-        
-        .totals-table tr.no-border td {
-            border-bottom: none;
-        }
-
-        .summary-notes {
-            margin-top: 4mm;
-            padding-bottom: 4mm;
-            border-bottom: 1pt solid #000;
-        }
-
-        /* Footer Notes Layout */
-        .footer-layout {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            margin-top: 15mm;
-            font-size: 8.5pt;
-        }
-
-        .footer-layout td {
-            vertical-align: top;
-            padding: 0 0 3mm 0;
-        }
-
-        .footer-label {
-            width: 25%;
-            font-weight: normal;
-        }
-
-        .footer-text {
-            width: 75%;
-            line-height: 1.4;
-        }
-
-        /* QR Page */
-        .qr-only-page {
-            page: qrpage;
-            width: 100%;
-            height: 297mm;
-            background: #fff;
-            page-break-inside: avoid;
-        }
-
-        .qr-only-layout {
-            width: 100%;
-            height: 297mm;
-            border-collapse: collapse;
-            table-layout: fixed;
-        }
-
-        .qr-only-layout td {
-            vertical-align: bottom;
-            /* Keep the QR slip at page bottom, but with a safer print margin. */
-            padding: 0 0 1mm 0;
-        }
-
-        .qr-bill-bottom {
-            width: 100%;
-            height: 105mm;
-            overflow: hidden;
-            background: #fff;
-        }
-
-        .qr-bill-bottom svg {
-            width: 100% !important;
-            height: 105mm !important;
-            display: block;
-        }
-    </style>
+<meta charset="utf-8"/>
+<style>
+@page invoice { size: A4; margin: 18mm 18mm 18mm;
+  @bottom-left { content: "3D Fab Küng Caletti · info@3dfab.ch"; font-family: Helvetica, sans-serif; font-size: 8pt; color: #666; }
+  @bottom-right { content: counter(page); font-family: Helvetica, sans-serif; font-size: 8pt; color: #666; }
+}
+@page qrpage { size: A4; margin: 0; }
+body { page: invoice; font-family: Helvetica, Arial, sans-serif; font-size: 10pt; line-height: 1.45; color: #191d22; margin: 0; }
+table { width: 174mm; border-collapse: collapse; table-layout: fixed; }
+td { vertical-align: top; }
+.header { margin-bottom: 14mm; }
+.brand { width: 90mm; }
+.brand img { width: 58mm; height: 6.54mm; }
+.brand-name { margin-top: 3mm; font-size: 9pt; letter-spacing: 0.3pt; }
+.seller { width: 84mm; text-align: right; font-size: 8.5pt; color: #555; line-height: 1.6; }
+.addresses { margin-bottom: 10mm; }
+.addresses td { padding-right: 6mm; }
+.eyebrow { font-size: 8pt; color: #646970; margin-bottom: 2mm; }
+.customer-name { font-weight: bold; }
+.title { border-bottom: 2pt solid #facf0c; padding-bottom: 4mm; margin-bottom: 5mm; }
+h1 { font-size: 26pt; letter-spacing: -0.5pt; margin: 0; font-weight: bold; }
+.reference { font-size: 10pt; color: #555; margin-top: 1mm; overflow-wrap: break-word; }
+.paid { font-size: 10pt; font-weight: bold; text-align: right; padding-top: 4mm; }
+.meta { margin-bottom: 8mm; font-size: 9pt; }
+.meta td { padding-right: 3mm; }
+.meta-label { color: #646970; font-size: 8pt; margin-bottom: 1mm; }
+.items { -fs-table-paginate: paginate; font-size: 9pt; }
+.items thead { display: table-header-group; }
+.items th { text-align: left; background: #f2f3f4; border-bottom: 0.7pt solid #bfc3c7; padding: 3mm 2mm; font-size: 8pt; }
+.items td { padding: 3mm 2mm; border-bottom: 0.5pt solid #dfe2e5; }
+.items tr { page-break-inside: avoid; }
+.items .description { }
+.items .qty { text-align: center; }
+.items .numeric { text-align: right; white-space: nowrap; }
+.item-name { font-weight: bold; overflow-wrap: break-word; }
+.settings { margin-top: 2mm; font-size: 8pt; line-height: 1.6; color: #555; }
+.summary { page-break-inside: avoid; margin-top: 6mm; }
+.totals { margin-left: 69mm; width: 105mm; font-size: 9pt; }
+.totals td { padding: 2mm 0; }
+.totals .value { text-align: right; white-space: nowrap; }
+.totals .grand td { font-weight: bold; font-size: 13pt; border-top: 1pt solid #191d22; border-bottom: 1pt solid #191d22; padding: 3mm 0; }
+.notes { margin-top: 9mm; font-size: 9pt; }
+.notes p { margin: 0 0 2mm; }
+.muted { color: #646970; font-size: 8pt; }
+.qr-page { page: qrpage; page-break-before: always; position: relative; height: 296.9mm; }
+.qr-heading { padding: 20mm 18mm; }
+.qr-heading h1 { font-size: 20pt; }
+.qr-note { font-size: 10pt; width: 150mm; margin-top: 7mm; }
+.qr-slip { position: absolute; left: 0; top: 192mm; width: 210mm; height: 105mm; }
+.qr-slip svg { width: 210mm; height: 105mm; display: block; }
+</style>
 </head>
 <body>
 <div class="invoice-page">
-
-    <!-- Header -->
-    <table class="header-layout">
-        <tr>
-            <td class="logo-block">
-                <span class="logo-3d">3D</span> <span class="logo-fab">fab</span>
-                <div style="font-size: 14pt; font-weight: normal; margin-top: 4px; color: #111827;">Küng Caletti</div>
-            </td>
-            <td class="seller-block">
-                <div th:text="${sellerDisplayName}">3D Fab Switzerland</div>
-                <div th:text="${sellerAddressLine1}">Via G. pioda 29a - 6710 Biasca, Svizzera</div>
-                <div th:text="${sellerAddressLine2}">Lyss-Strasse 71 - 2560 Nidau, Svizzera</div>
-            </td>
-            <td class="website-block">
-                www.3d-fab.ch
-            </td>
-        </tr>
-    </table>
-
-    <!-- Document Title -->
-    <div class="doc-title">
-        <span th:if="${isConfirmation}">Conferma dell'ordine</span>
-        <span th:unless="${isConfirmation}">Fattura</span>
-        <span th:text="${invoiceNumber}">141052743</span>
-        <span th:unless="${isConfirmation}" style="color: #2e7d32; font-weight: bold; font-size: 18pt; padding-left: 15px;">PAGATO</span>
-    </div>
-
-    <!-- Details block (Meta and Customer) -->
-    <table class="details-layout">
-        <tr>
-            <td class="meta-container">
-                <table class="meta-table">
-                    <tr>
-                        <td class="meta-label">Data dell'ordine / fattura</td>
-                        <td class="meta-value" th:text="${invoiceDate}">07.03.2025</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Numero documento</td>
-                        <td class="meta-value" th:text="${invoiceNumber}">INV-2026-000123</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Data di scadenza</td>
-                        <td class="meta-value" th:text="${dueDate}">07.03.2025</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Metodo di pagamento</td>
-                        <td class="meta-value" th:text="${paymentMethodText}">QR / Bonifico oppure TWINT</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Valuta</td>
-                        <td class="meta-value">CHF</td>
-                    </tr>
-                </table>
-            </td>
-            <td class="customer-container">
-                <div style="font-weight: bold; margin-bottom: 2mm;">Indirizzo di fatturazione:</div>
-                <div th:text="${buyerDisplayName}">Joe Küng</div>
-                <div th:text="${buyerAddressLine1}">Via G.Pioda, 29a</div>
-                <div th:text="${buyerAddressLine2}">6710 biasca</div>
-                <div>Svizzera</div>
-                <br/>
-                <div th:if="${shippingDisplayName != null}">
-                    <div style="font-weight: bold; margin-bottom: 2mm;">Indirizzo di spedizione:</div>
-                    <div th:text="${shippingDisplayName}">Joe Küng</div>
-                    <div th:text="${shippingAddressLine1}">Via G.Pioda, 29a</div>
-                    <div th:text="${shippingAddressLine2}">6710 biasca</div>
-                    <div>Svizzera</div>
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    <!-- Items Table -->
-    <table class="line-items">
-        <thead>
-        <tr>
-            <th class="col-desc">Descrizione</th>
-            <th class="col-qty center">Quantità</th>
-            <th class="col-price right">Prezzo unitario</th>
-            <th class="col-total right">Prezzo incl.</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="lineItem : ${invoiceLineItems}">
-            <td class="item-desc" th:text="${lineItem.description}">Apple iPhone 16 Pro</td>
-            <td class="center" th:text="${lineItem.quantity}">1</td>
-            <td class="right" th:text="${lineItem.unitPriceFormatted}">968.55</td>
-            <td class="right" th:text="${lineItem.lineTotalFormatted}">1'047.00</td>
-        </tr>
-        </tbody>
-    </table>
-
-    <!-- Totals -->
-    <table class="totals-table">
-        <tr>
-            <td class="totals-label">Importo totale</td>
-            <td class="totals-value" th:text="${subtotalFormatted}">1'012.86</td>
-        </tr>
-        <tr>
-            <td class="totals-label">Totale di tutte le consegne e di tutti i servizi CHF</td>
-            <td class="totals-value" th:text="${grandTotalFormatted}">1'094.90</td>
-        </tr>
-        <tr class="no-border" th:if="${isConfirmation}">
-            <td class="totals-label">Importo dovuto</td>
-            <td class="totals-value" th:text="${grandTotalFormatted}">1'094.90</td>
-        </tr>
-        <tr class="no-border" th:unless="${isConfirmation}">
-            <td class="totals-label">Importo dovuto</td>
-            <td class="totals-value">CHF 0.00</td>
-        </tr>
-    </table>
-
-    <!-- Footer Notes -->
-    <table class="footer-layout">
-        <tr>
-            <td class="footer-label">Informazioni</td>
-            <td class="footer-text" th:text="${paymentTermsText}">
-                Appena riceviamo il pagamento l'ordine entra nella coda di stampa. Grazie per la fiducia.
-            </td>
-        </tr>
-        <tr>
-            <td class="footer-label">Generale</td>
-            <td class="footer-text">
-                Si applicano le nostre condizioni generali di contratto. Verifica i dettagli dell'ordine al ricevimento. Per assistenza, rispondi alla nostra email di conferma.
-            </td>
-        </tr>
-    </table>
-
+<table class="header"><colgroup><col style="width:90mm"/><col style="width:84mm"/></colgroup><tr>
+<td class="brand"><img src="invoice-logo.svg" alt="3D Fab"/><div class="brand-name">Küng Caletti</div></td>
+<td class="seller"><strong th:text="${sellerDisplayName}"></strong><br/><span th:text="${sellerAddressLine1}"></span><br/><span th:text="${sellerAddressLine2}"></span><br/><span th:text="${sellerEmail}"></span></td>
+</tr></table>
+<table class="addresses"><colgroup><col style="width:87mm"/><col style="width:87mm"/></colgroup><tr>
+<td><div class="eyebrow" th:text="${labels.billing}"></div><div class="customer-name" th:text="${buyerDisplayName}"></div><div th:text="${buyerAddressLine1}"></div><div th:text="${buyerAddressLine2}"></div></td>
+<td><div th:if="${shippingDisplayName != null}"><div class="eyebrow" th:text="${labels.shipping}"></div><div class="customer-name" th:text="${shippingDisplayName}"></div><div th:text="${shippingAddressLine1}"></div><div th:text="${shippingAddressLine2}"></div></div></td>
+</tr></table>
+<table class="title"><tr><td style="width:80%"><h1 th:text="${labels.invoice}"></h1><div class="reference" th:text="${invoiceNumber}"></div></td><td class="paid" th:unless="${isConfirmation}" th:text="${labels.paid}"></td></tr></table>
+<table class="meta"><colgroup><col style="width:52mm"/><col style="width:52mm"/><col style="width:70mm"/></colgroup><tr>
+<td><div class="meta-label" th:text="${labels.date}"></div><span th:text="${invoiceDate}"></span></td>
+<td><div class="meta-label" th:text="${labels.due}"></div><span th:text="${dueDate}"></span></td>
+<td><div class="meta-label" th:text="${labels.paymentMethod}"></div><span th:text="${paymentMethodText}"></span></td>
+</tr></table>
+<table class="items"><colgroup><col style="width:90mm"/><col style="width:16mm"/><col style="width:34mm"/><col style="width:34mm"/></colgroup><thead><tr>
+<th class="description" th:text="${labels.description}"></th><th class="qty" th:text="${labels.quantity}"></th><th class="numeric" th:text="${labels.unitPrice}"></th><th class="numeric" th:text="${labels.amount}"></th>
+</tr></thead><tbody><tr th:each="lineItem : ${invoiceLineItems}">
+<td><div class="item-name" th:text="${lineItem.description}"></div><div class="settings" th:if="${lineItem['printSettings'] != null}" th:text="${lineItem['printSettings']}"></div></td>
+<td class="qty" th:text="${lineItem.quantity}"></td><td class="numeric" th:text="${lineItem.unitPriceFormatted}"></td><td class="numeric" th:text="${lineItem.lineTotalFormatted}"></td>
+</tr></tbody></table>
+<div class="summary">
+<table class="totals"><colgroup><col style="width:65mm"/><col style="width:40mm"/></colgroup><tr class="grand"><td th:text="${labels.total}"></td><td class="value" th:text="${grandTotalFormatted}"></td></tr>
+<tr th:unless="${isConfirmation}"><td th:text="${labels.amountDue}"></td><td class="value">CHF 0.00</td></tr></table>
+<div class="notes"><p th:text="${paymentTermsText}"></p><p class="muted" th:text="${labels.notes}"></p><p th:if="${isConfirmation}" th:text="${labels.thanks}"></p></div>
 </div>
-
-<!-- QR Bill Page (only renders if QR data is passed) -->
-<div class="qr-only-page" th:if="${qrBillSvg != null}">
-    <table class="qr-only-layout">
-        <tr>
-            <td>
-                <div class="qr-bill-bottom" th:utext="${qrBillSvg}">
-                </div>
-            </td>
-        </tr>
-    </table>
 </div>
-
+<div class="qr-page" th:if="${qrBillSvg != null}">
+<div class="qr-heading"><img src="invoice-logo.svg" alt="3D Fab" style="width:58mm;height:6.54mm;margin-bottom:15mm;"/><h1 th:text="${labels.qrTitle}"></h1><div class="reference" th:text="${invoiceNumber}"></div><p class="qr-note" th:text="${labels.qrNote}"></p></div>
+<div class="qr-slip" th:utext="${qrBillSvg}"></div>
+</div>
 </body>
 </html>

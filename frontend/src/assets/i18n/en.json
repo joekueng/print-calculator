@@ -1175,6 +1175,8 @@
     "HERO_SUBTITLE": "We are here to help you. Fill in the form below for any request."
   },
   "CHECKOUT": {
+    "COLOR": "Color",
+    "ERR_UPDATE_ITEM": "Could not update the item. Check quantity and color and try again.",
     "TITLE": "Checkout",
     "SUBTITLE": "Complete your order by entering the shipping and payment details.",
     "CAD_SERVICE": "CAD service",

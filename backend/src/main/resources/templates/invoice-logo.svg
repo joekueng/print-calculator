@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="60 140 390 44" width="390px" height="44px">
+  <g transform="matrix(0.9999999999999999, 0, 0, 0.9999999999999999, 0, -7.105427357601002e-15)">
+    <rect x="60" y="140" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="60" y="150" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="80" y="160" width="40" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="60" y="170" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="60" y="180" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="140" y="140" width="45" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="140" y="150" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="140" y="160" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="140" y="170" width="60" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="140" y="180" width="45" height="4" style="paint-order: fill; stroke: rgb(0, 0, 0); stroke-linejoin: round; stroke-width: 1;"/>
+    <rect x="240" y="140" width="60" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="240" y="150" width="60" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="240" y="160" width="60" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="240" y="170" width="30" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="240" y="180" width="30" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="330" y="140" width="20" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="324.954" y="150" width="30" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="320" y="160" width="40" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="315" y="170" width="50" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="310" y="180" width="60" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="390" y="140" width="50" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="390" y="150" width="60" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="390" y="160" width="40" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="390" y="170" width="60" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+    <rect x="390" y="180" width="50" height="4" style="paint-order: fill; stroke-linejoin: round; stroke-width: 1; fill: rgb(250, 207, 12); stroke: rgb(250, 207, 12);"/>
+  </g>
+</svg>

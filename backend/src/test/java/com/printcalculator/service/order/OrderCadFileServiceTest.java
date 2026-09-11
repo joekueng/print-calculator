@@ -179,6 +179,33 @@ class OrderCadFileServiceTest {
     }
 
     @Test
+    void zipNamesRemainUniqueWhenAnOriginalNameMatchesAGeneratedSuffix() throws Exception {
+        UUID orderId = UUID.randomUUID();
+        Order order = buildCadOrder(orderId);
+        order.setPaidAt(java.time.OffsetDateTime.now());
+        var first = buildBaseItem(order, UUID.randomUUID(), "part.stl");
+        var second = buildBaseItem(order, UUID.randomUUID(), "part.stl");
+        var third = buildBaseItem(order, UUID.randomUUID(), "part-2.stl");
+        when(orderRepo.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderItemRepo.findByOrder_Id(orderId)).thenReturn(List.of(first, second, third));
+        when(deliverableFileRepo.findByOrder_IdOrderByCreatedAtAsc(orderId)).thenReturn(List.of());
+        when(storageService.loadAsResource(org.mockito.ArgumentMatchers.any(Path.class)))
+                .thenReturn(new ByteArrayResource("solid".getBytes()));
+        var response = service.downloadCustomerCadFiles(orderId);
+        var output = new ByteArrayOutputStream();
+        ((StreamingResponseBody) response.getBody()).writeTo(output);
+        java.util.Set<String> names = new java.util.HashSet<>();
+        try (var zip = new ZipInputStream(new ByteArrayInputStream(output.toByteArray()))) {
+            ZipEntry entry;
+            while ((entry = zip.getNextEntry()) != null) {
+                org.junit.jupiter.api.Assertions.assertTrue(names.add(entry.getName()));
+                assertArrayEquals("solid".getBytes(), zip.readAllBytes());
+            }
+        }
+        assertEquals(3, names.size());
+    }
+
+    @Test
     void uploadAdminCadFiles_shouldStoreFilesUnderOrderCadDeliverables() throws Exception {
         UUID orderId = UUID.randomUUID();
         UUID deliverableId = UUID.randomUUID();

@@ -53,30 +53,12 @@
             }
 
             <div class="card-body">
-              <div class="card-controls">
-                <div class="qty-group">
-                  <label>{{ "CALC.QTY_SHORT" | translate }}</label>
-                  <input
-                    type="number"
-                    min="1"
-                    [value]="item.quantity"
-                    (input)="updateItemQuantity(i, $event)"
-                    class="qty-input"
-                    (click)="$event.stopPropagation()"
-                  />
-                </div>
-
-                <div class="color-group">
-                  <label>{{ "CALC.COLOR_LABEL" | translate }}</label>
-                  <app-color-selector
-                    [selectedColor]="item.color"
-                    [selectedVariantId]="item.filamentVariantId ?? null"
-                    [variants]="getVariantsForMaterial(item.material)"
-                    (colorSelected)="updateItemColor(i, $event)"
-                  >
-                  </app-color-selector>
-                </div>
-              </div>
+              <app-print-item-controls
+                [quantity]="item.quantity" [color]="item.color"
+                [variantId]="item.filamentVariantId ?? null"
+                [variants]="getVariantsForMaterial(item.material)"
+                (quantityChange)="updateItemQuantityValue(i, $event)"
+                (colorChange)="updateItemColor(i, $event)" />
 
               <button
                 type="button"

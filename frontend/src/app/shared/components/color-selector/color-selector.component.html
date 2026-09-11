@@ -1,16 +1,20 @@
 <div class="color-selector-container">
-  @if (isOpen()) {
+  @if (isOpen() && !disabled()) {
     <div class="backdrop" (click)="close()"></div>
   }
 
-  <div
+  <button
+    type="button"
+    [disabled]="disabled()"
+    [attr.aria-label]="getCurrentLabel() | translate"
+    [attr.aria-expanded]="isOpen() && !disabled()"
     class="color-circle trigger"
     [style.background-color]="getCurrentHex()"
     [title]="getCurrentLabel() | translate"
     (click)="toggleOpen()"
-  ></div>
+  ></button>
 
-  @if (isOpen()) {
+  @if (isOpen() && !disabled()) {
     <div class="color-popup">
       @for (category of categories(); track category.name) {
         <div class="category">

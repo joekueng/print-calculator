@@ -1247,6 +1247,8 @@
     "REMOVE_FILE": "Rimuovi file allegato"
   },
   "CHECKOUT": {
+    "COLOR": "Colore",
+    "ERR_UPDATE_ITEM": "Impossibile aggiornare il pezzo. Verifica quantità e colore e riprova.",
     "TITLE": "Checkout",
     "SUBTITLE": "Completa il tuo ordine inserendo i dettagli per la spedizione e il pagamento.",
     "CAD_SERVICE": "Servizio CAD",

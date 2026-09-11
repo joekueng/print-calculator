@@ -98,6 +98,10 @@ public class QuoteLineItem {
     @Column(name = "supports_enabled")
     private Boolean supportsEnabled;
 
+    @ColumnDefault("false")
+    @Column(name = "requires_split_printing")
+    private Boolean requiresSplitPrinting = false;
+
     @Column(name = "bounding_box_x_mm", precision = 10, scale = 3)
     private BigDecimal boundingBoxXMm;
 
@@ -149,6 +153,9 @@ public class QuoteLineItem {
         if (lineItemType == null || lineItemType.isBlank()) {
             lineItemType = "PRINT_FILE";
         }
+        if (requiresSplitPrinting == null) {
+            requiresSplitPrinting = false;
+        }
         if ((displayName == null || displayName.isBlank()) && originalFilename != null && !originalFilename.isBlank()) {
             displayName = originalFilename;
         } else if ((displayName == null || displayName.isBlank()) && shopProductName != null && !shopProductName.isBlank()) {
@@ -161,6 +168,9 @@ public class QuoteLineItem {
         updatedAt = OffsetDateTime.now();
         if (lineItemType == null || lineItemType.isBlank()) {
             lineItemType = "PRINT_FILE";
+        }
+        if (requiresSplitPrinting == null) {
+            requiresSplitPrinting = false;
         }
         if ((displayName == null || displayName.isBlank()) && originalFilename != null && !originalFilename.isBlank()) {
             displayName = originalFilename;
@@ -351,6 +361,14 @@ public class QuoteLineItem {
 
     public void setSupportsEnabled(Boolean supportsEnabled) {
         this.supportsEnabled = supportsEnabled;
+    }
+
+    public Boolean getRequiresSplitPrinting() {
+        return requiresSplitPrinting;
+    }
+
+    public void setRequiresSplitPrinting(Boolean requiresSplitPrinting) {
+        this.requiresSplitPrinting = requiresSplitPrinting;
     }
 
     public BigDecimal getBoundingBoxXMm() {

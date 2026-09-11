@@ -1,40 +1,40 @@
 # Print Calculator (OrcaSlicer Edition)
 
-Un'applicazione Full Stack (Angular + Spring Boot) per calcolare preventivi di stampa 3D precisi utilizzando **OrcaSlicer** in modalità headless.
+A full-stack application (Angular + Spring Boot) for calculating accurate 3D-printing quotes with **OrcaSlicer** running headlessly.
 
-## Funzionalità
+## Features
 
-*   **Slicing Reale**: Usa il motore di OrcaSlicer per stimare tempo e materiale, garantendo la massima precisione.
-*   **Preventivazione Database-Driven**: Calcolo basato su politiche di prezzo configurabili nel database (costo materiale, ammortamento macchina a scaglioni, energia e markup).
-*   **Visualizzazione 3D**: Anteprima del file STL caricato tramite Three.js.
-*   **Multi-Profilo**: Supporto per diverse stampanti, materiali e profili di processo.
+* **Real slicing:** Uses the OrcaSlicer engine to estimate print time and material as accurately as possible.
+* **Database-driven quoting:** Calculates prices from configurable database policies for material cost, tiered machine depreciation, electricity, and markup.
+* **3D preview:** Displays uploaded STL files with Three.js.
+* **Multiple profiles:** Supports different printers, materials, and process profiles.
 
-## Stack Tecnologico
+## Technology stack
 
 - **Backend**: Java 21, Spring Boot 3.4, PostgreSQL.
 - **Frontend**: Angular 19, Angular Material, Three.js.
 - **Slicer**: OrcaSlicer (invocato via CLI).
 
-## Prerequisiti
+## Prerequisites
 
-*   **Java 21** installato.
-*   **Node.js 22** e **npm** installati.
-*   **PostgreSQL** attivo.
-*   **OrcaSlicer** installato sul sistema.
-*   **FFmpeg** installato sul sistema o presente nell'immagine Docker del backend.
+* **Java 21** installed.
+* **Node.js 22** and **npm** installed.
+* A running **PostgreSQL** instance.
+* **OrcaSlicer** installed on the system.
+* **FFmpeg** installed on the system or included in the backend Docker image.
 
-## Avvio Rapido
+## Quick start
 
 ### 1. Database
-Crea un database PostgreSQL chiamato `printcalc`. Lo schema viene gestito dal progetto tramite configurazione JPA/SQL del repository.
+Create a PostgreSQL database named `printcalc`. The project manages the schema through its JPA/SQL configuration.
 
 ### 2. Backend
-Configura il percorso di OrcaSlicer in `backend/src/main/resources/application.properties` o tramite la variabile d'ambiente `SLICER_PATH`. Per il media service pubblico puoi configurare anche:
+Configure the OrcaSlicer path in `backend/src/main/resources/application.properties` or with the `SLICER_PATH` environment variable. The public media service also supports:
 
-- `MEDIA_STORAGE_ROOT` per la root `storage_media` usata dal backend (`original/`, `public/`, `private/`)
-- `SHOP_STORAGE_ROOT` per la root `storage_shop` usata dal backend per i modelli dei prodotti shop
-- `MEDIA_FFMPEG_PATH` per il binario `ffmpeg` (nel deploy Docker default: `/usr/local/bin/ffmpeg-media`)
-- `MEDIA_UPLOAD_MAX_FILE_SIZE_BYTES` per il limite per asset immagine
+- `MEDIA_STORAGE_ROOT` — the backend `storage_media` root (`original/`, `public/`, `private/`)
+- `SHOP_STORAGE_ROOT` — the backend `storage_shop` root for shop product models
+- `MEDIA_FFMPEG_PATH` — the `ffmpeg` binary (Docker deployment default: `/usr/local/bin/ffmpeg-media`)
+- `MEDIA_UPLOAD_MAX_FILE_SIZE_BYTES` — the maximum image-asset size
 
 ```bash
 cd backend
@@ -48,31 +48,31 @@ npm install
 npm start
 ```
 
-Accedi a [http://localhost:4200](http://localhost:4200).
+Open [http://localhost:4200](http://localhost:4200).
 
-## Configurazione Prezzi
+## Price configuration
 
-I prezzi non sono più gestiti tramite variabili d'ambiente fisse ma tramite tabelle nel database:
-- `pricing_policy`: Definisce markup, fee fissi e costi elettrici.
-- `pricing_policy_machine_hour_tier`: Definisce i costi orari delle macchine in base alla durata della stampa.
-- `printer_machine`: Anagrafica stampanti e consumi energetici.
-- `filament_material_type` / `filament_variant`: Listino prezzi materiali.
+Prices are managed in database tables rather than fixed environment variables:
+- `pricing_policy`: Defines markup, fixed fees, and electricity cost.
+- `pricing_policy_machine_hour_tier`: Defines machine hourly costs by print-duration tier.
+- `printer_machine`: Printer catalogue and energy consumption.
+- `filament_material_type` / `filament_variant`: Material price list.
 
-## Struttura del Progetto
+## Project structure
 
-*   `/backend`: API Spring Boot.
-*   `/frontend`: Applicazione Angular.
-*   `/backend/profiles`: Contiene i file di configurazione per OrcaSlicer.
-*   `/storage_media`: Originali e varianti media pubbliche/private su filesystem.
-*   `/storage_shop`: Modelli e file prodotti dello shop.
+* `/backend`: Spring Boot API.
+* `/frontend`: Angular application.
+* `/backend/profiles`: OrcaSlicer configuration files.
+* `/storage_media`: Original files and public/private media variants on the filesystem.
+* `/storage_shop`: Shop product models and files.
 
-## Media pubblici
+## Public media
 
-Il backend salva sempre l'originale in `storage_media/original/` e precomputa le varianti pubbliche in `storage_media/public/`. La cartella `storage_media/private/` è predisposta per asset non pubblici.
+The backend always stores the original in `storage_media/original/` and pre-generates public variants in `storage_media/public/`. `storage_media/private/` is reserved for non-public assets.
 
-Nel deploy Docker i volumi attesi sono `/mnt/cache/appdata/print-calculator/${ENV}/storage_media:/app/storage_media` e `/mnt/cache/appdata/print-calculator/${ENV}/storage_shop:/app/storage_shop`.
+In Docker deployments, the expected volumes are `/mnt/cache/appdata/print-calculator/${ENV}/storage_media:/app/storage_media` and `/mnt/cache/appdata/print-calculator/${ENV}/storage_shop:/app/storage_shop`.
 
-Nginx non deve passare dal backend per i file pubblici. Configurazione attesa:
+Nginx must serve public files directly rather than proxying them through the backend. Expected configuration:
 
 ```nginx
 location /media/ {
@@ -80,7 +80,7 @@ location /media/ {
 }
 ```
 
-Usage key iniziali previste per frontend:
+Initial frontend usage keys:
 
 - `HOME_SECTION / shop-gallery`
 - `HOME_SECTION / founders-gallery`
@@ -91,22 +91,22 @@ Usage key iniziali previste per frontend:
 - `HOME_PROJECT / <home-project-slug>`
 - `ABOUT_MEMBER / joe`
 - `ABOUT_MEMBER / matteo`
-- riservati per estensioni future: `SHOP_PRODUCT`, `SHOP_CATEGORY`, `SHOP_GALLERY`
+- Reserved for future extensions: `SHOP_PRODUCT`, `SHOP_CATEGORY`, `SHOP_GALLERY`
 
-Operativamente:
+Operationally:
 
-- carica i file dal media admin endpoint del backend
-- associa ogni asset con `POST /api/admin/media/usages`
-- per `ABOUT_MEMBER` imposta `isPrimary=true` sulla foto principale del membro
-- home e about leggono da `GET /api/public/media/usages?usageType=...&usageKey=...`
-- il frontend usa `<picture>` e preferisce AVIF/WEBP con fallback JPEG, senza usare l'originale
-- nel back-office frontend la gestione operativa della home passa dalla pagina `admin/home-media`
+- Upload files through the backend media-admin endpoint.
+- Associate each asset with `POST /api/admin/media/usages`.
+- For `ABOUT_MEMBER`, set `isPrimary=true` on the member's primary photo.
+- Home and About load assets from `GET /api/public/media/usages?usageType=...&usageKey=...`.
+- The frontend uses `<picture>`, prefers AVIF/WEBP with JPEG fallback, and does not use the original asset.
+- The frontend back office manages home media from `admin/home-media`.
 
-## QR tracking e geolocalizzazione
+## QR tracking and geolocation
 
-Il tracking QR deduce la posizione solo dall'IP pubblico visto dal backend tramite GeoLite2 City. Non usa GPS: citta e regione sono sempre stime, mentre il paese e in genere piu affidabile.
+QR tracking infers a location only from the public IP observed by the backend through GeoLite2 City. It does not use GPS: city and region are estimates, while the country is generally more reliable.
 
-Per avere location affidabili dietro reverse proxy, Nginx deve inoltrare l'IP reale e il backend deve fidarsi solo della rete del proxy:
+For reliable locations behind a reverse proxy, Nginx must forward the real IP and the backend must trust only the proxy network:
 
 ```nginx
 location /api/ {
@@ -119,14 +119,27 @@ location /api/ {
 }
 ```
 
-Configurazione runtime attesa:
+Expected runtime configuration:
 
 - `APP_QR_TRUST_PROXY_HEADERS=true`
-- `APP_QR_TRUSTED_PROXY_NETWORKS=172.16.0.0/12` se il backend riceve richieste dal bridge Docker, oppure la CIDR esatta mostrata nei log `remoteAddrNormalized`
+- `APP_QR_TRUSTED_PROXY_NETWORKS=172.16.0.0/12` if the backend receives requests from the Docker bridge, or the exact CIDR shown in `remoteAddrNormalized` logs
 - `APP_QR_GEO_ENABLED=true`
-- `APP_QR_GEO_DB_PATH=/app/cache/geoip/GeoLite2-City.mmdb` con il file montato e leggibile nel container
+- `APP_QR_GEO_DB_PATH=/app/cache/geoip/GeoLite2-City.mmdb` with the file mounted and readable in the container
 
-`APP_QR_DEBUG_LOGGING=true` aiuta a diagnosticare `remoteAddr`, header proxy e IP risolto, ma registra IP nei log: usarlo solo durante il debug.
+`APP_QR_DEBUG_LOGGING=true` helps diagnose `remoteAddr`, proxy headers, and the resolved IP, but logs IP addresses. Use it only while debugging.
+
+## LinkedIn company posts
+
+The backend refreshes the latest company posts every day at 04:00 Europe/Zurich and exposes its cached result at `GET /api/public/linkedin/posts`. An authenticated administrator can inspect the synchronization status and start it immediately from the LinkedIn back-office page. The About page rotates the cached posts every 30 seconds and falls back to two localized entries when LinkedIn is unavailable or not configured.
+
+Automatic synchronization requires a LinkedIn Developer application approved for the Community Management API, the `r_organization_social` permission, and an authenticated administrator of the company page. Configure these runtime variables without committing their values:
+
+- `LINKEDIN_ACCESS_TOKEN` — LinkedIn OAuth access token
+- `LINKEDIN_ORGANIZATION_URN` — company identifier such as `urn:li:organization:123456`
+- `LINKEDIN_SYNC_CRON` — Spring cron expression, default `0 0 4 * * *`
+- `LINKEDIN_SYNC_ZONE` — cron time zone, default `Europe/Zurich`
+- `LINKEDIN_POST_COUNT` — cached post count, default `5`
+- `LINKEDIN_API_VERSION` — version header, default `202608`
 
 ## License
 
@@ -138,14 +151,14 @@ See [LICENSE](./LICENSE).
 
 ## Troubleshooting
 
-### Percorso OrcaSlicer
-Assicurati che `slicer.path` punti al binario corretto. Su macOS è solitamente `/Applications/OrcaSlicer.app/Contents/MacOS/OrcaSlicer`. Su Linux è il percorso all'AppImage (estratta o meno).
+### OrcaSlicer path
+Ensure that `slicer.path` points to the correct binary. On macOS it is usually `/Applications/OrcaSlicer.app/Contents/MacOS/OrcaSlicer`. On Linux it is the path to the AppImage, extracted or otherwise.
 
-### FFmpeg e media pubblici
-Verifica che `MEDIA_FFMPEG_PATH` punti a un `ffmpeg` con supporto JPEG, WebP e AVIF (encoder + muxer AVIF). Nel container backend il default è `/usr/local/bin/ffmpeg-media`: usa `/usr/bin/ffmpeg` se già compatibile, altrimenti installa un fallback statico con supporto AVIF. Se gli URL media restituiti dalle API admin non sono raggiungibili, controlla che `APP_FRONTEND_BASE_URL` punti al dominio corretto, che `location /media/` sia esposto da Nginx e che il volume `storage_media` sia montato correttamente.
+### FFmpeg and public media
+Check that `MEDIA_FFMPEG_PATH` points to an `ffmpeg` build with JPEG, WebP, and AVIF support (AVIF encoder and muxer). The backend container default is `/usr/local/bin/ffmpeg-media`; use `/usr/bin/ffmpeg` if it is compatible, otherwise install a static AVIF-capable fallback. If media URLs returned by admin APIs are unreachable, verify that `APP_FRONTEND_BASE_URL` uses the correct domain, Nginx exposes `location /media/`, and the `storage_media` volume is mounted correctly.
 
 ### Database connection
-Verifica le credenziali in `application.properties`. Se usi Docker, puoi passare `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` come variabili d'ambiente.
+Check the credentials in `application.properties`. With Docker, you can supply `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` as environment variables.
 
-### Deploy e traduzioni OpenAI
-Nel deploy Gitea la chiave OpenAI deve stare nel secret `OPENAI_API_KEY`. La pipeline la aggiunge al file `.env` dell'ambiente durante il deploy e il container backend la riceve come variabile runtime. I file `deploy/envs/*.env` restano per i valori specifici di `dev/int/prod`.
+### Deployment and OpenAI translations
+For Gitea deployment, the OpenAI key must be in the `OPENAI_API_KEY` secret. The pipeline adds it to the environment `.env` file during deployment and the backend container receives it as a runtime variable. `deploy/envs/*.env` remains for `dev`/`int`/`prod`-specific values.

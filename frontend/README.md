@@ -1,12 +1,12 @@
 # Print Calculator Frontend
 
-This is a modern Angular application designed with a Clean Architecture approach (Core, Shared, Features) and Design Tokens for easy theming.
+This is a modern Angular standalone application organised around Core, Shared, and Feature areas, with design tokens for easy theming.
 
 ## Project Structure
 
 - **Core**: Singleton services, global layout components (Navbar, Footer), guards.
 - **Shared**: Reusable dumb UI components (Buttons, Cards, Inputs). No business logic.
-- **Features**: Lazy-loaded modules (Calculator, Shop, About). Each contains its own pages, components, and services.
+- **Features**: Routed product areas (Calculator, Shop, About, Admin, Checkout, and more). Each contains its own pages, components, and services.
 - **Styles**: Design tokens and theming layer.
 
 ## Getting Started
@@ -47,7 +47,10 @@ The application uses CSS Variables defined in `src/styles/tokens.scss` and mappe
 ## Internationalization (i18n)
 
 Translations are stored in `src/assets/i18n/`.
-- `it.json` (Italian - Default)
-- `en.json` (English)
 
-To add a language, create the JSON file and update `LanguageService` in `src/app/core/services/language.service.ts`.
+- `it.json` (Italian, the default and fallback locale)
+- `en.json` (English)
+- `de.json` (German)
+- `fr.json` (French)
+
+To add a language, create the JSON file, update the supported-language types and `LanguageService` in `src/app/core/services/language.service.ts`, and update the static translation loader. Run `npm run check:i18n` before committing.

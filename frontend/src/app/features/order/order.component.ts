@@ -48,6 +48,7 @@ interface PublicOrderItem {
   infillPercent?: number;
   infillPattern?: string;
   supportsEnabled?: boolean;
+  requiresSplitPrinting?: boolean;
   quantity: number;
   printTimeSeconds?: number;
   materialGrams?: number;
@@ -65,8 +66,11 @@ interface PublicOrder {
   shippingCostChf?: number;
   setupCostChf?: number;
   totalChf?: number;
+  isCadOrder?: boolean;
   cadHours?: number;
   cadTotalChf?: number;
+  cadFileCount?: number;
+  cadFileDownloadAvailable?: boolean;
   items?: PublicOrderItem[];
 }
 
@@ -141,6 +145,33 @@ export class OrderComponent implements OnInit {
         downloadBlobInBrowser(blob, `qr-invoice-${orderNumber}.pdf`);
       },
       error: (err) => console.error('Failed to download QR invoice', err),
+    });
+  }
+
+  downloadCadFiles(): void {
+    if (!this.isBrowser) {
+      return;
+    }
+    const orderId = this.orderId;
+    if (!orderId) return;
+
+    this.quoteService.getOrderCadFiles(orderId).subscribe({
+      next: (response) => {
+        const blob = response.body;
+        if (!blob) {
+          return;
+        }
+        const order = this.order();
+        const filename =
+          this.filenameFromContentDisposition(
+            response.headers.get('content-disposition'),
+          ) ?? this.fallbackCadDownloadName(order, orderId);
+        downloadBlobInBrowser(blob, filename);
+      },
+      error: (err) => {
+        console.error('Failed to download CAD files', err);
+        this.error.set('ORDER.ERR_DOWNLOAD_CAD_FILES');
+      },
     });
   }
 
@@ -380,5 +411,37 @@ export class OrderComponent implements OnInit {
       typeof value === 'string' &&
       /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)
     );
+  }
+
+  private filenameFromContentDisposition(header: string | null): string | null {
+    if (!header) {
+      return null;
+    }
+
+    const encodedMatch = /filename\*=UTF-8''([^;]+)/i.exec(header);
+    if (encodedMatch?.[1]) {
+      try {
+        return decodeURIComponent(encodedMatch[1].trim());
+      } catch {
+        return encodedMatch[1].trim();
+      }
+    }
+
+    const quotedMatch = /filename="([^"]+)"/i.exec(header);
+    if (quotedMatch?.[1]) {
+      return quotedMatch[1].trim();
+    }
+
+    const plainMatch = /filename=([^;]+)/i.exec(header);
+    return plainMatch?.[1]?.trim() || null;
+  }
+
+  private fallbackCadDownloadName(
+    order: PublicOrder | null,
+    orderId: string,
+  ): string {
+    const orderNumber = order?.orderNumber ?? this.extractOrderNumber(orderId);
+    const extension = (order?.cadFileCount ?? 0) > 1 ? 'zip' : 'stl';
+    return `cad-files-${orderNumber}.${extension}`;
   }
 }

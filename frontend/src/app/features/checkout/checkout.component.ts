@@ -16,7 +16,12 @@ import {
 } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { QuoteEstimatorService } from '../calculator/services/quote-estimator.service';
+import {
+  MaterialOption,
+  VariantOption,
+  QuoteEstimatorService,
+} from '../calculator/services/quote-estimator.service';
+import { PrintItemControlsComponent } from '../../shared/components/print-item-controls/print-item-controls.component';
 import { AppInputComponent } from '../../shared/components/app-input/app-input.component';
 import { AppButtonComponent } from '../../shared/components/app-button/app-button.component';
 import { AppCardComponent } from '../../shared/components/app-card/app-card.component';
@@ -43,6 +48,7 @@ import {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    PrintItemControlsComponent,
     TranslateModule,
     AppInputComponent,
     AppButtonComponent,
@@ -66,6 +72,9 @@ export class CheckoutComponent implements OnInit {
   sessionId: string | null = null;
   loading = true;
   error: string | null = null;
+  itemEditError = signal(false);
+  updatingItem = signal(false);
+  materialOptions = signal<MaterialOption[]>([]);
   isSubmitting = signal(false); // Add signal for submit state
   quoteSession = signal<any>(null); // Add signal for session details
   previewFiles = signal<Record<string, File>>({});
@@ -214,8 +223,68 @@ export class CheckoutComponent implements OnInit {
     });
   }
 
+  orderableItems(session: any): any[] {
+    return Array.isArray(session?.items)
+      ? session.items.filter((item: any) => item?.status !== 'REVIEW_REQUIRED')
+      : [];
+  }
+
   isCadSession(): boolean {
     return this.isCadSessionData(this.quoteSession());
+  }
+
+  cadVariants(item: { materialCode?: string }): VariantOption[] {
+    const materialCode = (
+      item.materialCode ??
+      this.quoteSession()?.session?.materialCode ??
+      ''
+    )
+      .trim()
+      .toUpperCase();
+    return (
+      this.materialOptions().find(
+        (material) => material.code.trim().toUpperCase() === materialCode,
+      )?.variants ?? []
+    );
+  }
+
+  updateCadItem(
+    item: { id: string; quantity: number; filamentVariantId: number },
+    quantity: number | string,
+    variantId: number | string,
+  ): void {
+    if (!this.sessionId || this.updatingItem() || this.isSubmitting()) return;
+    const parsedQuantity = Number(quantity);
+    const parsedVariant = Number(variantId);
+    if (
+      !Number.isInteger(parsedQuantity) ||
+      parsedQuantity < 1 ||
+      parsedQuantity > 2147483647 ||
+      !parsedVariant
+    ) {
+      this.itemEditError.set(true);
+      this.error = 'CHECKOUT.ERR_UPDATE_ITEM';
+      return;
+    }
+    this.updatingItem.set(true);
+    this.error = null;
+    this.quoteService
+      .updateCadCheckoutItem(this.sessionId, item.id, {
+        quantity: parsedQuantity,
+        filamentVariantId: parsedVariant,
+      })
+      .subscribe({
+        next: (session) => {
+          this.quoteSession.set(session);
+          this.itemEditError.set(false);
+          this.updatingItem.set(false);
+        },
+        error: () => {
+          this.itemEditError.set(true);
+          this.error = 'CHECKOUT.ERR_UPDATE_ITEM';
+          this.updatingItem.set(false);
+        },
+      });
   }
 
   cadRequestId(): string | null {
@@ -249,6 +318,7 @@ export class CheckoutComponent implements OnInit {
       {
         labelKey: 'CHECKOUT.SHIPPING',
         amount: session?.shippingCostChf ?? 0,
+        visible: !this.shippingUnavailable(),
       },
     ];
   }
@@ -392,6 +462,7 @@ export class CheckoutComponent implements OnInit {
   private loadMaterialColorPalette(): void {
     this.quoteService.getOptions().subscribe({
       next: (options) => {
+        this.materialOptions.set(options.materials);
         this.variantHexById.clear();
         this.variantHexByColorName.clear();
 
@@ -474,8 +545,21 @@ export class CheckoutComponent implements OnInit {
     this.closePreview();
   }
 
+  shippingUnavailable(): boolean {
+    const status: string | undefined =
+      this.quoteSession()?.shippingQuote?.status;
+    return status === 'PENDING' || status === 'MANUAL_QUOTE';
+  }
+
   onSubmit() {
-    if (this.checkoutForm.invalid) {
+    if (
+      this.checkoutForm.invalid ||
+      this.shippingUnavailable() ||
+      this.updatingItem() ||
+      this.itemEditError() ||
+      this.isSubmitting() ||
+      this.loading
+    ) {
       return;
     }
 
@@ -519,6 +603,7 @@ export class CheckoutComponent implements OnInit {
             countryCode: formVal.shippingAddress.countryCode,
           },
       shippingSameAsBilling: formVal.shippingSameAsBilling,
+      expectedShippingCostChf: this.quoteSession()?.shippingCostChf,
       language: this.languageService.selectedLang(),
       acceptTerms: formVal.acceptLegal,
       acceptPrivacy: formVal.acceptLegal,

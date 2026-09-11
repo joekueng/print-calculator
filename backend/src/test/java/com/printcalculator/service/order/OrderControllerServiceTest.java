@@ -14,16 +14,13 @@ import com.printcalculator.service.payment.TwintPaymentService;
 import com.printcalculator.service.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 
 import java.math.BigDecimal;
-import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,12 +28,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,66 +54,11 @@ class OrderControllerServiceTest {
     private PaymentService paymentService;
     @Mock
     private PaymentRepository paymentRepo;
+    @Mock
+    private OrderCadFileService orderCadFileService;
 
     @InjectMocks
     private OrderControllerService service;
-
-    @Test
-    void uploadOrderItemFile_withOrderMismatch_shouldReturnFalse() throws Exception {
-        UUID expectedOrderId = UUID.randomUUID();
-        UUID wrongOrderId = UUID.randomUUID();
-        UUID orderItemId = UUID.randomUUID();
-
-        Order order = new Order();
-        order.setId(expectedOrderId);
-
-        OrderItem item = new OrderItem();
-        item.setId(orderItemId);
-        item.setOrder(order);
-        item.setStoredRelativePath("PENDING");
-
-        when(orderItemRepo.findById(orderItemId)).thenReturn(Optional.of(item));
-
-        MockMultipartFile file = new MockMultipartFile("file", "part.stl", "model/stl", "solid".getBytes());
-
-        boolean result = service.uploadOrderItemFile(wrongOrderId, orderItemId, file);
-
-        assertFalse(result);
-        verify(storageService, never()).store(any(MockMultipartFile.class), any(Path.class));
-        verify(orderItemRepo, never()).save(any(OrderItem.class));
-    }
-
-    @Test
-    void uploadOrderItemFile_withPendingPath_shouldStoreAndPersistMetadata() throws Exception {
-        UUID orderId = UUID.randomUUID();
-        UUID orderItemId = UUID.randomUUID();
-
-        Order order = new Order();
-        order.setId(orderId);
-
-        OrderItem item = new OrderItem();
-        item.setId(orderItemId);
-        item.setOrder(order);
-        item.setStoredRelativePath("PENDING");
-
-        when(orderItemRepo.findById(orderItemId)).thenReturn(Optional.of(item));
-
-        MockMultipartFile file = new MockMultipartFile("file", "model.STL", "model/stl", "mesh".getBytes());
-
-        boolean result = service.uploadOrderItemFile(orderId, orderItemId, file);
-
-        assertTrue(result);
-
-        ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
-        verify(storageService).store(eq(file), pathCaptor.capture());
-        Path storedPath = pathCaptor.getValue();
-        assertTrue(storedPath.startsWith(Path.of("orders", orderId.toString(), "3d-files", orderItemId.toString())));
-
-        assertTrue(item.getStoredFilename().endsWith(".stl"));
-        assertEquals(file.getSize(), item.getFileSizeBytes());
-        assertEquals("model/stl", item.getMimeType());
-        verify(orderItemRepo).save(item);
-    }
 
     @Test
     void getOrder_withShippedStatus_shouldRedactPersonalData() {

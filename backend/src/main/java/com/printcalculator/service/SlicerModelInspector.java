@@ -157,10 +157,6 @@ final class SlicerModelInspector {
     static String buildOutOfVolumeMessage(String machineName,
                                           Optional<ModelDimensions> modelDimensions,
                                           Optional<PrintableVolume> printableVolume) {
-        String machineLabel = machineName != null && !machineName.isBlank()
-                ? machineName
-                : "the selected printer";
-
         List<String> details = new ArrayList<>();
         modelDimensions.ifPresent(dimensions -> details.add(
                 "model size " + formatMillimeters(dimensions.xMm())
@@ -173,13 +169,11 @@ final class SlicerModelInspector {
                         + " x " + formatMillimeters(volume.zMm()) + " mm"
         ));
 
-        StringBuilder message = new StringBuilder(
-                "This model could not be placed fully inside the printer volume for " + machineLabel
-        );
+        StringBuilder message = new StringBuilder("This model could not be placed fully inside the printer volume");
         if (!details.isEmpty()) {
             message.append(" (").append(String.join("; ", details)).append(")");
         }
-        message.append(". Reduce the model size or request a consultation.");
+        message.append(". Accept split printing to calculate it anyway, reduce the model size, or request a custom quote.");
         return message.toString();
     }
 

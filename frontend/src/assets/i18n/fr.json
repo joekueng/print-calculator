@@ -12,7 +12,8 @@
     "PRIVACY": "Confidentialité",
     "TERMS": "Conditions générales",
     "MATERIALS": "Qualité & matériaux",
-    "CONTACT": "Contactez-nous"
+    "CONTACT": "Contactez-nous",
+    "LINKEDIN": "3D Fab sur LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -81,6 +82,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG pour le contact alimentaire",
+      "DESCRIPTION": "Nous proposons aussi une variante PETG d’Extrudr pour les projets en contact avec des aliments. La fiche réglementaire Extrudr déclare la conformité du matériau aux règlements CE 1935/2004 et UE 10/2011.",
+      "NOTE": "Cela ne certifie pas automatiquement la pièce imprimée : son aptitude dépend de l’aliment, de la température, de la durée du contact et des conditions d’impression et de nettoyage. Indiquez-nous l’usage prévu pour que nous puissions l’évaluer.",
+      "SOURCE_LABEL": "Extrudr PETG — fiche réglementaire (PDF)"
+    },
     "HERO": {
       "TITLE": "Qualité & matériaux",
       "SUBTITLE_PREFIX": "Guide technique sur une selection de materiaux. Comparez la qualite d'impression et les compromis de production, puis voyez comment utiliser le",
@@ -96,7 +103,7 @@
       "SELECTOR_ARIA_LABEL": "Selection des materiaux",
       "SELECTOR_HELP": "Note : sur l'axe Economie, une valeur plus elevee signifie un cout par kg plus bas.",
       "READING_TITLE": "Comment lire la comparaison",
-      "READING_DESCRIPTION": "Chaque axe montre une propriete technique. La valeur la plus elevee represente la meilleure performance relative parmi les materiaux compares.",
+      "READING_DESCRIPTION": "Chaque axe représente une propriété technique. Les échelles utilisent toute la gamme de matériaux et restent fixes lorsque la sélection change. Une surface plus grande n’est pas forcément préférable pour votre projet.",
       "AXES": {
         "economy": {
           "LABEL": "Economie",
@@ -105,7 +112,7 @@
         },
         "printability": {
           "LABEL": "Imprimabilite",
-          "DESCRIPTION": "Indice synthetique qui prend en compte la facilite d'impression, la sensibilite a l'humidite et la stabilite du processus.",
+          "DESCRIPTION": "Indice indicatif de 0 à 100 pour notre imprimante et nos profils : plus il est élevé, plus l’impression est facile. Il tient compte du gauchissement, de l’humidité et de la stabilité du procédé. L’ASA est le plus exigeant dans notre configuration en raison du gauchissement. Ce n’est pas une propriété universelle du matériau.",
           "UNIT": "indice"
         },
         "tensile": {
@@ -120,7 +127,7 @@
         },
         "elongation": {
           "LABEL": "Flexibilite",
-          "DESCRIPTION": "Allongement a la rupture (%).",
+          "DESCRIPTION": "Allongement à la rupture (%) sur une échelle logarithmique fixe. L’ajout ou le retrait du TPU ne change pas l’échelle. Les pourcentages exacts figurent dans le tableau.",
           "UNIT": "%"
         },
         "hdt": {
@@ -516,6 +523,32 @@
           }
         }
       },
+      "petg-extrudr": {
+        "NAME": "PETG",
+        "SUMMARY": "PETG polyvalent et résistant, également utilisé pour des projets avec un contact alimentaire limité. Le filament est déclaré adapté par le fournisseur, mais la pièce FDM finie n'est pas certifiée food safe.",
+        "QUALITY_TIPS": [
+          "Utiliser un plateau chauffant et une surface propre pour une adhérence fiable.",
+          "Pour les demandes alimentaires, nous évaluons par écrit l'aliment, la température, la durée du contact et le nettoyage."
+        ],
+        "PROS": [
+          "Bonne résistance mécanique, adhérence entre couches et tenue thermique jusqu'à environ 90 °C.",
+          "Adapté aux pièces fonctionnelles et 100% recyclable selon la fiche produit."
+        ],
+        "CONS": [
+          "Les lignes de couche et microfissures FDM compliquent le nettoyage et la désinfection.",
+          "La pièce imprimée n'est pas certifiée food safe pour un usage professionnel continu ou prolongé."
+        ],
+        "IDEAL_FOR": [
+          "Pièces fonctionnelles",
+          "Contact bref et occasionnel avec des aliments froids ou à température ambiante, après évaluation",
+          "Ustensiles et accessoires de cuisine non professionnels"
+        ],
+        "SOURCES": {
+          "extrudr-petg-white": {
+            "LABEL": "3DJake - Extrudr PETG White"
+          }
+        }
+      },
       "pet-cf": {
         "NAME": "PET-CF",
         "SUMMARY": "Materiau technique rigide avec fibre de carbone, tres stable sur les pieces de precision.",
@@ -710,6 +743,8 @@
     "NOZZLE": "Diamètre de buse",
     "SUPPORT": "Supports",
     "SUPPORT_DESC": "Activer les supports pour les surplombs",
+    "SPLIT_ACCEPT_LABEL": "J'accepte que les modèles trop grands soient divisés pour l'impression",
+    "SPLIT_RESULT_NOTE": "Ce devis inclut le supplément de CHF 10 pour diviser les modèles trop grands. Le fichier original reste associé à la commande.",
     "CALCULATE": "Calculer le devis",
     "RESULT": "Devis estimé",
     "TIME": "Temps d'impression",
@@ -718,6 +753,10 @@
     "ORDER": "Commander maintenant",
     "CONSULT": "Demander une consultation",
     "ERROR_GENERIC": "Une erreur s'est produite pendant le calcul du devis.",
+    "ERROR_RATE_LIMIT": "Trop de tentatives ont été effectuées en peu de temps. Le calculateur fonctionne correctement : attendez au moins 60 secondes sans réessayer, puis calculez à nouveau le devis.",
+    "ERROR_SESSION_INIT": "Le calcul du devis n’a pas pu être démarré. Veuillez réessayer.",
+    "ERROR_FINALIZATION": "Le calcul est terminé, mais le devis final n’a pas pu être chargé. Veuillez réessayer.",
+    "ERROR_ITEM_PROCESSING": "Le fichier n’a pas pu être traité.",
     "NEW_QUOTE": "Calculer un nouveau devis",
     "ORDER_SUCCESS_TITLE": "Commande envoyée avec succès",
     "ORDER_SUCCESS_DESC": "Nous avons reçu les détails de votre commande. Vous recevrez bientôt un e-mail de confirmation avec les informations de paiement.",
@@ -730,12 +769,44 @@
     "ANALYZING_TEXT": "Nous analysons la géométrie et calculons le parcours outil.",
     "QTY_SHORT": "QTÉ",
     "COLOR_LABEL": "COULEUR",
+    "SAME_SETTINGS_ALL": "Mêmes paramètres pour tous les fichiers",
+    "COLOR_EXCLUDED": "Couleur exclue",
+    "GLOBAL_SETTINGS": "Paramètres globaux",
+    "FILE_SETTINGS": "Paramètres pour {{fileName}}",
+    "OPTION_STANDARD": "Standard",
+    "OPTION_FLEXIBLE": "Flexible",
+    "OPTION_TECHNICAL": "Technique",
+    "NOT_AVAILABLE": "N/D",
+    "VALUE_ON": "Activés",
+    "VALUE_OFF": "Désactivés",
+    "QUALITY_OPTIONS": {
+      "DRAFT": "Brouillon",
+      "STANDARD": "Standard",
+      "EXTRA_FINE": "Haute définition"
+    },
+    "INFILL_PATTERNS": {
+      "GRID": "Grille",
+      "GYROID": "Gyroïde",
+      "CUBIC": "Cubique"
+    },
+    "CONSULTATION": {
+      "TITLE": "Demande de devis",
+      "MATERIAL": "Matériau",
+      "QUALITY": "Qualité",
+      "FILES": "Fichiers",
+      "QUANTITY": "Quantité",
+      "COLOR": "Couleur",
+      "INFILL": "Remplissage",
+      "MANUAL_REVIEW": "Le modèle nécessite une évaluation manuelle. La division éventuelle, le prix final et l’approbation seront convenus par e-mail.",
+      "NOTES": "Notes"
+    },
     "ADD_FILES": "Ajouter des fichiers",
     "UPLOADING": "Téléversement...",
     "PROCESSING": "Traitement...",
     "NOTES_PLACEHOLDER": "Instructions spécifiques...",
     "SETUP_NOTE": "* Inclut {{cost}} comme coût de setup",
-    "SHIPPING_NOTE": "* Frais d'expédition exclus, calculés à l'étape suivante",
+    "SHIPPING_NOTE": "* Les frais de livraison sont estimés selon les dimensions et le poids emballés, puis confirmés à la commande.",
+    "SHIPPING_UNAVAILABLE": "La livraison n’est pas comprise dans ce total. Terminez le calcul ou demandez une consultation pour un devis de livraison.",
     "STEP_WARNING": "La prévisualisation 3D est disponible uniquement pour les fichiers STL.",
     "REMOVE_FILE": "Supprimer le fichier",
     "FALLBACK_MATERIAL": "PLA (fallback)",
@@ -744,7 +815,17 @@
     "ERR_INVALID_FILE_TYPE": "Vous pouvez téléverser uniquement des fichiers .stl ou .3mf.",
     "ERROR_ZERO_PRICE": "Un problème est survenu pendant le calcul. Essayez un autre format ou contactez-nous directement via Demander une consultation.",
     "ZERO_RESULT_TITLE": "Résultat invalide",
-    "ZERO_RESULT_HELP": "Le calcul a renvoyé des valeurs nulles invalides. Essayez un autre format de fichier ou contactez-nous directement via Demander une consultation."
+    "ZERO_RESULT_HELP": "Le calcul a renvoyé des valeurs nulles invalides. Essayez un autre format de fichier ou contactez-nous directement via Demander une consultation.",
+    "CUSTOM_QUOTE_TITLE": "Devis personnalisé nécessaire",
+    "CUSTOM_QUOTE_HELP": "Le fichier reste enregistré et nécessite une évaluation manuelle. Contactez-nous : nous conviendrons par e-mail de la division éventuelle, du prix final et de votre accord avant de poursuivre.",
+    "SPLIT_REVIEW_TITLE": "Ce modèle doit être divisé",
+    "SPLIT_REVIEW_HELP": "Le modèle dépasse le volume d'impression disponible. Le fichier reste enregistré : demandez une consultation afin de convenir par e-mail de sa division, du prix final et de votre accord.",
+    "SPLIT_REQUEST_ACTION": "Demander la division du modèle",
+    "REVIEW_OUT_OF_VOLUME": "Le modèle dépasse le volume d'impression disponible.",
+    "REVIEW_PROCESSING_FAILED": "Le fichier n'a pas pu être analysé automatiquement. Il reste enregistré pour une évaluation manuelle.",
+    "REVIEW_PARTIAL_SINGLE": "{{fileName}} nécessite une évaluation manuelle et n'est pas inclus dans le total. {{reason}}",
+    "REVIEW_PARTIAL_MULTIPLE": "{{count}} fichiers nécessitent une évaluation manuelle et ne sont pas inclus dans le total : {{fileNames}}. {{reason}}",
+    "FILE_REVIEW_REQUIRED": "Évaluation requise"
   },
   "QUOTE": {
     "PROCEED_ORDER": "Procéder à la commande",
@@ -923,7 +1004,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Étudiant en ingénierie électronique",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Suivez notre travail",
+      "TITLE": "3D Fab sur LinkedIn",
+      "DESCRIPTION": "Suivez notre page d’entreprise pour découvrir les nouvelles de l’atelier, nos projets en cours et des exemples concrets d’impression 3D sur mesure.",
+      "CTA": "Suivre 3D Fab",
+      "POST_LABEL": "Publication récente",
+      "POST_TITLE": "Une nouvelle collaboration prend forme",
+      "POST_TEXT": "Nous développons une nouvelle solution pour kappa events. Nous avons hâte de concrétiser cette idée et de partager bientôt le résultat.",
+      "POST_SECOND_TITLE": "Nous vous présentons 3D Fab",
+      "POST_SECOND_TEXT": "Nous aidons les entreprises, les professionnels et les makers à transformer des modèles numériques en prototypes, composants personnalisés, pièces de rechange et petites séries.",
+      "POST_CTA": "Lire la publication sur LinkedIn",
+      "IMAGE_ALT": "Image de la publication LinkedIn de 3D Fab",
+      "PREVIOUS": "Publication LinkedIn précédente",
+      "NEXT": "Publication LinkedIn suivante",
+      "PAUSE": "Pause",
+      "PLAY": "Reprendre",
+      "SLIDE_LABEL": "Afficher la publication LinkedIn {{number}}"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Nos sites",
@@ -1071,6 +1170,14 @@
         "P1": "13.1. Le fournisseur peut refuser des commandes relatives à des objets illégaux, armes ou pièces réglementées, applications critiques pour la sécurité ou médicales sans accords et validations dédiés.",
         "P2": "13.2. Le client reste responsable de l'usage final et de la conformité réglementaire du produit."
       },
+      "S13A": {
+        "TITLE": "13A. Applications en contact avec des denrées alimentaires",
+        "P1": "13A.1. Sauf indication expresse contraire dans la description du produit ou dans un accord écrit, les produits fabriqués par 3D-Fab.ch par fabrication additive FDM/FFF ne sont ni certifiés, ni testés, ni garantis comme étant aptes au contact avec des denrées alimentaires.",
+        "P2": "13A.2. Le fait qu'un matériau soit décrit par son fabricant ou son fournisseur comme apte, conforme ou approuvé pour des applications en contact avec des denrées alimentaires ne constitue pas, en soi, une déclaration de conformité du produit final imprimé en 3D aux réglementations applicables en matière de contact alimentaire. Le processus de fabrication, les équipements d'impression, les additifs, les pigments, les caractéristiques de surface, les traitements ultérieurs, le type d'aliment, la durée du contact, la température et les conditions d'utilisation peuvent influer sur l'aptitude du produit final.",
+        "P3": "13A.3. Les produits destinés à des applications en contact avec des denrées alimentaires ne peuvent être considérés comme aptes à cet usage que lorsque cela est expressément confirmé par écrit par 3D-Fab.ch ou spécifiquement indiqué sur la page du produit concerné, avec les éventuelles conditions et limitations d'utilisation applicables.",
+        "P4": "13A.4. Lorsqu'un client commande un produit personnalisé destiné au contact avec des denrées alimentaires sans demander et obtenir cette confirmation écrite, le produit est fourni comme composant technique imprimé en 3D, sans certification pour le contact alimentaire. Le client reste responsable de vérifier l'aptitude et la conformité du produit par rapport à l'utilisation prévue.",
+        "P5": "13A.5. Toute instruction relative aux aliments autorisés, à la durée du contact, à la température, au nettoyage, à la réutilisation ou à d'autres conditions d'utilisation fournie avec un produit expressément destiné au contact alimentaire doit être respectée."
+      },
       "S14": {
         "TITLE": "14. Propriété intellectuelle et licences",
         "P1": "14.1. Les droits sur les fichiers du client restent au client ou aux titulaires concernés. Le client concède au fournisseur une licence limitée à l'usage pour l'évaluation technique et la production.",
@@ -1147,6 +1254,8 @@
     "REMOVE_FILE": "Supprimer le fichier joint"
   },
   "CHECKOUT": {
+    "COLOR": "Couleur",
+    "ERR_UPDATE_ITEM": "Impossible de mettre à jour la pièce. Vérifiez la quantité et la couleur et réessayez.",
     "TITLE": "Checkout",
     "SUBTITLE": "Complétez votre commande en saisissant les détails de livraison et de paiement.",
     "CAD_SERVICE": "Service CAD",
@@ -1248,7 +1357,12 @@
     "ERR_ID_NOT_FOUND": "ID de commande introuvable.",
     "ERR_LOAD_ORDER": "Impossible de charger les détails de la commande.",
     "ERR_REPORT_PAYMENT": "Impossible de signaler le paiement. Réessayez.",
+    "ERR_DOWNLOAD_CAD_FILES": "Impossible de télécharger les fichiers CAD. Réessayez.",
     "CAD_SERVICE": "Service CAD ({{hours}}h)",
+    "CAD_FILES_TITLE": "Fichiers CAD",
+    "CAD_FILES_READY": "{{count}} fichiers disponibles au téléchargement.",
+    "CAD_FILES_LOCKED": "Disponible après confirmation du paiement.",
+    "DOWNLOAD_CAD_FILES": "Télécharger les fichiers CAD",
     "ITEMS_TITLE": "Articles de la commande",
     "ORDER_TYPE_LABEL": "Type de commande",
     "ITEM_COUNT": "Lignes",
@@ -1257,9 +1371,50 @@
     "TYPE_MIXED": "Mixte",
     "NOT_AVAILABLE": "N/D"
   },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "Synchronisation LinkedIn",
+    "DESCRIPTION": "Gérez les publications affichées sur la page À propos.",
+    "OPEN_PAGE": "Ouvrir LinkedIn",
+    "LOADING": "Chargement de l’état LinkedIn...",
+    "SYNC_ENABLED": "Synchronisation active",
+    "API_CONFIGURED": "API configurée",
+    "CACHED_POSTS": "Publications en cache",
+    "LAST_SYNC": "Dernière synchronisation",
+    "DAILY_TITLE": "Mise à jour quotidienne",
+    "DAILY_DESCRIPTION": "La tâche cron s’exécute chaque jour à 04:00, heure suisse. Vous pouvez actualiser immédiatement après une nouvelle publication.",
+    "SYNC_NOW": "Synchroniser maintenant",
+    "SYNCING": "Synchronisation...",
+    "SYNC_SUCCESS": "Les publications LinkedIn ont été mises à jour.",
+    "SYNC_ERROR": "LinkedIn n’a pas répondu. Les publications existantes ont été conservées.",
+    "STATUS_ERROR": "Impossible de charger l’état de la synchronisation.",
+    "CONFIG_REQUIRED": "Configurez et activez les identifiants LinkedIn avant la synchronisation."
+  },
   "DROPZONE": {
     "DEFAULT_LABEL": "Glissez les fichiers ici ou cliquez pour téléverser",
     "DEFAULT_SUBTEXT": "Prend en charge .STL, .3MF"
+  },
+  "ADMIN_ORDERS": {
+    "PAID_OR_COMPLETED_ORDERS": "commandes payées ou terminées",
+    "FILTERS": "Filtres",
+    "BACK_TO_ORDERS": "Retour aux commandes",
+    "ITEMS_AND_FILES": "Articles et fichiers",
+    "CUSTOMER_AND_ADDRESSES": "Client et adresses",
+    "PAYMENT_AND_DOCUMENTS": "Paiement et documents",
+    "EMAIL_HISTORY": "Historique des e-mails",
+    "OPEN_3D_PREVIEW": "Aperçu 3D",
+    "PREVIEW_TITLE": "Aperçu 3D du modèle",
+    "PREVIEW_LOADING": "Chargement du modèle...",
+    "PREVIEW_ERROR": "Impossible de charger l'aperçu de ce fichier.",
+    "CLOSE": "Fermer",
+    "STATUS": {
+      "PENDING_PAYMENT": "En attente de paiement",
+      "PAID": "Payée",
+      "IN_PRODUCTION": "En production",
+      "SHIPPED": "Expédiée",
+      "COMPLETED": "Terminée",
+      "CANCELLED": "Annulée",
+      "UNKNOWN": "Statut inconnu"
+    }
   },
   "COLOR": {
     "AVAILABLE_COLORS": "Couleurs disponibles",

@@ -12,7 +12,7 @@ public interface EmailNotificationService {
      * @param templateName The name of the Thymeleaf template (e.g., "order-confirmation").
      * @param contextData  The data to populate the template with.
      */
-    void sendEmail(String to, String subject, String templateName, Map<String, Object> contextData);
+    EmailSendResult sendEmail(String to, String subject, String templateName, Map<String, Object> contextData);
 
     /**
      * Sends an HTML email using a Thymeleaf template, with an optional attachment.
@@ -24,6 +24,6 @@ public interface EmailNotificationService {
      * @param attachmentName The name for the attachment file.
      * @param attachmentData The raw bytes of the attachment.
      */
-    void sendEmailWithAttachment(String to, String subject, String templateName, Map<String, Object> contextData, String attachmentName, byte[] attachmentData);
+    EmailSendResult sendEmailWithAttachment(String to, String subject, String templateName, Map<String, Object> contextData, String attachmentName, byte[] attachmentData);
 
 }

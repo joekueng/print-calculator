@@ -40,7 +40,8 @@
     "PRIVACY": "Privacy",
     "TERMS": "Terms & Conditions",
     "MATERIALS": "Quality & Materials",
-    "CONTACT": "Contact Us"
+    "CONTACT": "Contact Us",
+    "LINKEDIN": "3D Fab on LinkedIn"
   },
   "SEO": {
     "DEFAULT": {
@@ -109,6 +110,12 @@
     }
   },
   "MATERIALS_PAGE": {
+    "FOOD_CONTACT": {
+      "TITLE": "PETG for food contact",
+      "DESCRIPTION": "We also offer a PETG variant from Extrudr for food-contact projects. Extrudr’s regulatory sheet declares compliance with EC 1935/2004 and EU 10/2011 for the material.",
+      "NOTE": "This does not automatically certify the printed part: suitability depends on the food, temperature, contact duration and printing and cleaning conditions. Tell us the intended use so we can assess it.",
+      "SOURCE_LABEL": "Extrudr PETG — regulatory information (PDF)"
+    },
     "HERO": {
       "TITLE": "Quality & Materials",
       "SUBTITLE_PREFIX": "Technical guide to a curated set of materials. Compare print-quality tradeoffs and see how to use the",
@@ -124,7 +131,7 @@
       "SELECTOR_ARIA_LABEL": "Material selection",
       "SELECTOR_HELP": "Note: on the Economy axis, a higher value means a lower cost per kg.",
       "READING_TITLE": "How to read the comparison",
-      "READING_DESCRIPTION": "Each axis shows a technical property. The highest value represents the strongest relative performance among the compared materials.",
+      "READING_DESCRIPTION": "Each axis shows a technical property. Scales use the full material range and remain fixed when the selection changes. A larger area is not necessarily better for your application.",
       "AXES": {
         "economy": {
           "LABEL": "Economy",
@@ -133,7 +140,7 @@
         },
         "printability": {
           "LABEL": "Printability",
-          "DESCRIPTION": "Synthetic index that reflects ease of printing, moisture sensitivity and process stability.",
+          "DESCRIPTION": "Indicative 0–100 index for our printer and print profiles: higher means easier to print. It considers warping, moisture and process stability. ASA is the most demanding in our setup due to warping. This is not a universal material property.",
           "UNIT": "index"
         },
         "tensile": {
@@ -148,7 +155,7 @@
         },
         "elongation": {
           "LABEL": "Flexibility",
-          "DESCRIPTION": "Elongation at break (%).",
+          "DESCRIPTION": "Elongation at break (%) on a fixed logarithmic scale. Adding or removing TPU does not change the scale. Exact percentages are in the table.",
           "UNIT": "%"
         },
         "hdt": {
@@ -536,6 +543,32 @@
           }
         }
       },
+      "petg-extrudr": {
+        "NAME": "PETG",
+        "SUMMARY": "Versatile, durable PETG also used for projects involving limited food contact. The supplier declares the filament suitable, but the finished FDM part is not certified as food safe.",
+        "QUALITY_TIPS": [
+          "Use a heated bed and a clean surface for reliable adhesion.",
+          "For food-contact requests, we assess the food, temperature, contact duration and cleaning method in writing."
+        ],
+        "PROS": [
+          "Good mechanical strength, layer adhesion and heat resistance up to approximately 90 °C.",
+          "Suitable for functional parts and 100% recyclable according to the product page."
+        ],
+        "CONS": [
+          "FDM layer lines and micro-gaps make cleaning and disinfection less straightforward.",
+          "The printed product is not certified as food safe for continuous or prolonged professional use."
+        ],
+        "IDEAL_FOR": [
+          "Functional parts",
+          "Brief, occasional contact with cold or room-temperature food, subject to assessment",
+          "Non-professional kitchen utensils and accessories"
+        ],
+        "SOURCES": {
+          "extrudr-petg-white": {
+            "LABEL": "3DJake - Extrudr PETG White"
+          }
+        }
+      },
       "pet-cf": {
         "NAME": "PET-CF",
         "SUMMARY": "Rigid technical material with carbon fiber, very stable on precision parts.",
@@ -663,6 +696,8 @@
     "LAYER_HEIGHT": "Layer Height",
     "SUPPORT": "Supports",
     "SUPPORT_DESC": "Enable supports for overhangs",
+    "SPLIT_ACCEPT_LABEL": "I accept that oversized models may be split for printing",
+    "SPLIT_RESULT_NOTE": "This quote includes the CHF 10 supplement for splitting oversized models. The original file remains attached to the order.",
     "CALCULATE": "Calculate Quote",
     "RESULT": "Estimated Quote",
     "TIME": "Print Time",
@@ -671,6 +706,10 @@
     "ORDER": "Order Now",
     "CONSULT": "Request Consultation",
     "ERROR_GENERIC": "An error occurred while calculating the quote.",
+    "ERROR_RATE_LIMIT": "Too many attempts were made in a short time. The calculator is working correctly: wait at least 60 seconds without retrying, then calculate the quote again.",
+    "ERROR_SESSION_INIT": "The quote calculation could not be started. Please try again.",
+    "ERROR_FINALIZATION": "The calculation finished, but the final quote could not be loaded. Please try again.",
+    "ERROR_ITEM_PROCESSING": "The file could not be processed.",
     "NEW_QUOTE": "Calculate New Quote",
     "ORDER_SUCCESS_TITLE": "Order Submitted Successfully",
     "ORDER_SUCCESS_DESC": "We have received your order details. You will receive a confirmation email shortly with the payment details.",
@@ -691,15 +730,57 @@
     "ANALYZING_TEXT": "We are analyzing the geometry and calculating the toolpath.",
     "QTY_SHORT": "QTY",
     "COLOR_LABEL": "COLOR",
+    "SAME_SETTINGS_ALL": "Same settings for all files",
+    "COLOR_EXCLUDED": "Color excluded",
+    "GLOBAL_SETTINGS": "Global settings",
+    "FILE_SETTINGS": "Settings for {{fileName}}",
+    "OPTION_STANDARD": "Standard",
+    "OPTION_FLEXIBLE": "Flexible",
+    "OPTION_TECHNICAL": "Technical",
+    "NOT_AVAILABLE": "N/A",
+    "VALUE_ON": "Enabled",
+    "VALUE_OFF": "Disabled",
+    "QUALITY_OPTIONS": {
+      "DRAFT": "Draft",
+      "STANDARD": "Standard",
+      "EXTRA_FINE": "High definition"
+    },
+    "INFILL_PATTERNS": {
+      "GRID": "Grid",
+      "GYROID": "Gyroid",
+      "CUBIC": "Cubic"
+    },
+    "CONSULTATION": {
+      "TITLE": "Quote request",
+      "MATERIAL": "Material",
+      "QUALITY": "Quality",
+      "FILES": "Files",
+      "QUANTITY": "Quantity",
+      "COLOR": "Color",
+      "INFILL": "Infill",
+      "MANUAL_REVIEW": "The model requires manual review. Any splitting, the final price and approval will be agreed by email.",
+      "NOTES": "Notes"
+    },
     "ADD_FILES": "Add files",
     "UPLOADING": "Uploading...",
     "PROCESSING": "Processing...",
     "NOTES_PLACEHOLDER": "Specific instructions...",
     "SETUP_NOTE": "* Includes {{cost}} as setup cost",
-    "SHIPPING_NOTE": "* Shipping costs excluded, calculated at the next step",
+    "SHIPPING_NOTE": "* Shipping is estimated from packed dimensions and weight. Confirmed at checkout.",
+    "SHIPPING_UNAVAILABLE": "Shipping is not included in this total. Complete the calculation or request a consultation for a shipping quote.",
     "ERROR_ZERO_PRICE": "Something went wrong during the calculation. Try another format or contact us directly via Request Consultation.",
     "ZERO_RESULT_TITLE": "Invalid Result",
-    "ZERO_RESULT_HELP": "The calculation returned invalid zero values. Try another file format or contact us directly via Request Consultation."
+    "ZERO_RESULT_HELP": "The calculation returned invalid zero values. Try another file format or contact us directly via Request Consultation.",
+    "CUSTOM_QUOTE_TITLE": "Custom quote required",
+    "CUSTOM_QUOTE_HELP": "The file remains saved and requires manual review. Contact us: we will agree any splitting, final price and your approval by email before proceeding.",
+    "SPLIT_REVIEW_TITLE": "This model needs to be split",
+    "SPLIT_REVIEW_HELP": "The model is larger than the available print volume. The file remains saved: request a consultation and we will agree by email how to split it, the final price and your approval.",
+    "SPLIT_REQUEST_ACTION": "Request model splitting",
+    "REVIEW_OUT_OF_VOLUME": "The model exceeds the available print volume.",
+    "REVIEW_PROCESSING_FAILED": "The file could not be analysed automatically. It remains saved for manual review.",
+    "REVIEW_PARTIAL_SINGLE": "{{fileName}} requires manual review and is not included in the total. {{reason}}",
+    "REVIEW_PARTIAL_MULTIPLE": "{{count}} files require manual review and are not included in the total: {{fileNames}}. {{reason}}",
+    "FILE_REVIEW_REQUIRED": "Review required"
   },
   "SHOP": {
     "TITLE": "Technical solutions",
@@ -844,7 +925,25 @@
     "MEMBER_JOE_ALT": "Joe Küng",
     "MEMBER_MATTEO_NAME": "Matteo Caletti",
     "MEMBER_MATTEO_ROLE": "Electronics Engineering Student",
-    "MEMBER_MATTEO_ALT": "Matteo Caletti"
+    "MEMBER_MATTEO_ALT": "Matteo Caletti",
+    "LINKEDIN": {
+      "EYEBROW": "Follow our work",
+      "TITLE": "3D Fab on LinkedIn",
+      "DESCRIPTION": "Follow our company page for workshop updates, current projects and practical examples of custom 3D printing.",
+      "CTA": "Follow 3D Fab",
+      "POST_LABEL": "Recent update",
+      "POST_TITLE": "A new collaboration is taking shape",
+      "POST_TEXT": "We are developing a new solution for kappa events. We look forward to turning the idea into something tangible and sharing the result soon.",
+      "POST_SECOND_TITLE": "Introducing 3D Fab",
+      "POST_SECOND_TEXT": "We help companies, professionals and makers turn digital models into prototypes, custom components, spare parts and small production runs.",
+      "POST_CTA": "Read the post on LinkedIn",
+      "IMAGE_ALT": "Image from the 3D Fab LinkedIn post",
+      "PREVIOUS": "Previous LinkedIn post",
+      "NEXT": "Next LinkedIn post",
+      "PAUSE": "Pause",
+      "PLAY": "Play",
+      "SLIDE_LABEL": "Show LinkedIn post {{number}}"
+    }
   },
   "LOCATIONS": {
     "TITLE": "Our Locations",
@@ -990,6 +1089,14 @@
         "P1": "13.1. The provider may refuse orders related to illegal objects, weapons or regulated parts, safety-critical or medical applications without dedicated agreements and validations.",
         "P2": "13.2. The customer remains responsible for end use and regulatory compliance of the product."
       },
+      "S13A": {
+        "TITLE": "13A. Food-contact applications",
+        "P1": "13A.1. Unless expressly stated otherwise in the product description or in a written agreement, products made by 3D-Fab.ch using FDM/FFF additive manufacturing are not certified, tested or warranted as suitable for food contact.",
+        "P2": "13A.2. The fact that a material is described by its manufacturer or supplier as suitable, compliant or approved for food-contact applications does not, in itself, constitute a declaration that the final 3D-printed product complies with applicable food-contact regulations. The manufacturing process, printing equipment, additives, pigments, surface characteristics, post-processing, type of food, duration of contact, temperature and conditions of use may affect the suitability of the final product.",
+        "P3": "13A.3. Products intended for food-contact applications may be considered suitable for that use only when this is expressly confirmed in writing by 3D-Fab.ch or specifically stated on the relevant product page, together with any applicable conditions and limitations of use.",
+        "P4": "13A.4. Where a customer orders a custom product intended for food contact without requesting and obtaining that written confirmation, the product is supplied as a technical 3D-printed component without food-contact certification. The customer remains responsible for verifying the product's suitability and compliance for the intended use.",
+        "P5": "13A.5. Any instructions concerning permitted foods, duration of contact, temperature, cleaning, reuse or other conditions of use supplied with a product expressly intended for food contact must be followed."
+      },
       "S14": {
         "TITLE": "14. Intellectual property and licenses",
         "P1": "14.1. Rights to customer files remain with the customer or respective rights holders. The customer grants the provider a limited license for use for technical evaluation and production.",
@@ -1068,6 +1175,8 @@
     "HERO_SUBTITLE": "We are here to help you. Fill in the form below for any request."
   },
   "CHECKOUT": {
+    "COLOR": "Color",
+    "ERR_UPDATE_ITEM": "Could not update the item. Check quantity and color and try again.",
     "TITLE": "Checkout",
     "SUBTITLE": "Complete your order by entering the shipping and payment details.",
     "CAD_SERVICE": "CAD service",
@@ -1234,7 +1343,12 @@
     "ERR_ID_NOT_FOUND": "Order ID not found.",
     "ERR_LOAD_ORDER": "Failed to load order details.",
     "ERR_REPORT_PAYMENT": "Failed to report payment. Please try again.",
+    "ERR_DOWNLOAD_CAD_FILES": "Failed to download CAD files. Please try again.",
     "CAD_SERVICE": "CAD service ({{hours}}h)",
+    "CAD_FILES_TITLE": "CAD files",
+    "CAD_FILES_READY": "{{count}} files available for download.",
+    "CAD_FILES_LOCKED": "Available after payment confirmation.",
+    "DOWNLOAD_CAD_FILES": "Download CAD files",
     "ITEMS_TITLE": "Order items",
     "ORDER_TYPE_LABEL": "Order type",
     "ITEM_COUNT": "Lines",
@@ -1243,9 +1357,50 @@
     "TYPE_MIXED": "Mixed",
     "NOT_AVAILABLE": "N/A"
   },
+  "ADMIN_LINKEDIN": {
+    "TITLE": "LinkedIn synchronization",
+    "DESCRIPTION": "Manage the posts displayed on the About us page.",
+    "OPEN_PAGE": "Open LinkedIn",
+    "LOADING": "Loading LinkedIn status...",
+    "SYNC_ENABLED": "Synchronization enabled",
+    "API_CONFIGURED": "API configured",
+    "CACHED_POSTS": "Cached posts",
+    "LAST_SYNC": "Last synchronization",
+    "DAILY_TITLE": "Daily update",
+    "DAILY_DESCRIPTION": "The cron job runs every day at 04:00 Swiss time. You can refresh immediately after publishing a new post.",
+    "SYNC_NOW": "Synchronize now",
+    "SYNCING": "Synchronizing...",
+    "SYNC_SUCCESS": "LinkedIn posts updated successfully.",
+    "SYNC_ERROR": "LinkedIn did not respond. Existing posts have been retained.",
+    "STATUS_ERROR": "Unable to load the synchronization status.",
+    "CONFIG_REQUIRED": "Configure and enable the LinkedIn credentials before synchronizing."
+  },
   "DROPZONE": {
     "DEFAULT_LABEL": "Drop files here or click to upload",
     "DEFAULT_SUBTEXT": "Supports .stl, .3mf"
+  },
+  "ADMIN_ORDERS": {
+    "PAID_OR_COMPLETED_ORDERS": "paid or completed orders",
+    "FILTERS": "Filters",
+    "BACK_TO_ORDERS": "Back to orders",
+    "ITEMS_AND_FILES": "Items and files",
+    "CUSTOMER_AND_ADDRESSES": "Customer and addresses",
+    "PAYMENT_AND_DOCUMENTS": "Payment and documents",
+    "EMAIL_HISTORY": "Email history",
+    "OPEN_3D_PREVIEW": "3D preview",
+    "PREVIEW_TITLE": "3D model preview",
+    "PREVIEW_LOADING": "Loading model...",
+    "PREVIEW_ERROR": "This file's preview could not be loaded.",
+    "CLOSE": "Close",
+    "STATUS": {
+      "PENDING_PAYMENT": "Awaiting payment",
+      "PAID": "Paid",
+      "IN_PRODUCTION": "In production",
+      "SHIPPED": "Shipped",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "UNKNOWN": "Unknown status"
+    }
   },
   "COLOR": {
     "AVAILABLE_COLORS": "Available colors",

@@ -34,6 +34,10 @@ public class PricingPolicy {
     @Column(name = "fixed_job_fee_chf", nullable = false, precision = 10, scale = 2)
     private BigDecimal fixedJobFeeChf;
 
+    @ColumnDefault("10.00")
+    @Column(name = "split_model_setup_fee_chf", precision = 10, scale = 2)
+    private BigDecimal splitModelSetupFeeChf;
+
     @ColumnDefault("0.00")
     @Column(name = "nozzle_change_base_fee_chf", nullable = false, precision = 10, scale = 2)
     private BigDecimal nozzleChangeBaseFeeChf;
@@ -104,6 +108,14 @@ public class PricingPolicy {
 
     public void setFixedJobFeeChf(BigDecimal fixedJobFeeChf) {
         this.fixedJobFeeChf = fixedJobFeeChf;
+    }
+
+    public BigDecimal getSplitModelSetupFeeChf() {
+        return splitModelSetupFeeChf;
+    }
+
+    public void setSplitModelSetupFeeChf(BigDecimal splitModelSetupFeeChf) {
+        this.splitModelSetupFeeChf = splitModelSetupFeeChf;
     }
 
     public BigDecimal getNozzleChangeBaseFeeChf() {

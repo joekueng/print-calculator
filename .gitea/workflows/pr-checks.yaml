@@ -37,20 +37,15 @@ jobs:
             exit 0
           fi
 
-          if ! command -v jq >/dev/null 2>&1; then
-            apt-get update
-            apt-get install -y --no-install-recommends jq
-          fi
-
           EVENT_FILE="${GITHUB_EVENT_PATH:-}"
           if [[ -z "$EVENT_FILE" || ! -f "$EVENT_FILE" ]]; then
             echo "Event payload not found, skipping auto-push."
             exit 0
           fi
 
-          HEAD_REPO="$(jq -r '.pull_request.head.repo.full_name // empty' "$EVENT_FILE")"
-          BASE_REPO="$(jq -r '.repository.full_name // empty' "$EVENT_FILE")"
-          PR_BRANCH="$(jq -r '.pull_request.head.ref // empty' "$EVENT_FILE")"
+          HEAD_REPO="$(node -p "require(process.argv[1]).pull_request?.head?.repo?.full_name || ''" "$EVENT_FILE")"
+          BASE_REPO="$(node -p "require(process.argv[1]).repository?.full_name || ''" "$EVENT_FILE")"
+          PR_BRANCH="$(node -p "require(process.argv[1]).pull_request?.head?.ref || ''" "$EVENT_FILE")"
 
           if [[ -z "$PR_BRANCH" ]]; then
             echo "PR branch not found in event payload, skipping auto-push."
@@ -70,6 +65,7 @@ jobs:
           git push origin "HEAD:${PR_BRANCH}"
 
   security-sast:
+    needs: prettier-autofix
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -77,13 +73,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Python and Semgrep
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Semgrep
         shell: bash
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends python3 python3-pip
-          python3 -m pip install --upgrade pip
-          python3 -m pip install semgrep
+        run: python -m pip install --disable-pip-version-check semgrep==1.176.1
 
       - name: Run Semgrep (SAST)
         shell: bash
@@ -119,6 +116,7 @@ jobs:
           exit $rc
 
   test-backend:
+    needs: prettier-autofix
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -138,6 +136,7 @@ jobs:
           ./gradlew test
 
   test-frontend:
+    needs: prettier-autofix
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -150,24 +149,24 @@ jobs:
           cache: "npm"
           cache-dependency-path: "frontend/package-lock.json"
 
-      - name: Resolve Chrome binary
+      - name: Install Google Chrome
         shell: bash
         run: |
           set -euo pipefail
-          if command -v chromium >/dev/null 2>&1; then
-            CHROME_PATH="$(command -v chromium)"
-          elif command -v chromium-browser >/dev/null 2>&1; then
-            CHROME_PATH="$(command -v chromium-browser)"
-          elif command -v google-chrome >/dev/null 2>&1; then
-            CHROME_PATH="$(command -v google-chrome)"
-          else
-            apt-get update
-            apt-get install -y --no-install-recommends chromium
-            CHROME_PATH="$(command -v chromium)"
-          fi
-
+          install -d -m 0755 /etc/apt/keyrings
+          curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
+            -o /tmp/google-linux-signing-key.pub
+          gpg --dearmor --yes \
+            -o /etc/apt/keyrings/google-chrome.gpg \
+            /tmp/google-linux-signing-key.pub
+          chmod 0644 /etc/apt/keyrings/google-chrome.gpg
+          echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" \
+            > /etc/apt/sources.list.d/google-chrome.list
+          apt-get -o Acquire::Retries=3 update
+          apt-get -o Acquire::Retries=3 install -y --no-install-recommends google-chrome-stable
+          CHROME_PATH="$(command -v google-chrome-stable)"
           echo "CHROME_BIN=$CHROME_PATH" >> "$GITHUB_ENV"
-          echo "Using CHROME_BIN=$CHROME_PATH"
+          "$CHROME_PATH" --version
 
       - name: Install frontend dependencies
         shell: bash

@@ -20,10 +20,19 @@
   </div>
 
   <div class="setup-note">
+    @if (shippingUnavailable()) {
+      <p class="ui-banner">{{ "CALC.SHIPPING_UNAVAILABLE" | translate }}</p>
+    }
     <small class="shipping-note" style="color: #666">{{
       "CALC.SHIPPING_NOTE" | translate
     }}</small>
   </div>
+
+  @if (hasSplitPrintingItems()) {
+    <div class="split-printing-note">
+      {{ "CALC.SPLIT_RESULT_NOTE" | translate }}
+    </div>
+  }
 
   @if (result().notes) {
     <div class="notes-section">
@@ -48,14 +57,28 @@
           <span class="file-details">
             {{ item.unitTime / 3600 | number: "1.1-1" }}h |
             {{ item.unitWeight | number: "1.0-0" }}g |
-            {{ item.material || "N/D" }}
-            @if (getItemDifferenceLabel(item.fileName, item.material)) {
-              |
-              <small class="item-settings-diff">
-                {{ getItemDifferenceLabel(item.fileName, item.material) }}
-              </small>
-            }
+            {{ item.material || ("CALC.NOT_AVAILABLE" | translate) }}
           </span>
+          @if (getItemSettingDetails(item); as settingDetails) {
+            @if (settingDetails.length > 0) {
+              <div class="item-settings-details">
+                @for (setting of settingDetails; track setting.key) {
+                  <small class="item-setting-detail">
+                    <span class="item-setting-label">
+                      {{ setting.labelKey | translate }}
+                    </span>
+                    <span class="item-setting-value">
+                      {{
+                        setting.valueKey
+                          ? (setting.valueKey | translate)
+                          : setting.value
+                      }}
+                    </span>
+                  </small>
+                }
+              </div>
+            }
+          }
         </div>
 
         <div class="item-controls">
@@ -104,7 +127,11 @@
     <div class="actions-right">
       @if (!hasQuantityOverLimit()) {
         <app-button
-          [disabled]="recalculationRequired()"
+          [disabled]="
+            recalculationRequired() ||
+            shippingUnavailable() ||
+            quantitiesPending()
+          "
           (click)="proceed.emit()"
         >
           {{ "QUOTE.PROCEED_ORDER" | translate }}

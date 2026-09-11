@@ -8,6 +8,7 @@ export type MaterialId =
   | 'asa'
   | 'pc'
   | 'pa12-cf'
+  | 'petg-extrudr'
   | 'pet-cf';
 
 export type MaterialSourceKindId = 'wikipedia' | 'tech-sheet' | 'product-sheet';
@@ -255,6 +256,12 @@ export interface QualityVisualGuideTranslation {
 }
 
 export interface MaterialsPageTranslations {
+  FOOD_CONTACT: {
+    TITLE: string;
+    DESCRIPTION: string;
+    NOTE: string;
+    SOURCE_LABEL: string;
+  };
   HERO: {
     TITLE: string;
     SUBTITLE_PREFIX: string;

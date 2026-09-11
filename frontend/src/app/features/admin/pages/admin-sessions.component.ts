@@ -4,6 +4,7 @@ import {
   AdminOperationsService,
   AdminQuoteSession,
   AdminQuoteSessionDetail,
+  AdminSessionStatistics,
 } from '../services/admin-operations.service';
 import { CopyOnClickDirective } from '../../../shared/directives/copy-on-click.directive';
 import { AppButtonComponent } from '../../../shared/components/app-button/app-button.component';
@@ -20,8 +21,10 @@ export class AdminSessionsComponent implements OnInit {
   private readonly adminOperationsService = inject(AdminOperationsService);
 
   sessions: AdminQuoteSession[] = [];
+  statistics: AdminSessionStatistics | null = null;
   sessionDetailsById: Record<string, AdminQuoteSessionDetail | undefined> = {};
   loading = false;
+  statisticsLoading = false;
   deletingSessionIds = new Set<string>();
   loadingDetailSessionIds = new Set<string>();
   expandedSessionId: string | null = null;
@@ -36,6 +39,7 @@ export class AdminSessionsComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
     this.successMessage = null;
+    this.loadStatistics();
     this.adminOperationsService.getSessions().subscribe({
       next: (sessions) => {
         this.sessions = sessions;
@@ -44,6 +48,20 @@ export class AdminSessionsComponent implements OnInit {
       error: () => {
         this.loading = false;
         this.errorMessage = 'Impossibile caricare le sessioni.';
+      },
+    });
+  }
+
+  private loadStatistics(): void {
+    this.statisticsLoading = true;
+    this.adminOperationsService.getSessionStatistics().subscribe({
+      next: (statistics) => {
+        this.statistics = statistics;
+        this.statisticsLoading = false;
+      },
+      error: () => {
+        this.statistics = null;
+        this.statisticsLoading = false;
       },
     });
   }
@@ -71,6 +89,7 @@ export class AdminSessionsComponent implements OnInit {
         this.sessions = this.sessions.filter((item) => item.id !== session.id);
         this.deletingSessionIds.delete(session.id);
         this.successMessage = 'Sessione eliminata.';
+        this.loadStatistics();
       },
       error: (err) => {
         this.deletingSessionIds.delete(session.id);

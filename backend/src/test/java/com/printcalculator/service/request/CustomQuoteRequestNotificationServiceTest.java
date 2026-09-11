@@ -1,7 +1,9 @@
 package com.printcalculator.service.request;
 
 import com.printcalculator.entity.CustomQuoteRequest;
+import com.printcalculator.service.email.EmailAuditService;
 import com.printcalculator.service.email.EmailNotificationService;
+import com.printcalculator.service.email.EmailSendResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.nullable;
 
 @ExtendWith(MockitoExtension.class)
 class CustomQuoteRequestNotificationServiceTest {
@@ -27,13 +32,16 @@ class CustomQuoteRequestNotificationServiceTest {
     @Mock
     private EmailNotificationService emailNotificationService;
 
+    @Mock
+    private EmailAuditService emailAuditService;
+
     private ContactRequestLocalizationService localizationService;
     private CustomQuoteRequestNotificationService service;
 
     @BeforeEach
     void setUp() {
         localizationService = new ContactRequestLocalizationService();
-        service = new CustomQuoteRequestNotificationService(emailNotificationService, localizationService);
+        service = new CustomQuoteRequestNotificationService(emailNotificationService, localizationService, emailAuditService);
     }
 
     @Test
@@ -71,6 +79,27 @@ class CustomQuoteRequestNotificationServiceTest {
         int adminIndex = recipients.indexOf("admin@3d-fab.ch");
         assertEquals("contact-request-admin", templateCaptor.getAllValues().get(adminIndex));
         assertEquals(3, dataCaptor.getAllValues().get(adminIndex).get("attachmentsCount"));
+
+        verify(emailAuditService).recordContactRequestEmail(
+                eq(request),
+                eq(EmailAuditService.EVENT_CONTACT_REQUEST_ADMIN),
+                eq(EmailAuditService.ORIGIN_SYSTEM),
+                eq("admin@3d-fab.ch"),
+                eq("Nuova richiesta di contatto #" + request.getId()),
+                eq("contact-request-admin"),
+                nullable(EmailSendResult.class),
+                isNull()
+        );
+        verify(emailAuditService).recordContactRequestEmail(
+                eq(request),
+                eq(EmailAuditService.EVENT_CONTACT_REQUEST_CUSTOMER),
+                eq(EmailAuditService.ORIGIN_SYSTEM),
+                eq("customer@example.com"),
+                eq("We received your contact request #" + request.getId() + " - 3D-Fab"),
+                eq("contact-request-customer"),
+                nullable(EmailSendResult.class),
+                isNull()
+        );
     }
 
     @Test

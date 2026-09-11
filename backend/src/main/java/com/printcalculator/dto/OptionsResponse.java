@@ -10,7 +10,7 @@ public record OptionsResponse(
     List<NozzleOptionDTO> nozzleDiameters,
     List<NozzleLayerHeightOptionsDTO> layerHeightsByNozzle
 ) {
-    public record MaterialOption(String code, String label, List<VariantOption> variants) {}
+    public record MaterialOption(String code, String label, boolean isTechnical, List<VariantOption> variants) {}
     public record VariantOption(
             Long id,
             String name,

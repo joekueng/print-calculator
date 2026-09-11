@@ -4,6 +4,18 @@
   white-space: nowrap;
 }
 
+.statistics-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.statistics-loading,
+.statistics-note {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 .detail-cell {
   background: var(--color-neutral-100);
   padding: var(--space-4);
@@ -53,6 +65,10 @@
 }
 
 @media (max-width: 900px) {
+  .statistics-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .section-header {
     flex-direction: column;
     align-items: stretch;
@@ -77,6 +93,10 @@
 }
 
 @media (max-width: 520px) {
+  .statistics-cards {
+    grid-template-columns: 1fr;
+  }
+
   .section-card {
     gap: var(--space-4);
   }

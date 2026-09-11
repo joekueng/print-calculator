@@ -5,6 +5,9 @@ import jakarta.validation.constraints.AssertTrue;
 
 @Data
 public class CreateOrderRequest {
+    @jakarta.validation.constraints.DecimalMin("0.00")
+    @jakarta.validation.constraints.Digits(integer = 10, fraction = 2)
+    private java.math.BigDecimal expectedShippingCostChf;
     private CustomerDto customer;
     private AddressDto billingAddress;
     private AddressDto shippingAddress;

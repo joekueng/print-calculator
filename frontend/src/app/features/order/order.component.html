@@ -212,6 +212,31 @@
             [totalLabelKey]="'PAYMENT.TOTAL'"
           ></app-price-breakdown>
 
+          <div
+            class="cad-download-panel"
+            *ngIf="o.isCadOrder && (o.cadFileCount || 0) > 0"
+          >
+            <div class="cad-download-copy">
+              <strong>{{ "ORDER.CAD_FILES_TITLE" | translate }}</strong>
+              <span>
+                {{
+                  o.cadFileDownloadAvailable
+                    ? ("ORDER.CAD_FILES_READY"
+                      | translate: { count: o.cadFileCount || 0 })
+                    : ("ORDER.CAD_FILES_LOCKED" | translate)
+                }}
+              </span>
+            </div>
+            <app-button
+              type="button"
+              size="sm"
+              (click)="downloadCadFiles()"
+              [disabled]="!o.cadFileDownloadAvailable"
+            >
+              {{ "ORDER.DOWNLOAD_CAD_FILES" | translate }}
+            </app-button>
+          </div>
+
           <div class="summary-items-section" *ngIf="(o.items || []).length > 0">
             <div class="summary-items-head">
               <h4>{{ "ORDER.ITEMS_TITLE" | translate }}</h4>
@@ -266,8 +291,8 @@
                     class="order-item-tech"
                     *ngIf="showItemPrintMetrics(item)"
                   >
-                    {{ item.printTimeSeconds || 0 | number: "1.0-0" }}s |
-                    {{ item.materialGrams || 0 | number: "1.0-0" }}g
+                    {{ (item.printTimeSeconds || 0) / 3600 | number: "1.1-1" }}h
+                    | {{ item.materialGrams || 0 | number: "1.0-0" }}g
                   </div>
                 </div>
 

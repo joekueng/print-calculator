@@ -2,6 +2,7 @@ package com.printcalculator.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.printcalculator.exception.ModelProcessingException;
 import com.printcalculator.model.ModelDimensions;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,6 +53,26 @@ public class SlicerService {
 
     public PrintStats slice(File inputStl, String machineName, String filamentName, String processName,
                             Map<String, String> machineOverrides, Map<String, String> processOverrides) throws IOException {
+        return sliceInternal(inputStl, machineName, filamentName, processName, machineOverrides, processOverrides, Optional.empty());
+    }
+
+    public PrintStats sliceForOversizedEstimate(File inputStl,
+                                                String machineName,
+                                                String filamentName,
+                                                String processName,
+                                                Optional<ModelDimensions> modelDimensions,
+                                                Map<String, String> processOverrides) throws IOException {
+        Optional<ModelDimensions> dimensions = modelDimensions != null ? modelDimensions : Optional.empty();
+        return sliceInternal(inputStl, machineName, filamentName, processName, null, processOverrides, dimensions);
+    }
+
+    private PrintStats sliceInternal(File inputStl,
+                                     String machineName,
+                                     String filamentName,
+                                     String processName,
+                                     Map<String, String> machineOverrides,
+                                     Map<String, String> processOverrides,
+                                     Optional<ModelDimensions> oversizedEstimateDimensions) throws IOException {
         ObjectNode machineProfile = profileManager.getMergedProfile(machineName, "machine");
         ObjectNode filamentProfile = profileManager.getMergedProfile(filamentName, "filament");
         ObjectNode processProfile = profileManager.getMergedProfile(processName, "process");
@@ -67,6 +89,7 @@ public class SlicerService {
         if (processOverrides != null) {
             processOverrides.forEach(processProfile::put);
         }
+        oversizedEstimateDimensions.ifPresent(dimensions -> applyOversizedEstimateVolume(machineProfile, dimensions));
 
         Path tempDir = Files.createTempDirectory("slicer_job_");
         try {
@@ -201,6 +224,28 @@ public class SlicerService {
         }
     }
 
+    private void applyOversizedEstimateVolume(ObjectNode machineProfile, ModelDimensions dimensions) {
+        double marginMm = 50.0;
+        double sideMm = Math.max(dimensions.xMm(), dimensions.yMm()) + marginMm;
+        double heightMm = dimensions.zMm() + marginMm;
+
+        ArrayNode printableArea = mapper.createArrayNode();
+        printableArea.add("0x0");
+        printableArea.add(formatProfileMillimeters(sideMm) + "x0");
+        printableArea.add(formatProfileMillimeters(sideMm) + "x" + formatProfileMillimeters(sideMm));
+        printableArea.add("0x" + formatProfileMillimeters(sideMm));
+
+        machineProfile.set("printable_area", printableArea);
+        machineProfile.put("printable_height", formatProfileMillimeters(heightMm));
+        machineProfile.putArray("bed_exclude_area");
+        machineProfile.putArray("head_wrap_detect_zone");
+
+        logger.info("Using virtual build volume for oversized estimate: "
+                + formatProfileMillimeters(sideMm) + " x "
+                + formatProfileMillimeters(sideMm) + " x "
+                + formatProfileMillimeters(heightMm) + " mm");
+    }
+
     public Optional<ModelDimensions> inspectModelDimensions(File inputModel) {
         return modelInspector.inspectModelDimensions(inputModel);
     }
@@ -266,6 +311,10 @@ public class SlicerService {
 
         File fallback = tempDir.resolve("plate_1.gcode").toFile();
         return fallback.exists() ? fallback : null;
+    }
+
+    private String formatProfileMillimeters(double value) {
+        return BigDecimal.valueOf(Math.ceil(value)).stripTrailingZeros().toPlainString();
     }
 
     private boolean isOutOfVolumeError(String errorLog) {

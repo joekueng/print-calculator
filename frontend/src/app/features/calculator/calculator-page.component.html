@@ -7,7 +7,7 @@
   </p>
 
   @if (error()) {
-    <app-alert type="error">
+    <app-alert [type]="isOutOfVolumeError() ? 'warning' : 'error'">
       @if (errorMessage()) {
         {{ errorMessage() }}
       } @else {
@@ -58,6 +58,7 @@
           [lockedSettings]="cadSessionLocked()"
           [loading]="loading()"
           [uploadProgress]="uploadProgress()"
+          [showSplitPrintingOption]="showSplitPrintingOption()"
           (submitRequest)="onCalculate($event)"
           (itemQuantityChange)="onUploadItemQuantityChange($event)"
           (printSettingsChange)="onUploadPrintSettingsChange($event)"
@@ -98,6 +99,35 @@
           <div class="zero-result-action">
             <app-button variant="outline" (click)="onConsult()">
               {{ "QUOTE.CONSULT" | translate }}
+            </app-button>
+          </div>
+        </app-card>
+      } @else if (isCustomQuoteError()) {
+        <app-card class="zero-result-card">
+          <h3>
+            {{
+              (isOutOfVolumeError()
+                ? "CALC.SPLIT_REVIEW_TITLE"
+                : "CALC.CUSTOM_QUOTE_TITLE"
+              ) | translate
+            }}
+          </h3>
+          <p>
+            {{
+              (isOutOfVolumeError()
+                ? "CALC.SPLIT_REVIEW_HELP"
+                : "CALC.CUSTOM_QUOTE_HELP"
+              ) | translate
+            }}
+          </p>
+          <div class="zero-result-action">
+            <app-button variant="outline" (click)="onConsult()">
+              {{
+                (isOutOfVolumeError()
+                  ? "CALC.SPLIT_REQUEST_ACTION"
+                  : "QUOTE.CONSULT"
+                ) | translate
+              }}
             </app-button>
           </div>
         </app-card>

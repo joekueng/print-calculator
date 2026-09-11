@@ -10,6 +10,7 @@ import {
 } from './services/quote-estimator.service';
 import { LanguageService } from '../../core/services/language.service';
 import { UploadFormComponent } from './components/upload-form/upload-form.component';
+import { TranslateService } from '@ngx-translate/core';
 
 describe('CalculatorPageComponent', () => {
   const createResult = (sessionId: string, notes?: string): QuoteResult => ({
@@ -75,9 +76,11 @@ describe('CalculatorPageComponent', () => {
         'mapSessionToQuoteResult',
         'calculate',
         'setPendingCalculatorDraft',
+        'getPendingCalculatorDraft',
         'consumePendingCalculatorDraft',
       ],
     );
+    estimator.getPendingCalculatorDraft.and.returnValue(null);
     const router = jasmine.createSpyObj<Router>('Router', ['navigate']);
     const route = {
       data: of({}),
@@ -97,12 +100,28 @@ describe('CalculatorPageComponent', () => {
       'LanguageService',
       ['selectedLang'],
     );
+    const translate = jasmine.createSpyObj<TranslateService>(
+      'TranslateService',
+      ['instant'],
+    );
+    translate.instant.and.callFake(
+      (key: string, params?: Record<string, unknown>) => {
+        if (key === 'CALC.REVIEW_PARTIAL_SINGLE') {
+          return `${params?.['fileName']} was not included in the quote. ${params?.['reason']}`;
+        }
+        if (key === 'CALC.REVIEW_OUT_OF_VOLUME') {
+          return 'This model could not be placed fully inside the printer volume.';
+        }
+        return key;
+      },
+    );
 
     const component = new CalculatorPageComponent(
       estimator,
       router,
       route,
       languageService,
+      translate,
       platformId,
     );
 
@@ -111,6 +130,9 @@ describe('CalculatorPageComponent', () => {
       [
         'setFiles',
         'setPreviewFileByIndex',
+        'setItemReviewStateByIndex',
+        'setItemReviewStateByName',
+        'setAcceptSplitPrinting',
         'patchSettings',
         'setItemPrintSettingsByIndex',
         'updateItemColor',
@@ -118,6 +140,7 @@ describe('CalculatorPageComponent', () => {
         'updateItemQuantityByIndex',
         'updateItemQuantityByName',
         'getCurrentRequestDraft',
+        'getPreviewFilesByIndex',
         'restoreRequestDraft',
       ],
     );
@@ -127,6 +150,7 @@ describe('CalculatorPageComponent', () => {
     uploadForm.selectedFile = jasmine
       .createSpy('selectedFile')
       .and.returnValue(null) as any;
+    uploadForm.getPreviewFilesByIndex.and.returnValue([]);
     component.uploadForm = uploadForm;
 
     return {
@@ -236,6 +260,32 @@ describe('CalculatorPageComponent', () => {
       request: draftRequest,
       sameSettingsForAll: false,
       selectedFileName: 'part-a.stl',
+      previewFiles: [],
+    });
+  });
+
+  it('stores files and previews before switching mode with a quote session', () => {
+    const { component, estimator, uploadForm } = createComponent(undefined, {
+      session: 'session-1',
+    });
+    const draftRequest = createDraftRequest();
+    const previewFile = new File(['preview'], 'part-a-preview.stl', {
+      type: 'model/stl',
+    });
+    uploadForm.getCurrentRequestDraft.and.returnValue(draftRequest);
+    uploadForm.getPreviewFilesByIndex.and.returnValue([previewFile]);
+    (uploadForm.sameSettingsForAll as jasmine.Spy).and.returnValue(false);
+    (uploadForm.selectedFile as jasmine.Spy).and.returnValue(
+      draftRequest.items[0].file,
+    );
+
+    component.switchMode('advanced');
+
+    expect(estimator.setPendingCalculatorDraft).toHaveBeenCalledWith({
+      request: draftRequest,
+      sameSettingsForAll: false,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [previewFile],
     });
   });
 
@@ -254,6 +304,31 @@ describe('CalculatorPageComponent', () => {
     expect(uploadForm.restoreRequestDraft).toHaveBeenCalledWith(draftRequest, {
       sameSettingsForAll: true,
       selectedFileName: 'part-a.stl',
+      previewFiles: undefined,
+    });
+  });
+
+  it('restores files and previews after a mode switch with a quote session', () => {
+    const { component, estimator, uploadForm } = createComponent(undefined, {
+      session: 'session-1',
+    });
+    const draftRequest = createDraftRequest();
+    const previewFile = new File(['preview'], 'part-a-preview.stl', {
+      type: 'model/stl',
+    });
+    estimator.getPendingCalculatorDraft.and.returnValue({
+      request: draftRequest,
+      sameSettingsForAll: false,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [previewFile],
+    });
+
+    component.ngAfterViewInit();
+
+    expect(uploadForm.restoreRequestDraft).toHaveBeenCalledWith(draftRequest, {
+      sameSettingsForAll: false,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [previewFile],
     });
   });
 
@@ -266,7 +341,7 @@ describe('CalculatorPageComponent', () => {
         fileName: 'cube-256.stl',
         code: 'MODEL_OUT_OF_PRINT_VOLUME',
         message:
-          'This model could not be placed fully inside the printer volume for Bambu Lab A1 0.4 nozzle.',
+          'This model could not be placed fully inside the printer volume.',
       },
     ];
 
@@ -286,7 +361,7 @@ describe('CalculatorPageComponent', () => {
   });
 
   it('shows backend failure message when calculation fails completely', () => {
-    const { component, estimator } = createComponent();
+    const { component, estimator, uploadForm } = createComponent();
     const request = createDraftRequest();
 
     estimator.calculate.and.returnValue(
@@ -294,7 +369,7 @@ describe('CalculatorPageComponent', () => {
         fileName: 'cube-257.stl',
         code: 'MODEL_OUT_OF_PRINT_VOLUME',
         message:
-          'This model could not be placed fully inside the printer volume for Bambu Lab A1 0.4 nozzle.',
+          'This model could not be placed fully inside the printer volume.',
       })),
     );
 
@@ -302,8 +377,96 @@ describe('CalculatorPageComponent', () => {
 
     expect(component.error()).toBeTrue();
     expect(component.errorMessage()).toBe(
-      'This model could not be placed fully inside the printer volume for Bambu Lab A1 0.4 nozzle.',
+      'This model could not be placed fully inside the printer volume.',
     );
+    expect(component.isCustomQuoteError()).toBeTrue();
+    expect(uploadForm.setItemReviewStateByName).toHaveBeenCalledWith(
+      'cube-257.stl',
+      'warning',
+      'This model could not be placed fully inside the printer volume.',
+    );
+  });
+
+  it('shows a clear banner when quote requests are rate limited', () => {
+    const { component, estimator } = createComponent();
+    const request = createDraftRequest();
+
+    estimator.calculate.and.returnValue(
+      throwError(() => ({
+        fileName: 'part-a.stl',
+        status: 429,
+        code: 'QUOTE_RATE_LIMITED',
+        message: 'Too Many Requests',
+      })),
+    );
+
+    component.onCalculate(request);
+
+    expect(component.error()).toBeTrue();
+    expect(component.errorKey()).toBe('CALC.ERROR_RATE_LIMIT');
+    expect(component.errorMessage()).toBe('CALC.ERROR_RATE_LIMIT');
+    expect(component.errorCode()).toBe('QUOTE_RATE_LIMITED');
+  });
+
+  it('restores the local draft when a session has no downloadable items', () => {
+    const { component, estimator, uploadForm } = createComponent(undefined, {
+      session: 'session-1',
+    });
+    const request = createDraftRequest();
+    estimator.consumePendingCalculatorDraft.and.returnValue({
+      request,
+      sameSettingsForAll: true,
+      selectedFileName: 'part-a.stl',
+    });
+
+    component.restoreFilesAndSettings({ id: 'session-1' }, []);
+
+    expect(uploadForm.restoreRequestDraft).toHaveBeenCalledWith(request, {
+      sameSettingsForAll: true,
+      selectedFileName: 'part-a.stl',
+      previewFiles: undefined,
+    });
+  });
+
+  it('marks custom quote failures for the custom quote CTA state', () => {
+    const { component, estimator } = createComponent();
+    const request = createDraftRequest();
+
+    estimator.calculate.and.returnValue(
+      throwError(() => ({
+        fileName: 'large-part.stl',
+        code: 'MODEL_REQUIRES_CUSTOM_QUOTE',
+        message:
+          'This model is too large for the automatic split-printing estimate. Please request a custom quote.',
+      })),
+    );
+
+    component.onCalculate(request);
+
+    expect(component.error()).toBeTrue();
+    expect(component.isCustomQuoteError()).toBeTrue();
+    expect(component.errorCode()).toBe('MODEL_REQUIRES_CUSTOM_QUOTE');
+  });
+
+  it('keeps the local file list authoritative during a session refresh', () => {
+    const { component, estimator, uploadForm } = createComponent();
+    const draftRequest = createDraftRequest();
+    component.result.set(createResult('session-1'));
+    estimator.getPendingCalculatorDraft.and.returnValue({
+      request: draftRequest,
+      sameSettingsForAll: true,
+      selectedFileName: 'part-a.stl',
+      previewFiles: [draftRequest.items[0].file],
+    });
+    estimator.getLineItemContent.and.returnValue(of(new Blob(['server'])));
+
+    component.restoreFilesAndSettings({ id: 'session-1' }, [
+      { id: 'line-1', originalFilename: 'part-a.stl', quantity: 1 },
+    ]);
+
+    expect(uploadForm.restoreRequestDraft).toHaveBeenCalled();
+    expect(uploadForm.setFiles).not.toHaveBeenCalled();
+    expect(estimator.setPendingCalculatorDraft).toHaveBeenCalledWith(null);
   });
 
   it('downloads converted previews only for items that expose them', () => {
@@ -316,7 +479,9 @@ describe('CalculatorPageComponent', () => {
       (_sessionId: string, _lineItemId: string, preview = false) =>
         of(preview ? previewBlob : originalBlob),
     );
-    (uploadForm.selectedFile as jasmine.Spy).and.returnValue(null);
+    (uploadForm.selectedFile as jasmine.Spy).and.returnValue(
+      new File(['current'], 'legacy.stl', { type: 'model/stl' }),
+    );
 
     component.restoreFilesAndSettings(
       {
@@ -352,6 +517,9 @@ describe('CalculatorPageComponent', () => {
     expect(uploadForm.setPreviewFileByIndex).toHaveBeenCalledWith(
       1,
       jasmine.any(File),
+    );
+    expect(uploadForm.selectFile.calls.mostRecent().args[0].name).toBe(
+      'legacy.stl',
     );
   });
 
@@ -466,6 +634,9 @@ describe('CalculatorPageComponent', () => {
       [
         'setFiles',
         'setPreviewFileByIndex',
+        'setItemReviewStateByIndex',
+        'setItemReviewStateByName',
+        'setAcceptSplitPrinting',
         'patchSettings',
         'setItemPrintSettingsByIndex',
         'updateItemColor',
@@ -473,6 +644,7 @@ describe('CalculatorPageComponent', () => {
         'updateItemQuantityByIndex',
         'updateItemQuantityByName',
         'getCurrentRequestDraft',
+        'getPreviewFilesByIndex',
         'restoreRequestDraft',
       ],
     );
@@ -482,6 +654,7 @@ describe('CalculatorPageComponent', () => {
     uploadForm.selectedFile = jasmine
       .createSpy('selectedFile')
       .and.returnValue(null) as any;
+    uploadForm.getPreviewFilesByIndex.and.returnValue([]);
 
     component.uploadForm = uploadForm;
     component.ngAfterViewInit();

@@ -43,16 +43,38 @@
   text-overflow: ellipsis;
 }
 
-.item-settings-diff {
-  margin-left: 2px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #8a6d1f;
-  white-space: normal;
-}
 .file-details {
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.item-settings-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 5px;
+}
+
+.item-setting-detail {
+  display: inline-flex;
+  gap: 3px;
+  min-width: 0;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.item-setting-label {
+  color: var(--color-text-muted);
+
+  &::after {
+    content: ":";
+  }
+}
+
+.item-setting-value {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 .item-controls {
@@ -125,9 +147,20 @@
 
 .setup-note {
   text-align: center;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-3);
   color: var(--color-text-muted);
   font-size: 0.8rem;
+}
+
+.split-printing-note {
+  margin-bottom: var(--space-5);
+  padding: var(--space-3);
+  border: 1px solid var(--color-warning-500);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-warning);
+  color: var(--color-text);
+  font-size: 0.86rem;
+  line-height: 1.45;
 }
 
 .actions {

@@ -15,6 +15,57 @@
     {{ successMessage }}
   </p>
 
+  <div
+    class="statistics-cards"
+    *ngIf="statistics as currentStatistics; else statisticsLoadingTpl"
+  >
+    <article class="ui-stat-chip">
+      <strong>{{ currentStatistics.totalSessionCount }}</strong>
+      <span>sessioni totali</span>
+    </article>
+    <article class="ui-stat-chip">
+      <strong>{{ currentStatistics.sessionsWithItemsCount }}</strong>
+      <span>con articoli</span>
+    </article>
+    <article class="ui-stat-chip">
+      <strong>{{ currentStatistics.paidConvertedSessionCount }}</strong>
+      <span>convertite e pagate</span>
+    </article>
+    <article class="ui-stat-chip">
+      <strong
+        >{{
+          currentStatistics.paidConversionRatePercent | number: "1.0-2"
+        }}%</strong
+      >
+      <span>conversione pagata</span>
+    </article>
+    <article class="ui-stat-chip">
+      <strong>{{
+        currentStatistics.averageItemsPerActiveSession | number: "1.0-2"
+      }}</strong>
+      <span>articoli per sessione</span>
+    </article>
+    <article class="ui-stat-chip">
+      <strong>{{ currentStatistics.modifiedSessionCount }}</strong>
+      <span>sessioni modificate</span>
+    </article>
+    <article class="ui-stat-chip">
+      <strong>{{ currentStatistics.expiredAbandonedSessionCount }}</strong>
+      <span>scadute senza acquisto</span>
+    </article>
+  </div>
+
+  <p class="statistics-note">
+    Il riuso per singolo utente non è disponibile: le sessioni non memorizzano
+    un identificatore visitatore.
+  </p>
+
+  <ng-template #statisticsLoadingTpl>
+    <p class="statistics-loading" *ngIf="statisticsLoading">
+      Caricamento statistiche...
+    </p>
+  </ng-template>
+
   <div class="table-wrap ui-table-wrap" *ngIf="!loading; else loadingTpl">
     <table class="sessions-table ui-data-table">
       <thead>

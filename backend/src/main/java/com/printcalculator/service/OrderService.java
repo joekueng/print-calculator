@@ -42,6 +42,7 @@ public class OrderService {
     private final ApplicationEventPublisher eventPublisher;
     private final PaymentService paymentService;
     private final QuoteSessionTotalsService quoteSessionTotalsService;
+    private final MaterialPrintCompatibilityService materialPrintCompatibilityService;
 
     public OrderService(OrderRepository orderRepo,
                         OrderItemRepository orderItemRepo,
@@ -53,7 +54,8 @@ public class OrderService {
                         QrBillService qrBillService,
                         ApplicationEventPublisher eventPublisher,
                         PaymentService paymentService,
-                        QuoteSessionTotalsService quoteSessionTotalsService) {
+                        QuoteSessionTotalsService quoteSessionTotalsService,
+                        MaterialPrintCompatibilityService materialPrintCompatibilityService) {
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
         this.quoteSessionRepo = quoteSessionRepo;
@@ -65,6 +67,7 @@ public class OrderService {
         this.eventPublisher = eventPublisher;
         this.paymentService = paymentService;
         this.quoteSessionTotalsService = quoteSessionTotalsService;
+        this.materialPrintCompatibilityService = materialPrintCompatibilityService;
     }
 
     @Transactional
@@ -79,6 +82,21 @@ public class OrderService {
         if (session.getConvertedOrderId() != null) {
             throw new IllegalStateException("Quote session already converted to order");
         }
+
+        List<QuoteLineItem> quoteItems = quoteLineItemRepo.findByQuoteSessionId(quoteSessionId);
+        quoteItems = quoteItems.stream()
+                .filter(item -> !"REVIEW_REQUIRED".equalsIgnoreCase(item.getStatus()))
+                .toList();
+        if (quoteItems.isEmpty() && quoteSessionTotalsService.calculateCadTotal(session).compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Quote session has no orderable items");
+        }
+        quoteItems.stream()
+                .filter(item -> !SHOP_LINE_ITEM_TYPE.equals(item.getLineItemType()))
+                .forEach(item -> materialPrintCompatibilityService.validate(
+                        item.getFilamentVariant(),
+                        item.getNozzleDiameterMm(),
+                        item.getLayerHeightMm()
+                ));
 
         Customer customer = customerRepo.findByEmail(request.getCustomer().getEmail())
                 .orElseGet(() -> {
@@ -151,8 +169,23 @@ public class OrderService {
             order.setShippingCountryCode(order.getBillingCountryCode());
         }
 
-        List<QuoteLineItem> quoteItems = quoteLineItemRepo.findByQuoteSessionId(quoteSessionId);
         QuoteSessionTotalsService.QuoteSessionTotals totals = quoteSessionTotalsService.compute(session, quoteItems);
+        if (totals.shippingQuote() != null) {
+            if (!totals.shippingQuote().available()) {
+                throw new IllegalArgumentException("Shipping requires a completed calculation or a manual quote");
+            }
+            if (request.getExpectedShippingCostChf() != null
+                    && request.getExpectedShippingCostChf().compareTo(totals.shippingCostChf()) != 0) {
+                throw new IllegalArgumentException("Shipping price changed. Refresh checkout before placing the order");
+            }
+            if (!"NOT_REQUIRED".equals(totals.shippingQuote().status())
+                    && !"CH".equalsIgnoreCase(order.getShippingCountryCode())) {
+                throw new IllegalArgumentException("Automatic calculator shipping is available only within Switzerland");
+            }
+            order.setShippingQuoteSnapshot(new com.fasterxml.jackson.databind.ObjectMapper().convertValue(
+                    totals.shippingQuote(), new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String,Object>>() {}));
+            order.getShippingQuoteSnapshot().put("algorithmVersion", "swiss-post-packing-v1-2026-09");
+        }
         BigDecimal cadTotal = totals.cadTotalChf();
 
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -207,6 +240,7 @@ public class OrderService {
             oItem.setInfillPercent(qItem.getInfillPercent());
             oItem.setInfillPattern(qItem.getInfillPattern());
             oItem.setSupportsEnabled(qItem.getSupportsEnabled());
+            oItem.setRequiresSplitPrinting(Boolean.TRUE.equals(qItem.getRequiresSplitPrinting()));
 
             BigDecimal distributedUnitPrice = qItem.getUnitPriceChf() != null ? qItem.getUnitPriceChf() : BigDecimal.ZERO;
             if (totals.totalPrintSeconds().compareTo(BigDecimal.ZERO) > 0 && qItem.getPrintTimeSeconds() != null) {

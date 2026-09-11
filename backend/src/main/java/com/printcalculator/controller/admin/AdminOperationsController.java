@@ -6,6 +6,7 @@ import com.printcalculator.dto.AdminContactRequestDetailDto;
 import com.printcalculator.dto.AdminContactRequestDto;
 import com.printcalculator.dto.AdminFilamentStockDto;
 import com.printcalculator.dto.AdminQuoteSessionDto;
+import com.printcalculator.dto.AdminSessionStatisticsDto;
 import com.printcalculator.dto.AdminUpdateContactRequestStatusRequest;
 import com.printcalculator.service.admin.AdminOperationsControllerService;
 import org.springframework.core.io.Resource;
@@ -58,6 +59,15 @@ public class AdminOperationsController {
         return ResponseEntity.ok(adminOperationsControllerService.updateContactRequestStatus(requestId, payload));
     }
 
+    @PostMapping("/contact-requests/{requestId}/email-logs/{emailLogId}/resend")
+    @Transactional
+    public ResponseEntity<AdminContactRequestDetailDto> resendContactRequestEmail(
+            @PathVariable UUID requestId,
+            @PathVariable UUID emailLogId
+    ) {
+        return ResponseEntity.ok(adminOperationsControllerService.resendContactRequestEmail(requestId, emailLogId));
+    }
+
     @GetMapping("/contact-requests/{requestId}/attachments/{attachmentId}/file")
     public ResponseEntity<Resource> downloadContactRequestAttachment(
             @PathVariable UUID requestId,
@@ -69,6 +79,11 @@ public class AdminOperationsController {
     @GetMapping("/sessions")
     public ResponseEntity<List<AdminQuoteSessionDto>> getQuoteSessions() {
         return ResponseEntity.ok(adminOperationsControllerService.getQuoteSessions());
+    }
+
+    @GetMapping("/sessions/statistics")
+    public ResponseEntity<AdminSessionStatisticsDto> getSessionStatistics() {
+        return ResponseEntity.ok(adminOperationsControllerService.getSessionStatistics());
     }
 
     @GetMapping("/cad-invoices")

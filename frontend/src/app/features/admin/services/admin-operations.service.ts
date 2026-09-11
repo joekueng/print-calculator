@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { AdminEmailLog } from './admin-email-log.model';
 
 export interface AdminFilamentStockRow {
   filamentVariantId: number;
@@ -110,6 +111,7 @@ export interface AdminContactRequestDetail {
   createdAt: string;
   updatedAt: string;
   attachments: AdminContactRequestAttachment[];
+  emailLogs: AdminEmailLog[];
 }
 
 export interface AdminUpdateContactRequestStatusPayload {
@@ -129,6 +131,18 @@ export interface AdminQuoteSession {
   cadTotalChf?: number;
 }
 
+export interface AdminSessionStatistics {
+  totalSessionCount: number;
+  sessionsWithItemsCount: number;
+  emptySessionCount: number;
+  convertedSessionCount: number;
+  paidConvertedSessionCount: number;
+  modifiedSessionCount: number;
+  expiredAbandonedSessionCount: number;
+  averageItemsPerActiveSession: number;
+  paidConversionRatePercent: number;
+}
+
 export interface AdminQuoteSessionDetailItem {
   id: string;
   originalFilename: string;
@@ -142,6 +156,7 @@ export interface AdminQuoteSessionDetailItem {
   infillPercent?: number;
   infillPattern?: string;
   supportsEnabled?: boolean;
+  requiresSplitPrinting?: boolean;
   colorCode?: string;
   filamentVariantId?: number;
   status: string;
@@ -299,6 +314,17 @@ export class AdminOperationsService {
     );
   }
 
+  resendContactRequestEmail(
+    requestId: string,
+    emailLogId: string,
+  ): Observable<AdminContactRequestDetail> {
+    return this.http.post<AdminContactRequestDetail>(
+      `${this.baseUrl}/contact-requests/${requestId}/email-logs/${emailLogId}/resend`,
+      {},
+      { withCredentials: true },
+    );
+  }
+
   downloadContactRequestAttachment(
     requestId: string,
     attachmentId: string,
@@ -316,6 +342,13 @@ export class AdminOperationsService {
     return this.http.get<AdminQuoteSession[]>(`${this.baseUrl}/sessions`, {
       withCredentials: true,
     });
+  }
+
+  getSessionStatistics(): Observable<AdminSessionStatistics> {
+    return this.http.get<AdminSessionStatistics>(
+      `${this.baseUrl}/sessions/statistics`,
+      { withCredentials: true },
+    );
   }
 
   deleteSession(sessionId: string): Observable<void> {

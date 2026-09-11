@@ -32,6 +32,7 @@
   gap: var(--space-6);
 
   a {
+    white-space: nowrap;
     color: var(--color-text-muted);
     font-weight: 500;
     text-decoration: none;
@@ -338,7 +339,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+@media (max-width: 1180px) {
   .brand-logo {
     width: min(12rem, 46vw);
   }

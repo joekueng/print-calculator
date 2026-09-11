@@ -98,16 +98,16 @@ class SlicerServiceTest {
     }
 
     @Test
-    void buildOutOfVolumeMessage_includesModelAndPrinterLimits() {
+    void buildOutOfVolumeMessage_excludesPrinterNameAndIncludesModelAndPrinterLimits() {
         String message = SlicerService.buildOutOfVolumeMessage(
                 "Bambu Lab A1 0.4 nozzle",
                 Optional.of(new ModelDimensions(256.0, 256.0, 256.0)),
                 Optional.of(new PrintableVolume(256.0, 256.0, 256.0))
         );
 
-        assertTrue(message.contains("Bambu Lab A1 0.4 nozzle"));
+        assertFalse(message.contains("Bambu Lab A1 0.4 nozzle"));
         assertTrue(message.contains("model size 256 x 256 x 256 mm"));
         assertTrue(message.contains("printer limit 256 x 256 x 256 mm"));
-        assertTrue(message.contains("Reduce the model size or request a consultation."));
+        assertTrue(message.contains("Accept split printing to calculate it anyway"));
     }
 }

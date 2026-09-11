@@ -4,9 +4,12 @@ import com.printcalculator.entity.Customer;
 import com.printcalculator.entity.Order;
 import com.printcalculator.event.OrderCreatedEvent;
 import com.printcalculator.repository.OrderItemRepository;
+import com.printcalculator.repository.OrderRepository;
+import com.printcalculator.repository.PaymentRepository;
+import com.printcalculator.service.email.EmailAuditService;
+import com.printcalculator.service.email.EmailSendResult;
 import com.printcalculator.service.payment.InvoicePdfRenderingService;
 import com.printcalculator.service.payment.QrBillService;
-import com.printcalculator.service.storage.StorageService;
 import com.printcalculator.service.email.EmailNotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,13 +19,13 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -34,6 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,13 +50,19 @@ class OrderEmailListenerTest {
     private InvoicePdfRenderingService invoicePdfRenderingService;
 
     @Mock
+    private OrderRepository orderRepository;
+
+    @Mock
     private OrderItemRepository orderItemRepository;
+
+    @Mock
+    private PaymentRepository paymentRepository;
 
     @Mock
     private QrBillService qrBillService;
 
     @Mock
-    private StorageService storageService;
+    private EmailAuditService emailAuditService;
 
     @InjectMocks
     private OrderEmailListener orderEmailListener;
@@ -81,11 +91,14 @@ class OrderEmailListenerTest {
 
         event = new OrderCreatedEvent(this, order);
 
+        lenient().when(orderRepository.findForEmailById(order.getId())).thenReturn(Optional.of(order));
+
         ReflectionTestUtils.setField(orderEmailListener, "adminMailEnabled", true);
         ReflectionTestUtils.setField(orderEmailListener, "adminMailAddress", "admin@printcalculator.local");
         ReflectionTestUtils.setField(orderEmailListener, "frontendBaseUrl", "https://3d-fab.ch");
 
-        when(storageService.loadAsResource(any())).thenReturn(new ByteArrayResource("PDF".getBytes(StandardCharsets.UTF_8)));
+        when(invoicePdfRenderingService.generateDocumentPdf(eq(order), anyList(), eq(true), eq(qrBillService), isNull()))
+                .thenReturn("PDF".getBytes(StandardCharsets.UTF_8));
     }
 
     @Test
@@ -122,6 +135,29 @@ class OrderEmailListenerTest {
 
         Map<String, Object> adminData = adminTemplateCaptor.getValue();
         assertEquals("John Doe", adminData.get("customerName"));
+
+        verify(emailAuditService).recordOrderEmail(
+                eq(order),
+                eq(EmailAuditService.EVENT_ORDER_CONFIRMATION_CUSTOMER),
+                eq(EmailAuditService.ORIGIN_SYSTEM),
+                eq("john.doe@test.com"),
+                eq("Conferma Ordine #" + order.getOrderNumber() + " - 3D-Fab"),
+                eq("order-confirmation"),
+                eq("Conferma-Ordine-" + order.getOrderNumber() + ".pdf"),
+                nullable(EmailSendResult.class),
+                isNull()
+        );
+        verify(emailAuditService).recordOrderEmail(
+                eq(order),
+                eq(EmailAuditService.EVENT_ORDER_NOTIFICATION_ADMIN),
+                eq(EmailAuditService.ORIGIN_SYSTEM),
+                eq("admin@printcalculator.local"),
+                eq("Nuovo Ordine Ricevuto #" + order.getOrderNumber() + " - John Doe"),
+                eq("order-confirmation"),
+                isNull(),
+                nullable(EmailSendResult.class),
+                isNull()
+        );
     }
 
     @Test

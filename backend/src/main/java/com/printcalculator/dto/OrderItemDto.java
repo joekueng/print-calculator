@@ -35,6 +35,7 @@ public class OrderItemDto {
     private Integer infillPercent;
     private String infillPattern;
     private Boolean supportsEnabled;
+    private Boolean requiresSplitPrinting;
     private Integer quantity;
     private Integer printTimeSeconds;
     private BigDecimal materialGrams;
@@ -134,6 +135,9 @@ public class OrderItemDto {
 
     public Boolean getSupportsEnabled() { return supportsEnabled; }
     public void setSupportsEnabled(Boolean supportsEnabled) { this.supportsEnabled = supportsEnabled; }
+
+    public Boolean getRequiresSplitPrinting() { return requiresSplitPrinting; }
+    public void setRequiresSplitPrinting(Boolean requiresSplitPrinting) { this.requiresSplitPrinting = requiresSplitPrinting; }
 
     public Integer getQuantity() { return quantity; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }

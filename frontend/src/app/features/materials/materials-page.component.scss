@@ -80,6 +80,50 @@
   padding: var(--space-6);
 }
 
+.materials-section--food-contact {
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-8);
+}
+
+.food-contact-card {
+  max-width: 58rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.7fr) minmax(0, 2fr);
+  gap: var(--space-6);
+  padding: var(--space-5);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.food-contact-card h2 {
+  margin: var(--space-2) 0 0;
+  font-size: clamp(1.25rem, 2vw, 1.6rem);
+}
+
+.food-contact-copy {
+  display: grid;
+  gap: var(--space-3);
+  font-size: 0.92rem;
+}
+
+.food-contact-copy p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.food-contact-note {
+  color: var(--materials-muted);
+}
+
+@media (max-width: 640px) {
+  .food-contact-card {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
 .materials-panel__header {
   display: grid;
   gap: var(--space-3);

@@ -171,6 +171,59 @@
         </app-button>
       </div>
 
+      <section class="email-log-panel">
+        <header class="email-log-panel__header">
+          <h4>Email inviate</h4>
+          <span class="ui-status-chip ui-status-chip--neutral">
+            {{ emailLogs(selectedRequest).length }} tentativi
+          </span>
+        </header>
+
+        <div
+          class="email-log-list"
+          *ngIf="emailLogs(selectedRequest).length > 0; else noContactEmailsTpl"
+        >
+          <article
+            class="email-log-row"
+            *ngFor="let emailLog of emailLogs(selectedRequest)"
+          >
+            <div class="email-log-row__main">
+              <div class="email-log-row__heading">
+                <strong>{{ emailEventLabel(emailLog.eventType) }}</strong>
+                <span
+                  class="email-status"
+                  [ngClass]="emailStatusClass(emailLog.status)"
+                >
+                  {{ emailStatusLabel(emailLog.status) }}
+                </span>
+                <span class="email-origin" *ngIf="emailLog.origin === 'ADMIN'">
+                  Reinvio admin
+                </span>
+              </div>
+              <p class="email-log-row__meta">
+                A: {{ emailLog.recipient || "-" }} |
+                {{ emailLog.attemptedAt | date: "short" }}
+              </p>
+              <p class="email-log-row__subject">
+                {{ emailLog.subject || emailLog.templateName || "-" }}
+              </p>
+              <p class="email-log-row__error" *ngIf="emailLog.errorMessage">
+                {{ emailLog.errorMessage }}
+              </p>
+            </div>
+            <app-button
+              type="button"
+              variant="ghost"
+              size="sm"
+              (click)="resendEmail(emailLog)"
+              [disabled]="isResendingEmailLog(emailLog.id)"
+            >
+              {{ isResendingEmailLog(emailLog.id) ? "Reinvio..." : "Reinvia" }}
+            </app-button>
+          </article>
+        </div>
+      </section>
+
       <div class="message-box">
         <h4>Messaggio</h4>
         <p>{{ selectedRequest.message || "-" }}</p>
@@ -226,4 +279,8 @@
 
 <ng-template #noAttachmentsTpl>
   <p class="muted">Nessun allegato disponibile.</p>
+</ng-template>
+
+<ng-template #noContactEmailsTpl>
+  <p class="muted">Nessuna email tracciata per questa richiesta.</p>
 </ng-template>

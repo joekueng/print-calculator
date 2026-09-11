@@ -29,6 +29,9 @@ public class OrderDto {
     private BigDecimal cadHours;
     private BigDecimal cadHourlyRateChf;
     private BigDecimal cadTotalChf;
+    private Integer cadFileCount;
+    private Boolean cadFileDownloadAvailable;
+    private List<OrderDeliverableFileDto> cadFiles;
     private BigDecimal totalChf;
     private OffsetDateTime createdAt;
     private OffsetDateTime paidAt;
@@ -38,6 +41,7 @@ public class OrderDto {
     private String printInfillPattern;
     private Integer printInfillPercent;
     private Boolean printSupportsEnabled;
+    private List<AdminEmailLogDto> emailLogs;
     private List<OrderItemDto> items;
 
     // Getters and Setters
@@ -110,6 +114,15 @@ public class OrderDto {
     public BigDecimal getCadTotalChf() { return cadTotalChf; }
     public void setCadTotalChf(BigDecimal cadTotalChf) { this.cadTotalChf = cadTotalChf; }
 
+    public Integer getCadFileCount() { return cadFileCount; }
+    public void setCadFileCount(Integer cadFileCount) { this.cadFileCount = cadFileCount; }
+
+    public Boolean getCadFileDownloadAvailable() { return cadFileDownloadAvailable; }
+    public void setCadFileDownloadAvailable(Boolean cadFileDownloadAvailable) { this.cadFileDownloadAvailable = cadFileDownloadAvailable; }
+
+    public List<OrderDeliverableFileDto> getCadFiles() { return cadFiles; }
+    public void setCadFiles(List<OrderDeliverableFileDto> cadFiles) { this.cadFiles = cadFiles; }
+
     public BigDecimal getTotalChf() { return totalChf; }
     public void setTotalChf(BigDecimal totalChf) { this.totalChf = totalChf; }
 
@@ -136,6 +149,9 @@ public class OrderDto {
 
     public Boolean getPrintSupportsEnabled() { return printSupportsEnabled; }
     public void setPrintSupportsEnabled(Boolean printSupportsEnabled) { this.printSupportsEnabled = printSupportsEnabled; }
+
+    public List<AdminEmailLogDto> getEmailLogs() { return emailLogs; }
+    public void setEmailLogs(List<AdminEmailLogDto> emailLogs) { this.emailLogs = emailLogs; }
 
     public List<OrderItemDto> getItems() { return items; }
     public void setItems(List<OrderItemDto> items) { this.items = items; }

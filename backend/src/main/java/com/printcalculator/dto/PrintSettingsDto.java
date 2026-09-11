@@ -20,6 +20,7 @@ public class PrintSettingsDto {
     private Double infillDensity;
     private String infillPattern;
     private Boolean supportsEnabled;
+    private Boolean allowSplitForOversized;
     private String notes;
 
     // Dimensions
@@ -121,6 +122,14 @@ public class PrintSettingsDto {
 
     public void setSupportsEnabled(Boolean supportsEnabled) {
         this.supportsEnabled = supportsEnabled;
+    }
+
+    public Boolean getAllowSplitForOversized() {
+        return allowSplitForOversized;
+    }
+
+    public void setAllowSplitForOversized(Boolean allowSplitForOversized) {
+        this.allowSplitForOversized = allowSplitForOversized;
     }
 
     public String getNotes() {

@@ -182,6 +182,104 @@ tbody tr.selected {
   color: var(--color-text-muted);
 }
 
+.email-log-panel {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.email-log-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.email-log-panel__header h4 {
+  margin: 0;
+}
+
+.email-log-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.email-log-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+}
+
+.email-log-row__main {
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.email-log-row__heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.email-log-row__meta,
+.email-log-row__subject,
+.email-log-row__error {
+  margin: 0;
+  font-size: 0.84rem;
+}
+
+.email-log-row__meta,
+.email-log-row__subject {
+  color: var(--color-text-muted);
+}
+
+.email-log-row__subject,
+.email-log-row__error {
+  overflow-wrap: anywhere;
+}
+
+.email-log-row__error {
+  color: #b42318;
+}
+
+.email-status,
+.email-origin {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.email-status--sent {
+  background: color-mix(in srgb, #16a34a 14%, white);
+  color: #166534;
+}
+
+.email-status--failed {
+  background: color-mix(in srgb, #dc2626 12%, white);
+  color: #991b1b;
+}
+
+.email-status--skipped,
+.email-status--neutral,
+.email-origin {
+  background: var(--color-neutral-100);
+  color: var(--color-text-muted);
+}
+
 @media (max-width: 760px) {
   .section-header {
     flex-direction: column;
@@ -212,6 +310,12 @@ tbody tr.selected {
 
   .status-editor app-button {
     width: 100%;
+  }
+
+  .email-log-panel__header,
+  .email-log-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 

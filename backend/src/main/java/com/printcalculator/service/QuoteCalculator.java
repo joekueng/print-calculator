@@ -21,6 +21,7 @@ import java.util.List;
 
 @Service
 public class QuoteCalculator {
+    private static final BigDecimal DEFAULT_SPLIT_MODEL_SETUP_FEE_CHF = BigDecimal.valueOf(10);
     private static final BigDecimal SETUP_FEE_DOUBLE_THRESHOLD_CHF = BigDecimal.TEN;
     private static final BigDecimal SETUP_FEE_MULTIPLIER_BELOW_THRESHOLD = BigDecimal.valueOf(2);
 
@@ -126,6 +127,13 @@ public class QuoteCalculator {
         }
 
         return baseSetupFee.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    public BigDecimal calculateSplitModelSetupFee(PricingPolicy policy) {
+        BigDecimal fee = policy != null && policy.getSplitModelSetupFeeChf() != null
+                ? policy.getSplitModelSetupFeeChf()
+                : DEFAULT_SPLIT_MODEL_SETUP_FEE_CHF;
+        return fee.setScale(2, RoundingMode.HALF_UP);
     }
 
     private BigDecimal calculateMachineCost(PricingPolicy policy, BigDecimal hours) {

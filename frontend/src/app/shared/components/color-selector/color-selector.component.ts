@@ -27,6 +27,7 @@ import { LanguageService } from '../../../core/services/language.service';
 })
 export class ColorSelectorComponent {
   private readonly languageService = inject(LanguageService);
+  disabled = input(false);
   selectedColor = input<string>('Black');
   selectedVariantId = input<number | null>(null);
   variants = input<VariantOption[]>([]);
@@ -39,7 +40,7 @@ export class ColorSelectorComponent {
     if (vars && vars.length > 0) {
       const byFinish = new Map<string, ColorOption[]>();
       vars.forEach((v) => {
-        const finish = v.finishType || 'AVAILABLE_COLORS';
+        const finish = this.finishCategoryLabel(v.finishType);
         const bucket = byFinish.get(finish) || [];
         bucket.push({
           label:
@@ -67,11 +68,12 @@ export class ColorSelectorComponent {
   });
 
   toggleOpen() {
+    if (this.disabled()) return;
     this.isOpen.update((v) => !v);
   }
 
   selectColor(color: ColorOption) {
-    if (color.outOfStock) return;
+    if (this.disabled() || color.outOfStock) return;
 
     this.colorSelected.emit({
       colorName: color.value,
@@ -90,6 +92,25 @@ export class ColorSelectorComponent {
     }
 
     return getColorHex(this.selectedColor());
+  }
+
+  getCurrentLabel(): string {
+    for (const category of this.categories()) {
+      const color = category.colors.find(
+        (entry) => entry.value === this.selectedColor(),
+      );
+      if (color) return color.label;
+    }
+    return this.selectedColor();
+  }
+
+  private finishCategoryLabel(finishType: string): string {
+    const normalized = String(finishType || '')
+      .trim()
+      .toLowerCase();
+    if (normalized === 'glossy') return 'COLOR.CATEGORY_GLOSSY';
+    if (normalized === 'matte') return 'COLOR.CATEGORY_MATTE';
+    return 'COLOR.AVAILABLE_COLORS';
   }
 
   close() {

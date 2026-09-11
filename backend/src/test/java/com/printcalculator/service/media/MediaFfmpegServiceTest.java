@@ -31,7 +31,7 @@ class MediaFfmpegServiceTest {
 
     @Test
     void resolveExecutable_shouldFallbackToPathWhenAbsoluteLocationIsMissing() {
-        String resolved = MediaFfmpegService.resolveExecutable("/opt/homebrew/bin/ffmpeg");
+        String resolved = MediaFfmpegService.resolveExecutable(tempDir.resolve("ffmpeg").toString());
 
         assertEquals("ffmpeg", resolved);
     }

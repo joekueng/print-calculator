@@ -114,6 +114,7 @@ public class OptionsController {
                     return new OptionsResponse.MaterialOption(
                             type.getMaterialCode(),
                             buildMaterialLabel(type),
+                            Boolean.TRUE.equals(type.getIsTechnical()),
                             variants
                     );
                 })

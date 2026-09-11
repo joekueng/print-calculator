@@ -11,6 +11,13 @@ import java.util.UUID;
 @Table(name = "orders", indexes = {@Index(name = "ix_orders_status",
         columnList = "status")})
 public class Order {
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "shipping_quote_snapshot")
+    private java.util.Map<String, Object> shippingQuoteSnapshot;
+
+    public java.util.Map<String, Object> getShippingQuoteSnapshot() { return shippingQuoteSnapshot; }
+    public void setShippingQuoteSnapshot(java.util.Map<String, Object> value) { shippingQuoteSnapshot = value; }
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "order_id", nullable = false)

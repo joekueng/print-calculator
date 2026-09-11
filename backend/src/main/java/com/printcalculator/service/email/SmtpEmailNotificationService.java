@@ -12,12 +12,19 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.springframework.core.io.ByteArrayResource;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SmtpEmailNotificationService implements EmailNotificationService {
+
+    private static final int MAX_ERROR_MESSAGE_LENGTH = 500;
+    private static final Pattern SENSITIVE_VALUE_PATTERN = Pattern.compile(
+            "(?i)(password|passwd|pwd|secret|api[_-]?key|token|authorization|basic)\\s*[=:]\\s*\\S+"
+    );
 
     private final JavaMailSender emailSender;
     private final TemplateEngine templateEngine;
@@ -29,15 +36,16 @@ public class SmtpEmailNotificationService implements EmailNotificationService {
     private boolean mailEnabled;
 
     @Override
-    public void sendEmail(String to, String subject, String templateName, Map<String, Object> contextData) {
-        sendEmailWithAttachment(to, subject, templateName, contextData, null, null);
+    public EmailSendResult sendEmail(String to, String subject, String templateName, Map<String, Object> contextData) {
+        return sendEmailWithAttachment(to, subject, templateName, contextData, null, null);
     }
 
     @Override
-    public void sendEmailWithAttachment(String to, String subject, String templateName, Map<String, Object> contextData, String attachmentName, byte[] attachmentData) {
+    public EmailSendResult sendEmailWithAttachment(String to, String subject, String templateName, Map<String, Object> contextData, String attachmentName, byte[] attachmentData) {
+        OffsetDateTime attemptedAt = OffsetDateTime.now();
         if (!mailEnabled) {
             log.info("Email sending disabled (app.mail.enabled=false). Skipping email to {}", to);
-            return;
+            return EmailSendResult.skipped(attemptedAt, "Email sending disabled (app.mail.enabled=false).");
         }
 
         log.info("Preparing to send email to {} with template {}", to, templateName);
@@ -61,12 +69,29 @@ public class SmtpEmailNotificationService implements EmailNotificationService {
 
             emailSender.send(mimeMessage);
             log.info("Email successfully sent to {}", to);
+            return EmailSendResult.sent(attemptedAt, OffsetDateTime.now());
 
         } catch (MessagingException e) {
             log.error("Failed to send email to {}", to, e);
             // Non blocco l'ordine se l'email fallisce, ma loggo l'errore adeguatamente.
+            return EmailSendResult.failed(attemptedAt, errorMessage(e));
         } catch (Exception e) {
             log.error("Unexpected error while sending email to {}", to, e);
+            return EmailSendResult.failed(attemptedAt, errorMessage(e));
         }
+    }
+
+    private String errorMessage(Exception e) {
+        String message = e.getMessage();
+        if (message == null || message.isBlank()) {
+            return e.getClass().getSimpleName();
+        }
+
+        String sanitized = SENSITIVE_VALUE_PATTERN.matcher(message).replaceAll("$1=***");
+        sanitized = sanitized.replaceAll("[\\p{Cntrl}]", " ").trim();
+        if (sanitized.length() > MAX_ERROR_MESSAGE_LENGTH) {
+            sanitized = sanitized.substring(0, MAX_ERROR_MESSAGE_LENGTH).trim() + "...";
+        }
+        return sanitized;
     }
 }

@@ -3,6 +3,7 @@ import {
   HttpClient,
   HttpErrorResponse,
   HttpEventType,
+  HttpResponse,
 } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -26,6 +27,7 @@ export interface QuoteRequest {
   material: string;
   quality: string;
   notes?: string;
+  acceptSplitPrinting?: boolean;
   infillDensity?: number;
   infillPattern?: string;
   supportEnabled?: boolean;
@@ -38,6 +40,7 @@ export interface PendingCalculatorDraft {
   request: QuoteRequest;
   sameSettingsForAll: boolean;
   selectedFileName?: string | null;
+  previewFiles?: Array<File | null>;
 }
 
 export interface QuoteItem {
@@ -56,16 +59,22 @@ export interface QuoteItem {
   infillPattern?: string;
   layerHeight?: number;
   nozzleDiameter?: number;
+  requiresSplitPrinting?: boolean;
 }
 
 export interface QuoteCalculationFailure {
   fileName: string;
+  sessionId?: string;
   status?: number;
   code?: string;
   message: string;
 }
 
 export interface QuoteResult {
+  shippingCost?: number;
+  shippingQuote?: {
+    status: 'QUOTED' | 'NOT_REQUIRED' | 'PENDING' | 'MANUAL_QUOTE';
+  };
   sessionId?: string;
   items: QuoteItem[];
   baseSetupCost?: number;
@@ -86,6 +95,7 @@ export interface QuoteResult {
 export interface MaterialOption {
   code: string;
   label: string;
+  isTechnical: boolean;
   variants: VariantOption[];
 }
 
@@ -179,6 +189,17 @@ export class QuoteEstimatorService {
     );
   }
 
+  updateCadCheckoutItem(
+    sessionId: string,
+    itemId: string,
+    changes: { quantity: number; filamentVariantId: number },
+  ): Observable<unknown> {
+    return this.http.patch(
+      `${environment.apiUrl}/api/quote-sessions/${sessionId}/cad-items/${itemId}`,
+      changes,
+    );
+  }
+
   createOrder(sessionId: string, orderDetails: any): Observable<any> {
     const headers: any = {};
     return this.http.post(
@@ -226,6 +247,18 @@ export class QuoteEstimatorService {
     );
   }
 
+  getOrderCadFiles(orderId: string): Observable<HttpResponse<Blob>> {
+    const headers: any = {};
+    return this.http.get(
+      `${environment.apiUrl}/api/orders/${orderId}/cad-files/download`,
+      {
+        headers,
+        responseType: 'blob',
+        observe: 'response',
+      },
+    );
+  }
+
   getTwintPayment(orderId: string): Observable<any> {
     const headers: any = {};
     return this.http.get(`${environment.apiUrl}/api/orders/${orderId}/twint`, {
@@ -247,7 +280,11 @@ export class QuoteEstimatorService {
           next: (sessionRes) => {
             const sessionId = String(sessionRes?.id || '');
             if (!sessionId) {
-              observer.error('Could not initialize quote session');
+              observer.error({
+                fileName: request.items[0]?.file.name || '',
+                code: 'QUOTE_SESSION_INIT_FAILED',
+                message: '',
+              } satisfies QuoteCalculationFailure);
               return;
             }
 
@@ -286,8 +323,11 @@ export class QuoteEstimatorService {
 
               if (successfulUploads === 0) {
                 observer.error(
-                  failures[0] ||
-                    'One or more files failed during upload/analysis',
+                  failures[0] || {
+                    fileName: request.items[0]?.file.name || '',
+                    code: 'QUOTE_ITEM_PROCESSING_FAILED',
+                    message: '',
+                  },
                 );
                 return;
               }
@@ -302,7 +342,12 @@ export class QuoteEstimatorService {
                   observer.complete();
                 },
                 error: () => {
-                  observer.error('Failed to calculate final quote');
+                  observer.error({
+                    fileName: request.items[0]?.file.name || '',
+                    sessionId,
+                    code: 'QUOTE_FINALIZATION_FAILED',
+                    message: '',
+                  } satisfies QuoteCalculationFailure);
                 },
               });
             };
@@ -342,7 +387,23 @@ export class QuoteEstimatorService {
 
                     if (event.type === HttpEventType.Response) {
                       uploadProgress[index] = 100;
-                      uploadResults[index] = { success: true };
+                      const responseItem = event.body;
+                      const success = responseItem?.status === 'READY';
+                      uploadResults[index] = success
+                        ? { success: true }
+                        : {
+                            success: false,
+                            failure: {
+                              fileName:
+                                responseItem?.originalFilename ||
+                                item.file.name,
+                              sessionId,
+                              code:
+                                responseItem?.pricingBreakdown?.errorCode ||
+                                'QUOTE_ITEM_PROCESSING_FAILED',
+                              message: responseItem?.errorMessage || '',
+                            },
+                          };
                       completed += 1;
                       finalize();
                     }
@@ -351,10 +412,13 @@ export class QuoteEstimatorService {
                     uploadProgress[index] = 100;
                     uploadResults[index] = {
                       success: false,
-                      failure: this.normalizeCalculationFailure(
-                        error,
-                        item.file.name,
-                      ),
+                      failure: {
+                        ...this.normalizeCalculationFailure(
+                          error,
+                          item.file.name,
+                        ),
+                        sessionId,
+                      },
                     };
                     completed += 1;
                     finalize();
@@ -362,8 +426,13 @@ export class QuoteEstimatorService {
                 });
             });
           },
-          error: () => {
-            observer.error('Could not initialize quote session');
+          error: (error) => {
+            observer.error(
+              this.normalizeCalculationFailure(
+                error,
+                request.items[0]?.file.name || '',
+              ),
+            );
           },
         });
     });
@@ -381,6 +450,10 @@ export class QuoteEstimatorService {
 
   setPendingCalculatorDraft(data: PendingCalculatorDraft | null) {
     this.pendingCalculatorDraft.set(data);
+  }
+
+  getPendingCalculatorDraft(): PendingCalculatorDraft | null {
+    return this.pendingCalculatorDraft();
   }
 
   consumePendingCalculatorDraft(): PendingCalculatorDraft | null {
@@ -426,6 +499,7 @@ export class QuoteEstimatorService {
     fileName: string,
   ): QuoteCalculationFailure {
     if (error instanceof HttpErrorResponse) {
+      const isRateLimited = error.status === 429;
       const body = error.error;
       if (body && typeof body === 'object' && !(body instanceof Blob)) {
         const payload = body as Record<string, unknown>;
@@ -433,13 +507,16 @@ export class QuoteEstimatorService {
           typeof payload['message'] === 'string' &&
           payload['message'].trim().length > 0
             ? payload['message'].trim()
-            : `Unable to process ${fileName}.`;
+            : '';
 
         return {
           fileName,
           status: error.status || undefined,
-          code:
-            typeof payload['code'] === 'string' ? payload['code'] : undefined,
+          code: isRateLimited
+            ? 'QUOTE_RATE_LIMITED'
+            : typeof payload['code'] === 'string'
+              ? payload['code']
+              : 'QUOTE_ITEM_PROCESSING_FAILED',
           message,
         };
       }
@@ -447,7 +524,10 @@ export class QuoteEstimatorService {
       return {
         fileName,
         status: error.status || undefined,
-        message: error.message || `Unable to process ${fileName}.`,
+        code: isRateLimited
+          ? 'QUOTE_RATE_LIMITED'
+          : 'QUOTE_ITEM_PROCESSING_FAILED',
+        message: '',
       };
     }
 
@@ -460,13 +540,25 @@ export class QuoteEstimatorService {
 
     return {
       fileName,
-      message: `Unable to process ${fileName}.`,
+      code: 'QUOTE_ITEM_PROCESSING_FAILED',
+      message: '',
     };
   }
 
   mapSessionToQuoteResult(sessionData: any): QuoteResult {
     const session = sessionData?.session || {};
-    const items = Array.isArray(sessionData?.items) ? sessionData.items : [];
+    const allItems = Array.isArray(sessionData?.items) ? sessionData.items : [];
+    const items = allItems.filter(
+      (item: any) => item?.status !== 'REVIEW_REQUIRED',
+    );
+    const failedItems: QuoteCalculationFailure[] = allItems
+      .filter((item: any) => item?.status === 'REVIEW_REQUIRED')
+      .map((item: any) => ({
+        fileName: item?.originalFilename || '',
+        sessionId: session?.id,
+        code: item?.errorCode || 'QUOTE_ITEM_PROCESSING_FAILED',
+        message: item?.errorMessage || '',
+      }));
 
     const totalTime = items.reduce(
       (acc: number, item: any) =>
@@ -491,6 +583,8 @@ export class QuoteEstimatorService {
 
     return {
       sessionId: session?.id,
+      shippingCost: Number(sessionData?.shippingCostChf ?? 0),
+      shippingQuote: sessionData?.shippingQuote,
       items: items.map((item: any) => ({
         id: item?.id,
         fileName: item?.originalFilename,
@@ -512,6 +606,7 @@ export class QuoteEstimatorService {
           item?.nozzleDiameterMm != null
             ? Number(item.nozzleDiameterMm)
             : undefined,
+        requiresSplitPrinting: Boolean(item?.requiresSplitPrinting),
       })),
       baseSetupCost: Number(
         sessionData?.baseSetupCostChf ?? session?.setupCostChf ?? 0,
@@ -527,6 +622,7 @@ export class QuoteEstimatorService {
       totalTimeMinutes: Math.ceil((totalTime % 3600) / 60),
       totalWeight: Math.ceil(totalWeight),
       notes: session?.notes,
+      failedItems,
     };
   }
 
@@ -570,6 +666,7 @@ export class QuoteEstimatorService {
         item.nozzleDiameter ??
         request.nozzleDiameter ??
         0.4,
+      allowSplitForOversized: request.acceptSplitPrinting === true,
     };
   }
 

@@ -7,6 +7,7 @@ import {
   AdminContactRequestDetail,
   AdminOperationsService,
 } from '../services/admin-operations.service';
+import { AdminEmailLog } from '../services/admin-email-log.model';
 import { CopyOnClickDirective } from '../../../shared/directives/copy-on-click.directive';
 import { AppButtonComponent } from '../../../shared/components/app-button/app-button.component';
 import { AppSelectComponent } from '../../../shared/components/app-select/app-select.component';
@@ -43,6 +44,7 @@ export class AdminContactRequestsComponent implements OnInit {
   selectedStatus = '';
   errorMessage: string | null = null;
   successMessage: string | null = null;
+  resendingEmailLogIds = new Set<string>();
 
   ngOnInit(): void {
     this.loadRequests();
@@ -182,6 +184,79 @@ export class AdminContactRequestsComponent implements OnInit {
             'Impossibile aggiornare lo stato della richiesta.';
         },
       });
+  }
+
+  resendEmail(log: AdminEmailLog): void {
+    if (
+      !this.selectedRequest ||
+      !this.selectedRequestId ||
+      this.resendingEmailLogIds.has(log.id)
+    ) {
+      return;
+    }
+
+    this.errorMessage = null;
+    this.successMessage = null;
+    this.resendingEmailLogIds.add(log.id);
+    this.adminOperationsService
+      .resendContactRequestEmail(this.selectedRequestId, log.id)
+      .subscribe({
+        next: (updated) => {
+          this.resendingEmailLogIds.delete(log.id);
+          this.selectedRequest = updated;
+          this.selectedStatus = updated.status || this.selectedStatus;
+          this.successMessage = 'Email reinviata.';
+        },
+        error: () => {
+          this.resendingEmailLogIds.delete(log.id);
+          this.errorMessage = 'Reinvio email non riuscito.';
+        },
+      });
+  }
+
+  emailLogs(request: AdminContactRequestDetail | null): AdminEmailLog[] {
+    return request?.emailLogs ?? [];
+  }
+
+  emailEventLabel(eventType?: string): string {
+    switch ((eventType || '').trim().toUpperCase()) {
+      case 'CONTACT_REQUEST_ADMIN':
+        return 'Notifica richiesta admin';
+      case 'CONTACT_REQUEST_CUSTOMER':
+        return 'Conferma richiesta cliente';
+      default:
+        return eventType || '-';
+    }
+  }
+
+  emailStatusLabel(status?: string): string {
+    switch ((status || '').trim().toUpperCase()) {
+      case 'SENT':
+        return 'Inviata';
+      case 'FAILED':
+        return 'Fallita';
+      case 'SKIPPED':
+        return 'Saltata';
+      default:
+        return status || '-';
+    }
+  }
+
+  emailStatusClass(status?: string): string {
+    switch ((status || '').trim().toUpperCase()) {
+      case 'SENT':
+        return 'email-status--sent';
+      case 'FAILED':
+        return 'email-status--failed';
+      case 'SKIPPED':
+        return 'email-status--skipped';
+      default:
+        return 'email-status--neutral';
+    }
+  }
+
+  isResendingEmailLog(emailLogId: string): boolean {
+    return this.resendingEmailLogIds.has(emailLogId);
   }
 
   private downloadBlob(blob: Blob, filename: string): void {

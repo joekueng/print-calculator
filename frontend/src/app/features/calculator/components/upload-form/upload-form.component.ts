@@ -6,6 +6,7 @@ import {
   OnInit,
   inject,
   effect,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,11 +16,13 @@ import {
   Validators,
 } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppInputComponent } from '../../../../shared/components/app-input/app-input.component';
 import { AppDropzoneComponent } from '../../../../shared/components/app-dropzone/app-dropzone.component';
 import { AppButtonComponent } from '../../../../shared/components/app-button/app-button.component';
+import { AppCheckboxComponent } from '../../../../shared/components/app-checkbox/app-checkbox.component';
 import { StlViewerComponent } from '../../../../shared/components/stl-viewer/stl-viewer.component';
-import { ColorSelectorComponent } from '../../../../shared/components/color-selector/color-selector.component';
+import { PrintItemControlsComponent } from '../../../../shared/components/print-item-controls/print-item-controls.component';
 import {
   QuoteRequest,
   QuoteRequestItem,
@@ -58,8 +61,9 @@ import {
     AppInputComponent,
     AppDropzoneComponent,
     AppButtonComponent,
+    AppCheckboxComponent,
     StlViewerComponent,
-    ColorSelectorComponent,
+    PrintItemControlsComponent,
   ],
   templateUrl: './upload-form.component.html',
   styleUrl: './upload-form.component.scss',
@@ -69,6 +73,7 @@ export class UploadFormComponent implements OnInit {
   lockedSettings = input<boolean>(false);
   loading = input<boolean>(false);
   uploadProgress = input<number>(0);
+  showSplitPrintingOption = input<boolean>(false);
 
   submitRequest = output<QuoteRequest>();
   itemQuantityChange = output<{
@@ -91,6 +96,7 @@ export class UploadFormComponent implements OnInit {
   private estimator = inject(QuoteEstimatorService);
   private fb = inject(FormBuilder);
   private translate = inject(TranslateService);
+  private destroyRef = inject(DestroyRef);
   readonly languageService = inject(LanguageService);
 
   form: FormGroup;
@@ -107,10 +113,15 @@ export class UploadFormComponent implements OnInit {
   currentMaterialVariants = signal<VariantOption[]>([]);
 
   private fullMaterialOptions: MaterialOption[] = [];
+  private optionsResponse: OptionsResponse | null = null;
+  private usingFallbackOptions = false;
+  private allNozzleDiameters: SimpleOption[] = [];
   private allLayerHeights: SimpleOption[] = [];
   private layerHeightsByNozzle: Record<string, SimpleOption[]> = {};
   private isPatchingSettings = false;
   private nextItemKey = 0;
+  private readonly technicalMaterialMinLayerHeight = 0.12;
+  private readonly technicalMaterialBlockedNozzles = [0.2, 0.8];
 
   acceptedFormats = '.stl,.3mf';
   private readonly allowedExtensions = ['stl', '3mf'] as const;
@@ -122,6 +133,7 @@ export class UploadFormComponent implements OnInit {
       material: ['', Validators.required],
       quality: ['standard', Validators.required],
       notes: [''],
+      acceptSplitPrinting: [false],
       infillDensity: [15, [Validators.min(0), Validators.max(100)]],
       layerHeight: [0.2, [Validators.min(0.05), Validators.max(1.0)]],
       nozzleDiameter: [0.4, Validators.required],
@@ -130,7 +142,9 @@ export class UploadFormComponent implements OnInit {
     });
 
     this.form.get('material')?.valueChanges.subscribe((value) => {
-      this.updateVariants(String(value || ''));
+      const materialCode = String(value || '');
+      this.updateVariants(materialCode);
+      this.updatePrintOptionsForMaterial(materialCode);
     });
 
     this.form.get('quality')?.valueChanges.subscribe((quality) => {
@@ -190,71 +204,29 @@ export class UploadFormComponent implements OnInit {
       this.sameSettingsForAll.set(true);
       this.form.get('syncAllItems')?.setValue(true, { emitEvent: false });
     });
+
+    this.translate.onLangChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.refreshLocalizedOptions();
+      });
   }
 
   ngOnInit() {
     this.estimator.getOptions().subscribe({
       next: (options: OptionsResponse) => {
-        this.fullMaterialOptions = options.materials || [];
-
-        this.materials.set(
-          (options.materials || []).map((m) => ({
-            label: m.label,
-            value: m.code,
-          })),
-        );
-        this.qualities.set(
-          (options.qualities || []).map((q) => ({
-            label: q.label,
-            value: q.id,
-          })),
-        );
-        this.infillPatterns.set(
-          (options.infillPatterns || []).map((p) => ({
-            label: p.label,
-            value: p.id,
-          })),
-        );
-        this.nozzleDiameters.set(
-          (options.nozzleDiameters || []).map((n) => ({
-            label: n.label,
-            value: n.value,
-          })),
-        );
-
-        this.allLayerHeights = (options.layerHeights || []).map((l) => ({
-          label: l.label,
-          value: l.value,
-        }));
-
-        this.layerHeightsByNozzle = {};
-        (options.layerHeightsByNozzle || []).forEach((entry) => {
-          this.layerHeightsByNozzle[toNozzleKey(entry.nozzleDiameter)] = (
-            entry.layerHeights || []
-          ).map((layer) => ({
-            label: layer.label,
-            value: layer.value,
-          }));
-        });
-
+        this.optionsResponse = options;
+        this.usingFallbackOptions = false;
+        this.refreshLocalizedOptions();
         this.setDefaults();
       },
       error: (err) => {
         console.error('Failed to load options', err);
-        this.materials.set([
-          {
-            label: this.translate.instant('CALC.FALLBACK_MATERIAL'),
-            value: 'PLA',
-          },
-        ]);
-        this.qualities.set([
-          {
-            label: this.translate.instant('CALC.FALLBACK_QUALITY_STANDARD'),
-            value: 'standard',
-          },
-        ]);
-        this.infillPatterns.set([{ label: 'Grid', value: 'grid' }]);
-        this.nozzleDiameters.set([{ label: '0.4 mm', value: 0.4 }]);
+        this.optionsResponse = null;
+        this.usingFallbackOptions = true;
+        this.refreshLocalizedOptions();
+        this.allNozzleDiameters = [{ label: '0.4 mm', value: 0.4 }];
+        this.nozzleDiameters.set(this.allNozzleDiameters);
 
         this.allLayerHeights = [{ label: '0.20 mm', value: 0.2 }];
         this.layerHeightsByNozzle = {
@@ -290,6 +262,10 @@ export class UploadFormComponent implements OnInit {
     return item ? item.previewFile || item.file : null;
   }
 
+  getPreviewFilesByIndex(): Array<File | null> {
+    return this.items().map((item) => item.previewFile ?? null);
+  }
+
   getSelectedItemIndex(): number {
     const selected = this.selectedFile();
     if (!selected) return -1;
@@ -322,12 +298,22 @@ export class UploadFormComponent implements OnInit {
   getLayerHeightOptionsForNozzle(nozzleRaw: unknown): SimpleOption[] {
     const key = toNozzleKey(nozzleRaw);
     const perNozzle = this.layerHeightsByNozzle[key];
-    if (perNozzle && perNozzle.length > 0) {
-      return perNozzle;
+    const available =
+      perNozzle && perNozzle.length > 0
+        ? perNozzle
+        : this.allLayerHeights.length > 0
+          ? this.allLayerHeights
+          : [{ label: '0.20 mm', value: 0.2 }];
+
+    if (!this.isTechnicalMaterial(this.form.get('material')?.value)) {
+      return available;
     }
-    return this.allLayerHeights.length > 0
-      ? this.allLayerHeights
-      : [{ label: '0.20 mm', value: 0.2 }];
+
+    return available.filter(
+      (option) =>
+        normalizeNumber(option.value, 0) >=
+        this.technicalMaterialMinLayerHeight,
+    );
   }
 
   onFilesDropped(newFiles: File[]) {
@@ -405,6 +391,10 @@ export class UploadFormComponent implements OnInit {
     const parsed = parseInt(input.value, 10);
     const quantity = Number.isFinite(parsed) ? parsed : 1;
 
+    this.updateItemQuantityValue(index, quantity);
+  }
+
+  updateItemQuantityValue(index: number, quantity: number) {
     const currentItem = this.items()[index];
     if (!currentItem) {
       return;
@@ -587,11 +577,9 @@ export class UploadFormComponent implements OnInit {
     this.form.patchValue(patch, { emitEvent: false });
     this.isPatchingSettings = false;
 
-    this.updateVariants(String(this.form.get('material')?.value || ''));
-    this.updateLayerHeightOptionsForNozzle(
-      this.form.get('nozzleDiameter')?.value,
-      true,
-    );
+    const materialCode = String(this.form.get('material')?.value || '');
+    this.updateVariants(materialCode);
+    this.updatePrintOptionsForMaterial(materialCode);
 
     if (this.sameSettingsForAll()) {
       this.applyGlobalSettingsToAllItems();
@@ -651,6 +639,36 @@ export class UploadFormComponent implements OnInit {
     });
   }
 
+  setItemReviewStateByIndex(
+    index: number,
+    level: 'warning' | 'error',
+    message: string,
+  ): void {
+    if (!Number.isInteger(index) || index < 0) return;
+    this.items.update((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? { ...item, reviewLevel: level, reviewMessage: message }
+          : item,
+      ),
+    );
+  }
+
+  setItemReviewStateByName(
+    fileName: string,
+    level: 'warning' | 'error',
+    message: string,
+  ): void {
+    const normalizedName = normalizeFileName(fileName);
+    this.items.update((current) =>
+      current.map((item) =>
+        normalizeFileName(item.file.name) === normalizedName
+          ? { ...item, reviewLevel: level, reviewMessage: message }
+          : item,
+      ),
+    );
+  }
+
   setItemPrintSettingsByIndex(index: number, update: ItemPrintSettingsUpdate) {
     if (!Number.isInteger(index) || index < 0) return;
 
@@ -689,7 +707,7 @@ export class UploadFormComponent implements OnInit {
           }
         }
 
-        return next;
+        return this.clampItemPrintSettings(next);
       });
     });
 
@@ -708,6 +726,7 @@ export class UploadFormComponent implements OnInit {
     options?: {
       sameSettingsForAll?: boolean;
       selectedFileName?: string | null;
+      previewFiles?: Array<File | null>;
     },
   ) {
     if (!request?.items?.length) {
@@ -718,6 +737,11 @@ export class UploadFormComponent implements OnInit {
       request.items.map((item) => item.file),
       { autoSelect: false },
     );
+    options?.previewFiles?.forEach((previewFile, index) => {
+      if (previewFile) {
+        this.setPreviewFileByIndex(index, previewFile);
+      }
+    });
     this.patchSettings({
       materialCode: request.material,
       quality: request.quality,
@@ -728,6 +752,9 @@ export class UploadFormComponent implements OnInit {
       supportsEnabled: request.supportEnabled,
       notes: request.notes,
     });
+    this.form
+      .get('acceptSplitPrinting')
+      ?.setValue(Boolean(request.acceptSplitPrinting), { emitEvent: false });
 
     const sameSettingsForAll =
       this.mode() === 'advanced' ? (options?.sameSettingsForAll ?? true) : true;
@@ -767,6 +794,12 @@ export class UploadFormComponent implements OnInit {
     this.emitItemSettingsDiffChange();
   }
 
+  setAcceptSplitPrinting(accepted: boolean): void {
+    this.form
+      .get('acceptSplitPrinting')
+      ?.setValue(accepted, { emitEvent: false });
+  }
+
   getCurrentRequestDraft(): QuoteRequest {
     const defaults = this.getCurrentGlobalItemDefaults();
 
@@ -779,6 +812,9 @@ export class UploadFormComponent implements OnInit {
       material: defaults.material,
       quality: defaults.quality,
       notes: this.form.get('notes')?.value || '',
+      acceptSplitPrinting:
+        this.showSplitPrintingOption() &&
+        Boolean(this.form.get('acceptSplitPrinting')?.value),
       infillDensity: defaults.infillDensity,
       infillPattern: defaults.infillPattern,
       supportEnabled: defaults.supportEnabled,
@@ -832,11 +868,9 @@ export class UploadFormComponent implements OnInit {
         ?.setValue(this.infillPatterns()[0].value, { emitEvent: false });
     }
 
-    this.updateVariants(String(this.form.get('material')?.value || ''));
-    this.updateLayerHeightOptionsForNozzle(
-      this.form.get('nozzleDiameter')?.value,
-      true,
-    );
+    const materialCode = String(this.form.get('material')?.value || '');
+    this.updateVariants(materialCode);
+    this.updatePrintOptionsForMaterial(materialCode);
 
     if (this.mode() === 'easy') {
       this.applyEasyPresetFromQuality(
@@ -1046,7 +1080,7 @@ export class UploadFormComponent implements OnInit {
     this.isPatchingSettings = false;
 
     this.updateVariants(selected.material);
-    this.updateLayerHeightOptionsForNozzle(selected.nozzleDiameter, true);
+    this.updatePrintOptionsForMaterial(selected.material);
   }
 
   private updateVariants(materialCode: string) {
@@ -1129,6 +1163,115 @@ export class UploadFormComponent implements OnInit {
       { emitEvent: false },
     );
     this.isPatchingSettings = false;
+  }
+
+  private updatePrintOptionsForMaterial(materialCode: string) {
+    const nozzles = this.isTechnicalMaterial(materialCode)
+      ? this.allNozzleDiameters.filter(
+          (option) =>
+            !this.isTechnicalBlockedNozzle(
+              normalizeNumber(option.value, Number.NaN),
+            ),
+        )
+      : this.allNozzleDiameters;
+    this.nozzleDiameters.set(nozzles);
+
+    const currentNozzle = normalizeNumber(
+      this.form.get('nozzleDiameter')?.value,
+      0.4,
+    );
+    const nozzleAllowed = nozzles.some(
+      (option) =>
+        Math.abs(normalizeNumber(option.value, currentNozzle) - currentNozzle) <
+        0.0001,
+    );
+
+    let effectiveNozzle = currentNozzle;
+    if (!nozzleAllowed && nozzles.length > 0) {
+      const standardNozzle = nozzles.find(
+        (option) => Math.abs(normalizeNumber(option.value, 0) - 0.4) < 0.0001,
+      );
+      effectiveNozzle = Number((standardNozzle || nozzles[0]).value);
+      this.isPatchingSettings = true;
+      this.form
+        .get('nozzleDiameter')
+        ?.setValue(effectiveNozzle, { emitEvent: false });
+      this.isPatchingSettings = false;
+    }
+
+    this.updateLayerHeightOptionsForNozzle(effectiveNozzle, true);
+  }
+
+  private isTechnicalMaterial(materialCode: unknown): boolean {
+    const normalized = normalizeText(materialCode);
+    return this.fullMaterialOptions.some(
+      (material) =>
+        normalizeText(material.code) === normalized && material.isTechnical,
+    );
+  }
+
+  private isTechnicalBlockedNozzle(nozzle: number): boolean {
+    return this.technicalMaterialBlockedNozzles.some(
+      (blocked) => Math.abs(nozzle - blocked) < 0.0001,
+    );
+  }
+
+  private clampItemPrintSettings(item: FormItem): FormItem {
+    if (!this.isTechnicalMaterial(item.material)) {
+      return item;
+    }
+
+    const allowedNozzles = this.allNozzleDiameters.filter(
+      (option) =>
+        !this.isTechnicalBlockedNozzle(
+          normalizeNumber(option.value, Number.NaN),
+        ),
+    );
+    const fallbackNozzle =
+      allowedNozzles.find(
+        (option) => Math.abs(normalizeNumber(option.value, 0) - 0.4) < 0.0001,
+      ) || allowedNozzles[0];
+    const nozzleDiameter = this.isTechnicalBlockedNozzle(item.nozzleDiameter)
+      ? normalizeNumber(fallbackNozzle?.value, 0.4)
+      : item.nozzleDiameter;
+    const allowedLayers = this.getLayerHeightOptionsForItem(
+      nozzleDiameter,
+      item.material,
+    );
+    const layerAllowed = allowedLayers.some(
+      (option) =>
+        Math.abs(
+          normalizeNumber(option.value, item.layerHeight) - item.layerHeight,
+        ) < 0.0001,
+    );
+
+    return {
+      ...item,
+      nozzleDiameter,
+      layerHeight: layerAllowed
+        ? item.layerHeight
+        : normalizeNumber(
+            allowedLayers[0]?.value,
+            this.technicalMaterialMinLayerHeight,
+          ),
+    };
+  }
+
+  private getLayerHeightOptionsForItem(
+    nozzleRaw: unknown,
+    materialCode: string,
+  ): SimpleOption[] {
+    const perNozzle = this.layerHeightsByNozzle[toNozzleKey(nozzleRaw)];
+    const available =
+      perNozzle && perNozzle.length > 0 ? perNozzle : this.allLayerHeights;
+    if (!this.isTechnicalMaterial(materialCode)) {
+      return available;
+    }
+    return available.filter(
+      (option) =>
+        normalizeNumber(option.value, 0) >=
+        this.technicalMaterialMinLayerHeight,
+    );
   }
 
   private emitPrintSettingsChange() {
@@ -1234,6 +1377,110 @@ export class UploadFormComponent implements OnInit {
       colorName: preferred.colorName,
       filamentVariantId: preferred.id,
     };
+  }
+
+  private localizedOptionLabel(key: string, fallback: string): string {
+    const translated = this.translate.instant(key);
+    return translated === key ? fallback : translated;
+  }
+
+  private refreshLocalizedOptions(): void {
+    if (this.usingFallbackOptions) {
+      this.materials.set([
+        {
+          label: this.translate.instant('CALC.FALLBACK_MATERIAL'),
+          value: 'PLA',
+        },
+      ]);
+      this.qualities.set([
+        {
+          label: this.translate.instant('CALC.FALLBACK_QUALITY_STANDARD'),
+          value: 'standard',
+        },
+      ]);
+      this.infillPatterns.set([
+        {
+          label: this.translate.instant('CALC.INFILL_PATTERNS.GRID'),
+          value: 'grid',
+        },
+      ]);
+      return;
+    }
+
+    const options = this.optionsResponse;
+    if (!options) {
+      return;
+    }
+
+    this.fullMaterialOptions = options.materials || [];
+    this.materials.set(
+      this.fullMaterialOptions.map((material) => ({
+        label: this.localizeMaterialLabel(material),
+        value: material.code,
+      })),
+    );
+    this.qualities.set(
+      (options.qualities || []).map((quality) => ({
+        label: this.localizedOptionLabel(
+          `CALC.QUALITY_OPTIONS.${quality.id.toUpperCase()}`,
+          quality.label,
+        ),
+        value: quality.id,
+      })),
+    );
+    this.infillPatterns.set(
+      (options.infillPatterns || []).map((pattern) => ({
+        label: this.localizedOptionLabel(
+          `CALC.INFILL_PATTERNS.${pattern.id.toUpperCase()}`,
+          pattern.label,
+        ),
+        value: pattern.id,
+      })),
+    );
+    this.allNozzleDiameters = (options.nozzleDiameters || []).map((nozzle) => ({
+      label: this.localizeBackendLabel(nozzle.label),
+      value: nozzle.value,
+    }));
+    this.allLayerHeights = (options.layerHeights || []).map((layer) => ({
+      label: layer.label,
+      value: layer.value,
+    }));
+    this.layerHeightsByNozzle = {};
+    (options.layerHeightsByNozzle || []).forEach((entry) => {
+      this.layerHeightsByNozzle[toNozzleKey(entry.nozzleDiameter)] = (
+        entry.layerHeights || []
+      ).map((layer) => ({
+        label: layer.label,
+        value: layer.value,
+      }));
+    });
+
+    this.updatePrintOptionsForMaterial(
+      String(this.form.get('material')?.value || ''),
+    );
+  }
+
+  private localizeBackendLabel(label: string): string {
+    return String(label || '')
+      .replace(
+        /\(Standard\)$/,
+        `(${this.translate.instant('CALC.OPTION_STANDARD')})`,
+      )
+      .replace(
+        /\(Flexible\)$/,
+        `(${this.translate.instant('CALC.OPTION_FLEXIBLE')})`,
+      );
+  }
+
+  private localizeMaterialLabel(material: MaterialOption): string {
+    const code = String(material.code || '').trim();
+    const backendLabel = String(material.label || '');
+    const typeKey = /\(Flexible\)$/i.test(backendLabel)
+      ? 'CALC.OPTION_FLEXIBLE'
+      : material.isTechnical
+        ? 'CALC.OPTION_TECHNICAL'
+        : 'CALC.OPTION_STANDARD';
+    return `${code} (${this.translate.instant(typeKey)})`;
   }
 
   private refreshSameSettingsFlag() {

@@ -6,6 +6,7 @@ import com.printcalculator.entity.QuoteSession;
 import com.printcalculator.repository.QuoteLineItemRepository;
 import com.printcalculator.repository.QuoteSessionRepository;
 import com.printcalculator.service.QuoteCalculator;
+import com.printcalculator.service.QuoteRateLimitService;
 import com.printcalculator.service.QuoteSessionExpiryPolicy;
 import com.printcalculator.service.QuoteSessionTotalsService;
 import com.printcalculator.service.quote.QuoteSessionItemService;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -40,6 +43,7 @@ public class QuoteSessionController {
     private final QuoteStorageService quoteStorageService;
     private final QuoteSessionResponseAssembler quoteSessionResponseAssembler;
     private final QuoteSessionExpiryPolicy quoteSessionExpiryPolicy;
+    private final QuoteRateLimitService quoteRateLimitService;
 
     public QuoteSessionController(QuoteSessionRepository sessionRepo,
                                   QuoteLineItemRepository lineItemRepo,
@@ -49,7 +53,8 @@ public class QuoteSessionController {
                                   QuoteSessionItemService quoteSessionItemService,
                                   QuoteStorageService quoteStorageService,
                                   QuoteSessionResponseAssembler quoteSessionResponseAssembler,
-                                  QuoteSessionExpiryPolicy quoteSessionExpiryPolicy) {
+                                  QuoteSessionExpiryPolicy quoteSessionExpiryPolicy,
+                                  QuoteRateLimitService quoteRateLimitService) {
         this.sessionRepo = sessionRepo;
         this.lineItemRepo = lineItemRepo;
         this.quoteCalculator = quoteCalculator;
@@ -59,11 +64,13 @@ public class QuoteSessionController {
         this.quoteStorageService = quoteStorageService;
         this.quoteSessionResponseAssembler = quoteSessionResponseAssembler;
         this.quoteSessionExpiryPolicy = quoteSessionExpiryPolicy;
+        this.quoteRateLimitService = quoteRateLimitService;
     }
 
     @PostMapping(value = "")
     @Transactional
-    public ResponseEntity<QuoteSession> createSession() {
+    public ResponseEntity<QuoteSession> createSession(HttpServletRequest request) {
+        quoteRateLimitService.checkAllowed(request);
         QuoteSession session = new QuoteSession();
         session.setStatus("ACTIVE");
         session.setSessionType("PRINT_QUOTE");
@@ -84,7 +91,9 @@ public class QuoteSessionController {
     @Transactional
     public ResponseEntity<QuoteLineItem> addItemToExistingSession(@PathVariable UUID id,
                                                                    @RequestPart("settings") PrintSettingsDto settings,
-                                                                   @RequestPart("file") MultipartFile file) throws IOException {
+                                                                   @RequestPart("file") MultipartFile file,
+                                                                   HttpServletRequest request) throws IOException {
+        quoteRateLimitService.checkAllowed(request);
         QuoteSession session = sessionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
 

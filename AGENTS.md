@@ -1,72 +1,60 @@
-# AGENTS.md - Global Project Instructions
+# Print Calculator — Repository Guide for Coding Agents
 
-This file provides high-level guidance for AI agents working on the **Print Calculator** project. It complements the more detailed `GEMINI.md` and the directory-specific `AGENTS.md` files.
+## Purpose and architecture
 
-## Project Overview
-**Print Calculator** is an end-to-end 3D printing platform.
-- **Core Engine**: Real-time slicing using headless OrcaSlicer for precise time/material estimation.
-- **Shop**: E-commerce system for 3D printed products and filaments.
-- **QR Tracking**: Analytics for physical product tracking via QR codes.
-- **Swiss Integration**: Supports TWINT payments and Swiss QR-Bill invoicing.
+Print Calculator is a full-stack platform for quoting and selling 3D printing services and products. Its main domains are:
 
-## Tech Stack
-- **Backend**: Java 21, Spring Boot 3.4, PostgreSQL, Flyway, Hibernate.
-- **Frontend**: Angular 19 (Standalone), Angular Material, Three.js.
-- **DevOps**: Docker, Gitea Actions, Swiss-based deployment.
+- **Quoting and slicing:** uploaded models are inspected and sliced with headless OrcaSlicer to calculate material use, print duration, and price.
+- **Shop and orders:** public catalogue, cart, checkout, payments, fulfilment, and customer files.
+- **Operations:** printers, materials, pricing policies, inventory, media, home projects, and translations are managed in the admin area.
+- **QR tracking:** QR links record scans and may enrich them with GeoLite2 IP geolocation.
+- **Swiss payments and documents:** TWINT, Swiss QR bills, invoices, and transactional email.
 
-## Global Agent Rules
+The repository has two deployable applications:
 
-### 1. Architectural Integrity
-- **Follow Established Patterns**: Stick to the Service-Repository-Controller pattern in the backend and the Features-Shared-Core structure in the frontend.
-- **No Inline Code**: In Angular, always separate HTML, SCSS, and TypeScript files.
-- **DRY (Don't Repeat Yourself)**: Before implementing a new utility or UI component, check if it already exists in `backend/src/main/java/.../util` or `frontend/src/app/shared`.
+| Area | Location | Stack | Responsibility |
+| --- | --- | --- | --- |
+| Backend | `backend/` | Java 21, Spring Boot 3.4, JPA/Hibernate, PostgreSQL | REST API, domain logic, slicing, storage, payments, email |
+| Frontend | `frontend/` | Angular 19 standalone, Angular Material, Three.js, ngx-translate | Public site, calculator, checkout, and admin UI |
 
-### 2. Implementation Standards
-- **Validation**: Always use `@Valid` and Bean Validation constraints for DTOs.
-- **Type Safety**: Avoid `any` in TypeScript. Use explicit interfaces and types.
-- **Security**: Never expose sensitive data. Use session-based auth for admin and CSRF protection.
-- **Performance**: Be mindful of expensive operations like real-time slicing or heavy 3D model processing. Use async events where appropriate.
+Read the nearest `AGENTS.md` before editing. The backend and frontend guides contain the module-specific conventions and verification commands.
 
-### 3. Documentation & Communication
-- **Update GEMINI.md**: If you introduce a significant architectural change, update the root `GEMINI.md`.
-- **Commit Messages**: Keep commits atomic and descriptive. Reference modules (e.g., `feat(shop): add product variants`).
-- **Private Memory**: Use the project's private memory for local/personal notes that shouldn't be committed.
+## Repository map
 
-## Navigation & Entry Points
+- `backend/src/main/java/com/printcalculator/` — application code, organized into `controller`, `service`, `repository`, `entity`, `dto`, `security`, `config`, `event`, and `exception`.
+- `backend/src/main/resources/application.properties` — application and persistence configuration. The current schema policy is Hibernate `ddl-auto=update`; coordinate schema changes carefully with production deployment and `db.sql` where applicable.
+- `backend/profiles/` — OrcaSlicer profiles and printer data. Treat profile changes as pricing-sensitive.
+- `frontend/src/app/` — Angular `core`, `shared`, and feature folders.
+- `frontend/src/assets/i18n/` — synchronized translation catalogs: `de.json`, `en.json`, `fr.json`, and `it.json`.
+- `deploy/`, `docker-compose.yml`, `docker-compose.deploy.yml` — runtime and deployment configuration.
+- `docs/uml/en/` — English architecture diagrams; matching source diagrams are under `docs/uml/`.
+- `scripts/` — repository-level local checks and diagnostic scripts.
 
-### Backend (`/backend`)
-- **Services**: `src/main/java/com/printcalculator/service/` (organized by module: `quote`, `shop`, `qr`, etc.)
-- **Controllers**: `src/main/java/com/printcalculator/controller/` (Public and Admin subpackages)
-- **Data Access**: `src/main/java/com/printcalculator/repository/` and `src/main/java/com/printcalculator/entity/`
-- **DTOs & Models**: `src/main/java/com/printcalculator/dto/` and `src/main/java/com/printcalculator/model/`
-- **Database Migrations**: `src/main/resources/db/migration/`
-- **Slicing Logic**: `SlicerService.java` (usually in `service/quote` or `service/`) and `OrcaSlicer` integration.
+## Cross-cutting rules
 
-### Frontend (`/frontend`)
-- **Shared Components**: `src/app/shared/components/`
-- **UI Primitives**: `src/styles/_ui.scss`
-- **Feature Modules**: `src/app/features/` (e.g., `calculator`, `shop`, `admin`).
-- **Refer to `frontend/AGENTS.md`** for detailed UI/UX reuse rules and styling constraints.
+- Preserve the existing controller → service → repository flow. Controllers should validate and map HTTP concerns; services own business rules and transactions.
+- Use DTOs at API boundaries. Apply `@Valid` to request bodies and Bean Validation constraints to DTO fields.
+- Keep schema changes, entity mappings, repositories, services, DTOs, API contracts, and frontend models aligned. The project currently uses Hibernate `ddl-auto=update`, so assess deployment compatibility and data migration needs before changing persistent data.
+- Keep public and admin APIs intentionally separate. Admin endpoints use the established session and CSRF protections; do not weaken them or expose secrets/PII in public responses.
+- Do not add secrets, real credentials, private storage files, or generated build artifacts to version control.
+- Preserve user changes already present in the worktree. Keep commits small and module-scoped, for example `feat(shop): add product variants`.
 
-## Core Workflows for Agents
+## High-risk areas
 
-### Adding a New Feature
-1. **Research**: Check existing services and DTOs.
-2. **Backend**: Create Entity -> Repository -> Service -> Controller. Add Flyway migration.
-3. **Frontend**: Create Service -> Component. Reuse `app-*` shared components and `ui-*` primitives.
-4. **Validation**: Add unit tests for logic and integration tests for API endpoints.
+- **Quote/slicer changes:** inspect `SlicerService`, `QuoteCalculator`, pricing-policy entities/services, and quote-session totals together. Verify results using relevant tests; slicing is CPU- and I/O-intensive.
+- **Uploads and storage:** retain validation, antivirus, ownership/access checks, and the original/public/private storage distinction.
+- **Payments, orders, and email:** treat status transitions as domain events. Check event listeners, invoice generation, and notification behavior when changing order states.
+- **i18n:** every new user-visible frontend string needs every locale. Run `npm run check:i18n` after changing translation keys.
+- **UI:** reuse shared controls and semantic UI primitives; `frontend/AGENTS.md` is mandatory for frontend changes.
 
-### Modifying Slicing/Quote Logic
-- This is the "brain" of the application. Extreme care is required.
-- Check `PricingPolicy` and `SlicerService`.
-- Always verify that changes don't break existing quote calculations.
+## Common verification
 
-### UI/UX Updates
-- **Mandatory**: Read `frontend/AGENTS.md`.
-- Do not introduce new design systems. Use the existing SCSS variables and primitives.
-- Ensure responsiveness across mobile and desktop.
+Run the narrowest relevant checks first, then broader checks when the change crosses a boundary:
 
-## Tooling Context
-- **OrcaSlicer**: Must be available for backend tasks involving G-Code generation.
-- **FFmpeg**: Used for media processing.
-- **Three.js**: Used for the `stl-viewer` component.
+```bash
+cd backend && ./gradlew test
+cd frontend && npx tsc -p tsconfig.app.json --noEmit
+cd frontend && npm run check:i18n && npm run check:ui-reuse
+```
+
+For externally visible behavior, also exercise the affected API or UI flow. Do not run expensive slicing or deployment operations unless the change needs them.

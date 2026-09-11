@@ -1,74 +1,76 @@
-# GEMINI Project Context
+# Gemini Project Context
 
-Questo file serve a dare contesto all'AI (Antigravity/Gemini) sulla struttura e logica del progetto.
+This file provides Gemini and other coding agents with concise context about the project structure and domain logic.
 
-## Project Overview
-**Nome**: Print Calculator
-**Scopo**: Una piattaforma completa per la stampa 3D che include un calcolatore di preventivi basato su slicing reale, un sistema e-commerce (Shop), tracking di link tramite QR code e gestione di progetti (Showcase).
-**Stack**:
-- **Backend**: Java 21 (Spring Boot 3.4), PostgreSQL, Flyway.
-- **Frontend**: Angular 19 (TypeScript), Angular Material, Three.js per visualizzazione 3D.
+## Project overview
+
+**Name:** Print Calculator
+**Purpose:** A complete 3D-printing platform with a real-slicing quote calculator, e-commerce shop, QR-link tracking, and showcase-project management.
+
+**Stack:**
+
+- **Backend:** Java 21, Spring Boot 3.4, PostgreSQL, JPA/Hibernate.
+- **Frontend:** Angular 19 (TypeScript), Angular Material, and Three.js for 3D visualisation.
 
 ## Architecture
 
 ### Backend (`/backend`)
-L'applicazione è strutturata in diversi moduli funzionali:
 
-#### 1. Core Slicing & Quote (`service/quote`, `service/SlicerService.java`)
-- **Slicing Reale**: Utilizza **OrcaSlicer** (headless) per generare G-Code reali e ottenere stime precise di tempo e materiale.
-- **Quote Calculator**: Calcola il prezzo finale basandosi su politiche di prezzo (tiered pricing), costi energetici, markup e fee fissi.
-- **G-Code Parser**: Estrae metadati (tempo, peso) direttamente dai commenti del G-Code generato.
-- **3MF Support**: Supporto per la conversione e ispezione di file 3MF/STL tramite LWJGL/Assimp.
+The backend is divided into functional domains:
 
-#### 2. Shop System (`service/shop`, `controller/PublicShopController.java`)
-- Gestione di un catalogo prodotti con varianti, categorie gerarchiche e gestione del carrello tramite cookie e database.
-- Integrazione SEO con generazione dinamica di sitemap (`SitemapController`).
-
-#### 3. QR Tracking & Analytics (`service/qr`)
-- Sistema di tracking per QR code con geo-localizzazione (GeoIP2) e statistiche di scansione (lingua, location, dispositivi).
-
-#### 4. Media Management (`service/media`)
-- Gestione di asset multimediali (immagini e video) con ispezione tecnica, elaborazione tramite FFmpeg e varianti ottimizzate.
-
-#### 4b. Admin Localization (`service/admin`)
-- Traduzioni admin tramite OpenAI centralizzate: prodotti shop mantengono il flusso dedicato con review, mentre testi localizzati generici (media e progetti home) usano `/api/admin/translations/localized-text`.
-
-#### 5. Payments & Invoicing (`service/payment`)
-- Supporto per pagamenti tramite **TWINT** e generazione di fatture PDF con standard **Swiss QR-Bill**.
-
-#### 6. Security & Infrastructure
-- **Security**: Autenticazione admin basata su sessione, protezione CSRF e throttling dei login.
-- **Safety**: Scansione antivirus degli upload tramite **ClamAV**.
-- **Storage**: Gestione file system organizzata per quote, richieste, shop e media.
-
-### Documentation & DevOps
-- **UML**: Documentazione architetturale dettagliata disponibile in `/docs/uml/` tramite file Mermaid (`.mmd`).
-- **CI/CD**: Workflow definiti in `.gitea/workflows/` per deploy e PR checks.
-- **Deployment**: Script di deploy automatizzati in `/deploy/`.
+1. **Slicing and quotes** (`service/SlicerService.java`, `QuoteCalculator`)
+   - Headless **OrcaSlicer** creates real G-code for accurate time and material estimates.
+   - Pricing uses tiered policies, energy cost, markup, and fixed fees.
+   - `GCodeParser` extracts time and weight metadata from generated G-code comments.
+   - 3MF/STL conversion and inspection use LWJGL/Assimp.
+2. **Shop** (`PublicShopController`, shop/order services)
+   - Product catalogue with variants, hierarchical categories, cookie/database cart handling, checkout, and fulfilment.
+   - Dynamic sitemap generation is handled by `SitemapController`.
+3. **QR tracking and analytics** (`service/qr`)
+   - QR scans collect analytics and can be enriched with GeoLite2 IP geolocation.
+4. **Media management** (`service/media`)
+   - Images and videos are inspected, processed through FFmpeg, and served as optimised variants.
+5. **Admin localisation** (`service/admin`)
+   - OpenAI-assisted translation supports reviewed shop-product translations and generic localised text for media and home projects.
+6. **Payments and invoicing** (`service/payment`)
+   - Supports TWINT, Swiss QR bills, and PDF invoices.
+7. **Security and infrastructure**
+   - Admin authentication uses sessions, CSRF protection, and login throttling.
+   - ClamAV scans uploads.
+   - Filesystem storage is separated for quotes, requests, shop assets, and media.
 
 ### Frontend (`/frontend`)
-- Applicazione Angular 19 "Standalone" con architettura modulare:
-    - **Features**: `calculator`, `shop`, `admin`, `checkout`, `contact`, `projects`.
-    - **Shared**: Componenti riutilizzabili come `stl-viewer` (Three.js), `app-dropzone`, `brand-animation-logo`.
-    - **Core**: Intercettori per la gestione dell'origine server e autenticazione admin, servizi SEO e internazionalizzazione (ngx-translate).
 
-## Key Concepts
-- **Real Slicing**: Garantisce preventivi accurati al grammo e al minuto, a differenza delle stime basate solo sul volume.
-- **Database-Driven Pricing**: Prezzi guidati da entità DB (`PricingPolicy`, `PrinterMachine`, `FilamentVariant`).
-- **Geo-Enriched Analytics**: Le scansioni QR vengono arricchite con dati geografici in tempo reale tramite eventi asincroni.
-- **Automated Notifications**: Sistema di notifiche email per nuovi ordini e richieste di preventivo personalizzate.
+The Angular standalone application is organised as:
 
-## Development Notes
-- **Backend**: Richiede JDK 21. `./gradlew bootRun` (profilo `local` di default).
-- **Database**: PostgreSQL. Migrazioni gestite da Flyway in `src/main/resources/db/migration`.
-- **Frontend**: Node.js 22. `npm start`.
-- **Dipendenze Esterne**:
-    - **OrcaSlicer**: Deve essere nel PATH o configurato in `application.properties`.
-    - **FFmpeg**: Richiesto per l'elaborazione video.
-    - **ClamAV**: Richiesto per la sicurezza degli upload in produzione.
+- **Features:** calculator, shop, admin, checkout, contact, home, about, materials, legal, and order flows.
+- **Shared:** reusable UI such as `stl-viewer` (Three.js), `app-dropzone`, and `brand-animation-logo`.
+- **Core:** request-origin/admin-auth interceptors, SEO, and ngx-translate internationalisation services.
 
-## AI Agent Rules
-- **No Inline Code**: Tutti i componenti Angular DEVONO usare file separati per HTML (`templateUrl`) e SCSS (`styleUrl`).
-- **Spring Boot Conventions**: Seguire i pattern standard Service-Repository-Controller. Preferire `@RequiredArgsConstructor` per la Dependency Injection.
-- **Validation**: Validare sempre gli input DTO tramite annotazioni `@Valid`.
-- **Atomic Commits**: Se richiesto di committare, mantenere i commit piccoli e focalizzati per modulo.
+### Documentation and DevOps
+
+- Mermaid architecture diagrams are in `docs/uml/`; English versions are in `docs/uml/en/`.
+- Gitea workflow definitions are in `.gitea/workflows/`.
+- Deployment scripts and environment templates are in `deploy/`.
+
+## Key concepts
+
+- **Real slicing:** Generates estimates from actual G-code rather than volume-only approximations.
+- **Database-driven pricing:** Uses entities such as `PricingPolicy`, `PrinterMachine`, and `FilamentVariant`.
+- **Geo-enriched analytics:** Asynchronous events enrich QR scans with geographic data.
+- **Automated notifications:** Domain events trigger email for orders and custom quote requests.
+
+## Development notes
+
+- **Backend:** Requires JDK 21. `./gradlew bootRun` starts with the `local` profile by default.
+- **Database:** PostgreSQL. The current persistence configuration uses Hibernate `ddl-auto=update`; assess production compatibility and data-migration needs for schema changes.
+- **Frontend:** Requires Node.js 22. Run `npm start`.
+- **External dependencies:** OrcaSlicer must be on `PATH` or configured in `application.properties`; FFmpeg processes media; ClamAV is required for production upload safety.
+
+## Agent rules
+
+- Angular components must use separate HTML (`templateUrl`), SCSS (`styleUrl`), and TypeScript files.
+- Follow controller → service → repository conventions in Spring Boot and use constructor injection patterns already present in the codebase.
+- Validate DTO input with `@Valid` and Bean Validation constraints.
+- When asked to commit, keep commits small and focused by module.
+- Read the root, backend, or frontend `AGENTS.md` for complete, directory-specific instructions before making changes.

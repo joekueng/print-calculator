@@ -2,122 +2,121 @@
 
 ## Executive summary
 
-Revisione sicurezza del progetto `print-calculator` (backend Spring Boot Java + frontend Angular/TypeScript) con focus su autenticazione/autorizzazione, esposizione dati, upload file, hardening e resilienza.
+Security review of `print-calculator` (Spring Boot Java backend and Angular/TypeScript frontend), focused on authentication/authorization, data exposure, file uploads, hardening, and resilience.
 
-Risultato: **6 finding** totali.
+Result: **6 findings** in total.
 
 - **Critical**: 1
 - **High**: 3
 - **Medium**: 2
 
-Rischio principale: API pubbliche basate su UUID senza controllo di ownership/token, che consentono lettura PII e azioni di business su ordini.
+Primary risk: public UUID-based APIs without ownership or token checks that allow PII disclosure and business actions on orders.
 
-## Scope e metodo
+## Scope and method
 
-- Codice analizzato: backend (`backend/src/main/java`, `backend/src/main/resources`), frontend (`frontend/src/app`), config deploy (`deploy/`, `docker-compose*.yml`).
-- Riferimenti skill usati: `javascript-general-web-frontend-security.md`.
-- Nota: non è presente un riferimento specifico Java/Spring nel set dello skill; per il backend sono state applicate best practice consolidate Spring/security engineering.
+- Code reviewed: backend (`backend/src/main/java`, `backend/src/main/resources`), frontend (`frontend/src/app`), and deployment configuration (`deploy/`, `docker-compose*.yml`).
+- Skill reference used: `javascript-general-web-frontend-security.md`.
+- Note: the skill set has no Java/Spring-specific reference; established Spring and security-engineering practices were applied to the backend.
 
 ## Critical findings
 
-### SBP-001 - Broken access control su API ordine pubbliche (lettura PII + azioni stato)
+### SBP-001 - Broken access control on public order APIs (PII disclosure and state actions)
 
 - **Severity**: Critical
-- **Impatto**: Chiunque ottenga un `orderId` può leggere dati personali ordine e invocare operazioni di business senza autenticazione.
-- **Evidenze**:
+- **Impact**: Anyone who obtains an `orderId` can read personal order data and invoke business operations without authentication.
+- **Evidence**:
   - `backend/src/main/java/com/printcalculator/config/SecurityConfig.java:36` (`.anyRequest().permitAll()`).
   - `backend/src/main/java/com/printcalculator/controller/OrderController.java:131` (`GET /api/orders/{orderId}`).
   - `backend/src/main/java/com/printcalculator/controller/OrderController.java:141` (`POST /api/orders/{orderId}/payments/report`).
   - `backend/src/main/java/com/printcalculator/controller/OrderController.java:93` (`POST /api/orders/{orderId}/items/{orderItemId}/file`).
-  - `backend/src/main/java/com/printcalculator/controller/OrderController.java:295`-`337` (PII completa nel DTO: email, telefono, indirizzi billing/shipping).
+  - `backend/src/main/java/com/printcalculator/controller/OrderController.java:295`-`337` (complete PII in the DTO: email, phone number, billing/shipping addresses).
   - `backend/src/main/java/com/printcalculator/service/PaymentService.java:53`-`75` (cambio stato pagamento a `REPORTED`).
-- **Rischio tecnico**:
-  - Assenza di autenticazione/authorization applicativa su endpoint ordine.
-  - Modello “capability by UUID” senza token secondario, expiry o binding utente.
-- **Fix raccomandato**:
-  - Introdurre un `order_access_token` random ad alta entropia (>=128 bit), memorizzato hashato e richiesto sugli endpoint pubblici ordine.
-  - Separare endpoint pubblici (minimo set dati) da endpoint interni/admin.
-  - Rimuovere `orderItemId` e dettagli sensibili dal DTO pubblico, o usare URL firmate a scadenza per upload/download.
-  - Valutare auth customer leggera (magic link OTP) per consultazione/modifica ordine.
+- **Technical risk**:
+  - No application-level authentication/authorization on order endpoints.
+  - A “capability by UUID” model without a secondary token, expiry, or user binding.
+- **Recommended fix**:
+  - Introduce a high-entropy random `order_access_token` (>=128 bits), store it hashed, and require it on public order endpoints.
+  - Separate public endpoints (minimal data set) from internal/admin endpoints.
+  - Remove `orderItemId` and sensitive details from public DTOs, or use expiring signed URLs for upload/download.
+  - Consider lightweight customer authentication (magic-link OTP) for viewing or changing an order.
 
 ## High findings
 
-### SBP-002 - Esposizione PII su endpoint pubblico custom quote request
+### SBP-002 - PII exposure on public custom-quote-request endpoint
 
 - **Severity**: High
-- **Evidenze**:
+- **Evidence**:
   - `backend/src/main/java/com/printcalculator/controller/CustomQuoteRequestController.java:188`-`193` (`GET /api/custom-quote-requests/{id}` senza auth).
   - `backend/src/main/java/com/printcalculator/entity/CustomQuoteRequest.java:24`-`40` (campi PII e messaggio cliente).
   - `backend/src/main/java/com/printcalculator/config/SecurityConfig.java:36` (`.anyRequest().permitAll()`).
-- **Rischio tecnico**:
-  - Endpoint “lookup by UUID” ritorna oggetto completo con dati personali.
-- **Fix raccomandato**:
-  - Proteggere endpoint con token di accesso separato per richiesta (non solo UUID).
-  - Restituire una vista redatta/minimale per endpoint pubblici.
-  - Se endpoint non usato dal frontend, rimuoverlo.
+- **Technical risk**:
+  - A “lookup by UUID” endpoint returns a complete object containing personal data.
+- **Recommended fix**:
+  - Protect the endpoint with a separate access token per request, not just a UUID.
+  - Return a redacted/minimal view from public endpoints.
+  - Remove the endpoint if the frontend does not use it.
 
-### SBP-003 - Antivirus in fail-open + default scanner disattivato
+### SBP-003 - Fail-open antivirus and disabled scanner by default
 
 - **Severity**: High
-- **Evidenze**:
+- **Evidence**:
   - `backend/src/main/resources/application.properties:27` (`clamav.enabled=${CLAMAV_ENABLED:false}`).
   - `backend/src/main/java/com/printcalculator/service/ClamAVService.java:42`-`43` (scanner disabilitato => ritorna `true`).
   - `backend/src/main/java/com/printcalculator/service/ClamAVService.java:54`-`61` (errori scanner => `FAIL-OPEN`).
-  - `backend/src/main/java/com/printcalculator/service/FileSystemStorageService.java:59`-`60` (eccezioni scanner ignorate, file mantenuto).
-- **Rischio tecnico**:
-  - File malevoli possono essere accettati quando scanner è down/non configurato.
-- **Fix raccomandato**:
-  - Policy fail-closed in ambienti non-dev (`reject on scan error`).
-  - Rendere `CLAMAV_ENABLED=true` default in deploy runtime e bloccare startup se scanner richiesto ma non raggiungibile.
-  - Telemetria/alerting su scan bypass e failure rate.
+  - `backend/src/main/java/com/printcalculator/service/FileSystemStorageService.java:59`-`60` (scanner exceptions ignored and file retained).
+- **Technical risk**:
+  - Malicious files can be accepted when the scanner is down or unconfigured.
+- **Recommended fix**:
+  - Use a fail-closed policy in non-development environments (`reject on scan error`).
+  - Make `CLAMAV_ENABLED=true` the deployment-runtime default and prevent startup if a required scanner is unreachable.
+  - Add telemetry and alerts for scan bypasses and failure rates.
 
-### SBP-004 - Endpoint costosi esposti senza throttling/rate limit (DoS applicativo)
+### SBP-004 - Expensive endpoints exposed without throttling/rate limiting (application DoS)
 
 - **Severity**: High
-- **Evidenze**:
+- **Evidence**:
   - `backend/src/main/java/com/printcalculator/config/SecurityConfig.java:36` (endpoint pubblici permessi globalmente).
   - `backend/src/main/java/com/printcalculator/controller/QuoteController.java:38`-`39` (`POST /api/quote` pubblico).
   - `backend/src/main/java/com/printcalculator/controller/QuoteSessionController.java:114`-`120` (`POST /api/quote-sessions/{id}/line-items` pubblico).
   - `backend/src/main/java/com/printcalculator/controller/QuoteSessionController.java:228`-`235` (invocazione slicing).
   - `backend/src/main/java/com/printcalculator/service/SlicerService.java:156`-`163` (job fino a 5 minuti).
-- **Rischio tecnico**:
-  - Upload/slicing massivo può saturare CPU, I/O e worker thread.
-- **Fix raccomandato**:
-  - Rate limiting per IP/fingerprint/session (anche lato reverse proxy).
-  - Coda asincrona con limiti di concorrenza e timeout più stretti.
-  - Quote per utente/sessione e limite richieste per finestra temporale.
-  - CAPTCHA o proof-of-work per endpoint anonimi ad alto costo.
+- **Technical risk**:
+  - Mass upload/slicing can saturate CPU, I/O, and worker threads.
+- **Recommended fix**:
+  - Rate-limit by IP, fingerprint, or session, including at the reverse proxy.
+  - Use an asynchronous queue with concurrency limits and tighter timeouts.
+  - Apply user/session quotas and a request limit per time window.
+  - Add CAPTCHA or proof of work to high-cost anonymous endpoints.
 
 ## Medium findings
 
-### SBP-005 - Secret/default credenziali deboli nel codice di configurazione
+### SBP-005 - Weak secret/default credentials in configuration code
 
 - **Severity**: Medium
-- **Evidenze**:
+- **Evidence**:
   - `backend/src/main/resources/application.properties:7` (`DB_PASSWORD` fallback `printcalc_secret`).
-  - `backend/src/main/resources/application-local.properties:7`-`8` (admin password/secret hardcoded per profilo local).
-- **Rischio tecnico**:
-  - In caso di misconfigurazione ambientale o uso improprio profilo, vengono usati valori prevedibili.
-- **Fix raccomandato**:
-  - Rimuovere fallback sensibili e rendere obbligatori i secret a startup.
-  - Spostare credenziali locali in file non versionato (`.env.local`, `.gitignore`) con template placeholder.
-  - Policy di secret rotation periodica.
+  - `backend/src/main/resources/application-local.properties:7`-`8` (admin password/secret hard-coded for the local profile).
+- **Technical risk**:
+  - Predictable values are used if the environment is misconfigured or a profile is used incorrectly.
+- **Recommended fix**:
+  - Remove sensitive fallbacks and require secrets at startup.
+  - Move local credentials to an untracked file (`.env.local`, `.gitignore`) with a placeholder template.
+  - Adopt a periodic secret-rotation policy.
 
-### SBP-006 - CSRF disabilitato globalmente con autenticazione admin basata su cookie
+### SBP-006 - CSRF disabled globally with cookie-based admin authentication
 
 - **Severity**: Medium
-- **Evidenze**:
+- **Evidence**:
   - `backend/src/main/java/com/printcalculator/config/SecurityConfig.java:24` (CSRF disabilitato globalmente).
   - `backend/src/main/java/com/printcalculator/security/AdminSessionService.java:129`-`136` (cookie sessione admin).
   - `backend/src/main/java/com/printcalculator/security/AdminSessionService.java:133`-`134` (`Secure` + `SameSite=Strict` presenti, mitigazione parziale).
-- **Rischio tecnico**:
-  - Con auth cookie-based, la protezione CSRF andrebbe mantenuta sugli endpoint state-changing admin; `SameSite=Strict` riduce ma non elimina tutti i vettori.
-- **Fix raccomandato**:
-  - Riabilitare CSRF almeno su `/api/admin/**` e usare token CSRF (double-submit o synchronizer token).
-  - Mantenere `SameSite=Strict` come difesa aggiuntiva.
+- **Technical risk**:
+  - With cookie-based authentication, CSRF protection should be retained on state-changing admin endpoints; `SameSite=Strict` reduces but does not eliminate every vector.
+- **Recommended fix**:
+  - Re-enable CSRF at least on `/api/admin/**` and use a CSRF token (double-submit or synchronizer token).
+  - Retain `SameSite=Strict` as an additional defence.
 
-## Note e assunzioni
+## Notes and assumptions
 
-- Alcuni endpoint pubblici sembrano progettati come flusso anonimo customer; il finding resta valido perché manca una seconda prova di possesso oltre all’UUID.
-- Non è stata eseguita una DAST esterna o pentest black-box; analisi effettuata su codice statico e configurazioni nel repository.
-
+- Some public endpoints appear designed for an anonymous customer flow; the finding remains valid because there is no second proof of possession beyond the UUID.
+- No external DAST or black-box penetration test was performed; the review used static analysis of code and repository configuration.

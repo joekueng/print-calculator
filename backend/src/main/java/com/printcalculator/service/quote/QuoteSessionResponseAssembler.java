@@ -1,5 +1,6 @@
 package com.printcalculator.service.quote;
 
+import com.printcalculator.dto.QuoteSessionDto;
 import com.printcalculator.entity.QuoteLineItem;
 import com.printcalculator.entity.QuoteSession;
 import com.printcalculator.service.QuoteSessionTotalsService;
@@ -29,7 +30,7 @@ public class QuoteSessionResponseAssembler {
         }
 
         Map<String, Object> response = new HashMap<>();
-        response.put("session", session);
+        response.put("session", QuoteSessionDto.from(session));
         response.put("items", itemsDto);
         response.put("printItemsTotalChf", totals.printItemsTotalChf());
         response.put("cadTotalChf", totals.cadTotalChf());
@@ -38,6 +39,7 @@ public class QuoteSessionResponseAssembler {
         response.put("nozzleChangeCostChf", totals.nozzleChangeCostChf());
         response.put("setupCostChf", totals.setupCostChf());
         response.put("shippingCostChf", totals.shippingCostChf());
+        response.put("shippingQuote", totals.shippingQuote());
         response.put("globalMachineCostChf", totals.globalMachineCostChf());
         response.put("grandTotalChf", totals.grandTotalChf());
         return response;
@@ -97,7 +99,14 @@ public class QuoteSessionResponseAssembler {
         dto.put("infillPercent", item.getInfillPercent());
         dto.put("infillPattern", item.getInfillPattern());
         dto.put("supportsEnabled", item.getSupportsEnabled());
+        dto.put("requiresSplitPrinting", Boolean.TRUE.equals(item.getRequiresSplitPrinting()));
         dto.put("status", item.getStatus());
+        dto.put("errorMessage", item.getErrorMessage());
+        dto.put("errorCode", item.getPricingBreakdown() != null
+                ? item.getPricingBreakdown().get("errorCode")
+                : null);
+        dto.put("shippingOrientations", item.getPricingBreakdown() != null
+                ? item.getPricingBreakdown().get("shippingOrientations") : null);
         dto.put("convertedStoredPath", quoteStorageService.extractConvertedStoredPath(item));
         dto.put("unitPriceChf", resolveDistributedUnitPrice(item, totals));
         return dto;

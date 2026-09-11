@@ -2,24 +2,30 @@ package com.printcalculator.event.listener;
 
 import com.printcalculator.entity.Order;
 import com.printcalculator.entity.OrderItem;
+import com.printcalculator.entity.EmailLog;
 import com.printcalculator.entity.Payment;
 import com.printcalculator.event.OrderCreatedEvent;
 import com.printcalculator.event.OrderShippedEvent;
 import com.printcalculator.event.PaymentConfirmedEvent;
 import com.printcalculator.event.PaymentReportedEvent;
 import com.printcalculator.repository.OrderItemRepository;
+import com.printcalculator.repository.OrderRepository;
+import com.printcalculator.repository.PaymentRepository;
+import com.printcalculator.service.email.EmailAuditService;
+import com.printcalculator.service.email.EmailSendResult;
 import com.printcalculator.service.payment.InvoicePdfRenderingService;
 import com.printcalculator.service.payment.QrBillService;
-import com.printcalculator.service.storage.StorageService;
 import com.printcalculator.service.email.EmailNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.text.NumberFormat;
+import java.time.OffsetDateTime;
 import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -28,7 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.nio.file.Paths;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -39,9 +45,11 @@ public class OrderEmailListener {
 
     private final EmailNotificationService emailNotificationService;
     private final InvoicePdfRenderingService invoicePdfRenderingService;
+    private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final PaymentRepository paymentRepository;
     private final QrBillService qrBillService;
-    private final StorageService storageService;
+    private final EmailAuditService emailAuditService;
 
     @Value("${app.mail.admin.enabled:true}")
     private boolean adminMailEnabled;
@@ -53,26 +61,24 @@ public class OrderEmailListener {
     private String frontendBaseUrl;
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderCreatedEvent(OrderCreatedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         log.info("Processing OrderCreatedEvent for order id: {}", order.getId());
 
         try {
             sendCustomerConfirmationEmail(order);
 
-            if (adminMailEnabled && adminMailAddress != null && !adminMailAddress.isEmpty()) {
-                sendAdminNotificationEmail(order);
-            }
+            sendAdminNotificationEmail(order);
         } catch (Exception e) {
             log.error("Failed to process email notifications for order id: {}", order.getId(), e);
         }
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentReportedEvent(PaymentReportedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         log.info("Processing PaymentReportedEvent for order id: {}", order.getId());
 
         try {
@@ -83,9 +89,9 @@ public class OrderEmailListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePaymentConfirmedEvent(PaymentConfirmedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         Payment payment = event.getPayment();
         log.info("Processing PaymentConfirmedEvent for order id: {}", order.getId());
 
@@ -97,9 +103,9 @@ public class OrderEmailListener {
     }
 
     @Async
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleOrderShippedEvent(OrderShippedEvent event) {
-        Order order = event.getOrder();
+        Order order = loadCommittedOrder(event.getOrder());
         log.info("Processing OrderShippedEvent for order id: {}", order.getId());
 
         try {
@@ -110,39 +116,83 @@ public class OrderEmailListener {
     }
 
     private void sendCustomerConfirmationEmail(Order order) {
+        sendCustomerConfirmationEmail(order, EmailAuditService.ORIGIN_SYSTEM, null);
+    }
+
+    private Order loadCommittedOrder(Order eventOrder) {
+        if (eventOrder == null || eventOrder.getId() == null) {
+            return eventOrder;
+        }
+        return orderRepository.findForEmailById(eventOrder.getId()).orElse(eventOrder);
+    }
+
+    public EmailLog sendCustomerConfirmationEmail(Order order, String origin, UUID resentFromEmailLogId) {
         String language = resolveLanguage(order.getPreferredLanguage());
         String orderNumber = getDisplayOrderNumber(order);
 
         Map<String, Object> templateData = buildBaseTemplateData(order, language);
         String subject = applyOrderConfirmationTexts(templateData, language, orderNumber);
-        byte[] confirmationPdf = loadOrGenerateConfirmationPdf(order);
+        byte[] confirmationPdf = generateConfirmationPdf(order);
+        String attachmentName = buildConfirmationAttachmentName(language, orderNumber);
 
-        emailNotificationService.sendEmailWithAttachment(
-                order.getCustomer().getEmail(),
+        EmailSendResult result = emailNotificationService.sendEmailWithAttachment(
+                resolveCustomerEmail(order),
                 subject,
                 "order-confirmation",
                 templateData,
-                buildConfirmationAttachmentName(language, orderNumber),
+                attachmentName,
                 confirmationPdf
+        );
+
+        return emailAuditService.recordOrderEmail(
+                order,
+                EmailAuditService.EVENT_ORDER_CONFIRMATION_CUSTOMER,
+                origin,
+                resolveCustomerEmail(order),
+                subject,
+                "order-confirmation",
+                attachmentName,
+                result,
+                resentFromEmailLogId
         );
     }
 
     private void sendPaymentReportedEmail(Order order) {
+        sendPaymentReportedEmail(order, EmailAuditService.ORIGIN_SYSTEM, null);
+    }
+
+    public EmailLog sendPaymentReportedEmail(Order order, String origin, UUID resentFromEmailLogId) {
         String language = resolveLanguage(order.getPreferredLanguage());
         String orderNumber = getDisplayOrderNumber(order);
 
         Map<String, Object> templateData = buildBaseTemplateData(order, language);
         String subject = applyPaymentReportedTexts(templateData, language, orderNumber);
 
-        emailNotificationService.sendEmail(
-                order.getCustomer().getEmail(),
+        EmailSendResult result = emailNotificationService.sendEmail(
+                resolveCustomerEmail(order),
                 subject,
                 "payment-reported",
                 templateData
         );
+
+        return emailAuditService.recordOrderEmail(
+                order,
+                EmailAuditService.EVENT_PAYMENT_REPORTED_CUSTOMER,
+                origin,
+                resolveCustomerEmail(order),
+                subject,
+                "payment-reported",
+                null,
+                result,
+                resentFromEmailLogId
+        );
     }
 
     private void sendPaidInvoiceEmail(Order order, Payment payment) {
+        sendPaidInvoiceEmail(order, payment, EmailAuditService.ORIGIN_SYSTEM, null);
+    }
+
+    public EmailLog sendPaidInvoiceEmail(Order order, Payment payment, String origin, UUID resentFromEmailLogId) {
         String language = resolveLanguage(order.getPreferredLanguage());
         String orderNumber = getDisplayOrderNumber(order);
 
@@ -157,32 +207,90 @@ public class OrderEmailListener {
             log.error("Failed to generate PDF for paid invoice email: {}", e.getMessage(), e);
         }
 
-        emailNotificationService.sendEmailWithAttachment(
-                order.getCustomer().getEmail(),
+        String attachmentName = buildPaidInvoiceAttachmentName(language, orderNumber);
+        EmailSendResult result = emailNotificationService.sendEmailWithAttachment(
+                resolveCustomerEmail(order),
                 subject,
                 "payment-confirmed",
                 templateData,
-                buildPaidInvoiceAttachmentName(language, orderNumber),
+                attachmentName,
                 pdf
+        );
+
+        return emailAuditService.recordOrderEmail(
+                order,
+                EmailAuditService.EVENT_PAYMENT_CONFIRMED_CUSTOMER,
+                origin,
+                resolveCustomerEmail(order),
+                subject,
+                "payment-confirmed",
+                attachmentName,
+                result,
+                resentFromEmailLogId
         );
     }
 
     private void sendOrderShippedEmail(Order order) {
+        sendOrderShippedEmail(order, EmailAuditService.ORIGIN_SYSTEM, null);
+    }
+
+    public EmailLog sendOrderShippedEmail(Order order, String origin, UUID resentFromEmailLogId) {
         String language = resolveLanguage(order.getPreferredLanguage());
         String orderNumber = getDisplayOrderNumber(order);
 
         Map<String, Object> templateData = buildBaseTemplateData(order, language);
         String subject = applyOrderShippedTexts(templateData, language, orderNumber);
 
-        emailNotificationService.sendEmail(
-                order.getCustomer().getEmail(),
+        EmailSendResult result = emailNotificationService.sendEmail(
+                resolveCustomerEmail(order),
                 subject,
                 "order-shipped",
                 templateData
         );
+
+        return emailAuditService.recordOrderEmail(
+                order,
+                EmailAuditService.EVENT_ORDER_SHIPPED_CUSTOMER,
+                origin,
+                resolveCustomerEmail(order),
+                subject,
+                "order-shipped",
+                null,
+                result,
+                resentFromEmailLogId
+        );
     }
 
     private void sendAdminNotificationEmail(Order order) {
+        sendAdminNotificationEmail(order, EmailAuditService.ORIGIN_SYSTEM, null);
+    }
+
+    public EmailLog sendAdminNotificationEmail(Order order, String origin, UUID resentFromEmailLogId) {
+        if (!adminMailEnabled) {
+            return recordSkippedOrderEmail(
+                    order,
+                    EmailAuditService.EVENT_ORDER_NOTIFICATION_ADMIN,
+                    origin,
+                    adminMailAddress,
+                    null,
+                    "order-confirmation",
+                    "Admin order notification disabled.",
+                    resentFromEmailLogId
+            );
+        }
+        if (adminMailAddress == null || adminMailAddress.isBlank()) {
+            return recordSkippedOrderEmail(
+                    order,
+                    EmailAuditService.EVENT_ORDER_NOTIFICATION_ADMIN,
+                    origin,
+                    adminMailAddress,
+                    null,
+                    "order-confirmation",
+                    "Admin order notification address is missing.",
+                    resentFromEmailLogId
+            );
+        }
+
         String orderNumber = getDisplayOrderNumber(order);
         Map<String, Object> templateData = buildBaseTemplateData(order, DEFAULT_LANGUAGE);
         templateData.put("customerName", buildCustomerFullName(order));
@@ -199,12 +307,85 @@ public class OrderEmailListener {
         templateData.put("attachmentHintText", "La conferma cliente e il QR bill sono stati salvati nella cartella documenti dell'ordine.");
         templateData.put("supportText", "Controlla i dettagli e procedi con la gestione operativa.");
         templateData.put("footerText", "Notifica automatica sistema ordini.");
+        String subject = "Nuovo Ordine Ricevuto #" + orderNumber + " - " + buildCustomerFullName(order);
 
-        emailNotificationService.sendEmail(
+        EmailSendResult result = emailNotificationService.sendEmail(
                 adminMailAddress,
-                "Nuovo Ordine Ricevuto #" + orderNumber + " - " + buildCustomerFullName(order),
+                subject,
                 "order-confirmation",
                 templateData
+        );
+
+        return emailAuditService.recordOrderEmail(
+                order,
+                EmailAuditService.EVENT_ORDER_NOTIFICATION_ADMIN,
+                origin,
+                adminMailAddress,
+                subject,
+                "order-confirmation",
+                null,
+                result,
+                resentFromEmailLogId
+        );
+    }
+
+    public EmailLog resendOrderEmail(Order order, EmailLog sourceLog) {
+        String eventType = sourceLog.getEventType();
+        UUID resentFromEmailLogId = sourceLog.getId();
+
+        return switch (eventType) {
+            case EmailAuditService.EVENT_ORDER_CONFIRMATION_CUSTOMER ->
+                    sendCustomerConfirmationEmail(order, EmailAuditService.ORIGIN_ADMIN, resentFromEmailLogId);
+            case EmailAuditService.EVENT_ORDER_NOTIFICATION_ADMIN ->
+                    sendAdminNotificationEmail(order, EmailAuditService.ORIGIN_ADMIN, resentFromEmailLogId);
+            case EmailAuditService.EVENT_PAYMENT_REPORTED_CUSTOMER ->
+                    sendPaymentReportedEmail(order, EmailAuditService.ORIGIN_ADMIN, resentFromEmailLogId);
+            case EmailAuditService.EVENT_PAYMENT_CONFIRMED_CUSTOMER ->
+                    paymentRepository.findByOrder_Id(order.getId())
+                            .map(payment -> sendPaidInvoiceEmail(order, payment, EmailAuditService.ORIGIN_ADMIN, resentFromEmailLogId))
+                            .orElseGet(() -> recordSkippedOrderEmail(
+                                    order,
+                                    EmailAuditService.EVENT_PAYMENT_CONFIRMED_CUSTOMER,
+                                    EmailAuditService.ORIGIN_ADMIN,
+                                    resolveCustomerEmail(order),
+                                    sourceLog.getSubject(),
+                                    "payment-confirmed",
+                                    "Cannot resend paid invoice email because no payment record is available.",
+                                    resentFromEmailLogId
+                            ));
+            case EmailAuditService.EVENT_ORDER_SHIPPED_CUSTOMER ->
+                    sendOrderShippedEmail(order, EmailAuditService.ORIGIN_ADMIN, resentFromEmailLogId);
+            default -> recordSkippedOrderEmail(
+                    order,
+                    eventType,
+                    EmailAuditService.ORIGIN_ADMIN,
+                    sourceLog.getRecipient(),
+                    sourceLog.getSubject(),
+                    sourceLog.getTemplateName(),
+                    "Unsupported order email type: " + eventType,
+                    resentFromEmailLogId
+            );
+        };
+    }
+
+    private EmailLog recordSkippedOrderEmail(Order order,
+                                             String eventType,
+                                             String origin,
+                                             String recipient,
+                                             String subject,
+                                             String templateName,
+                                             String reason,
+                                             UUID resentFromEmailLogId) {
+        return emailAuditService.recordOrderEmail(
+                order,
+                eventType,
+                origin,
+                recipient,
+                subject,
+                templateName,
+                null,
+                EmailSendResult.skipped(OffsetDateTime.now(), reason),
+                resentFromEmailLogId
         );
     }
 
@@ -503,33 +684,14 @@ public class OrderEmailListener {
         };
     }
 
-    private byte[] loadOrGenerateConfirmationPdf(Order order) {
-        byte[] stored = loadStoredConfirmationPdf(order);
-        if (stored != null) {
-            return stored;
-        }
-
+    private byte[] generateConfirmationPdf(Order order) {
         try {
             List<OrderItem> items = orderItemRepository.findByOrder_Id(order.getId());
             return invoicePdfRenderingService.generateDocumentPdf(order, items, true, qrBillService, null);
         } catch (Exception e) {
-            log.error("Failed to generate fallback confirmation PDF for order id: {}", order.getId(), e);
+            log.error("Failed to generate confirmation PDF for order id: {}", order.getId(), e);
             return null;
         }
-    }
-
-    private byte[] loadStoredConfirmationPdf(Order order) {
-        String relativePath = buildConfirmationPdfRelativePath(order);
-        try {
-            return storageService.loadAsResource(Paths.get(relativePath)).getInputStream().readAllBytes();
-        } catch (Exception e) {
-            log.warn("Confirmation PDF not found for order id {} at {}", order.getId(), relativePath);
-            return null;
-        }
-    }
-
-    private String buildConfirmationPdfRelativePath(Order order) {
-        return "orders/" + order.getId() + "/documents/confirmation-" + getDisplayOrderNumber(order) + ".pdf";
     }
 
     private String buildCustomerFirstName(Order order, String language) {
@@ -558,6 +720,13 @@ public class OrderEmailListener {
             return order.getBillingFirstName() + " " + order.getBillingLastName();
         }
         return "Cliente";
+    }
+
+    private String resolveCustomerEmail(Order order) {
+        if (order.getCustomer() != null && order.getCustomer().getEmail() != null && !order.getCustomer().getEmail().isBlank()) {
+            return order.getCustomer().getEmail();
+        }
+        return order.getCustomerEmail();
     }
 
     private Locale localeForLanguage(String language) {

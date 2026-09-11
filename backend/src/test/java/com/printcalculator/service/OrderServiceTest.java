@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -76,9 +77,39 @@ class OrderServiceTest {
     private PaymentService paymentService;
     @Mock
     private QuoteSessionTotalsService quoteSessionTotalsService;
+    @Mock
+    private MaterialPrintCompatibilityService materialPrintCompatibilityService;
 
     @InjectMocks
     private OrderService service;
+
+    @Test
+    void createOrderFromQuote_validatesCalculatorMaterialSettingsBeforeCreatingCustomer() {
+        UUID sessionId = UUID.randomUUID();
+        QuoteSession session = new QuoteSession();
+        session.setId(sessionId);
+        session.setStatus("ACTIVE");
+
+        QuoteLineItem qItem = new QuoteLineItem();
+        qItem.setLineItemType("PRINT_FILE");
+        qItem.setNozzleDiameterMm(new BigDecimal("0.20"));
+        qItem.setLayerHeightMm(new BigDecimal("0.120"));
+
+        when(quoteSessionRepo.findById(sessionId)).thenReturn(Optional.of(session));
+        when(quoteLineItemRepo.findByQuoteSessionId(sessionId)).thenReturn(List.of(qItem));
+        doThrow(new IllegalArgumentException("invalid technical material settings"))
+                .when(materialPrintCompatibilityService)
+                .validate(qItem.getFilamentVariant(), qItem.getNozzleDiameterMm(), qItem.getLayerHeightMm());
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.createOrderFromQuote(sessionId, buildRequest())
+        );
+
+        assertEquals("invalid technical material settings", exception.getMessage());
+        verify(customerRepo, never()).findByEmail(any());
+        verify(orderRepo, never()).save(any());
+    }
 
     @Test
     void createOrderFromQuote_withShopCart_shouldPreserveShopSnapshotAndMaterialCode() throws Exception {
@@ -190,7 +221,10 @@ class OrderServiceTest {
                 .thenReturn("pdf".getBytes(StandardCharsets.UTF_8));
         when(paymentService.getOrCreatePaymentForOrder(any(Order.class), eq("OTHER"))).thenReturn(new Payment());
 
-        Order order = service.createOrderFromQuote(sessionId, buildRequest());
+        CreateOrderRequest request = buildRequest();
+        request.setLanguage("fr");
+        Order order = service.createOrderFromQuote(sessionId, request);
+        assertEquals("fr", order.getPreferredLanguage());
 
         assertEquals(orderId, order.getId());
         assertEquals("SHOP", order.getSourceType());
@@ -446,6 +480,43 @@ class OrderServiceTest {
         request.setAcceptTerms(true);
         request.setAcceptPrivacy(true);
         return request;
+    }
+
+    @Test
+    void createOrderRejectsUnquotableShippingBeforePaymentOrEvents() {
+        assertShippingRejected("MANUAL_QUOTE", "CH", null);
+    }
+
+    @Test
+    void createOrderRejectsForeignDestinationAndStaleShippingPrice() {
+        assertShippingRejected("QUOTED", "DE", null);
+    }
+
+    @Test
+    void createOrderRejectsStaleShippingPrice() {
+        assertShippingRejected("QUOTED", "CH", BigDecimal.valueOf(4));
+    }
+
+    private void assertShippingRejected(String status, String country, BigDecimal expected) {
+        UUID id = UUID.randomUUID();
+        QuoteSession session = new QuoteSession(); session.setId(id);
+        Customer customer = new Customer(); customer.setEmail("buyer@example.com");
+        when(quoteSessionRepo.findById(id)).thenReturn(Optional.of(session));
+        when(customerRepo.findByEmail("buyer@example.com")).thenReturn(Optional.of(customer));
+        when(quoteLineItemRepo.findByQuoteSessionId(id)).thenReturn(List.of());
+        when(quoteSessionTotalsService.calculateCadTotal(session)).thenReturn(BigDecimal.ONE);
+        var shipping = new ShippingQuoteService.ShippingQuote(status, BigDecimal.valueOf(9),null,null,3,List.of());
+        when(quoteSessionTotalsService.compute(session,List.of())).thenReturn(
+                new QuoteSessionTotalsService.QuoteSessionTotals(BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,
+                        BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.valueOf(9),
+                        BigDecimal.valueOf(9),BigDecimal.ZERO,shipping));
+        CreateOrderRequest request = buildRequest(); request.getBillingAddress().setCountryCode(country);
+        request.setExpectedShippingCostChf(expected);
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class,
+                () -> service.createOrderFromQuote(id,request));
+        verify(orderRepo,never()).save(any(Order.class));
+        verify(eventPublisher,never()).publishEvent(any(OrderCreatedEvent.class));
+        verify(paymentService,never()).getOrCreatePaymentForOrder(any(Order.class),eq("OTHER"));
     }
 
     private void assertAmountEquals(String expected, BigDecimal actual) {

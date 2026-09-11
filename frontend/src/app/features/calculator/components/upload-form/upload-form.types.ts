@@ -12,6 +12,8 @@ export interface FormItem {
   infillPattern: string;
   layerHeight: number;
   nozzleDiameter: number;
+  reviewLevel?: 'warning' | 'error';
+  reviewMessage?: string;
 }
 
 export interface ItemSettingsDiffInfo {

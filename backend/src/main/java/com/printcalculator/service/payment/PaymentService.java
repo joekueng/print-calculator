@@ -18,6 +18,9 @@ import java.util.UUID;
 @Service
 public class PaymentService {
 
+    private static final String RECEIVED_STATUS = "RECEIVED";
+    private static final String LEGACY_COMPLETED_STATUS = "COMPLETED";
+
     private final PaymentRepository paymentRepo;
     private final OrderRepository orderRepo;
     private final ApplicationEventPublisher eventPublisher;
@@ -83,14 +86,23 @@ public class PaymentService {
         Payment payment = paymentRepo.findByOrder_Id(orderId)
                 .orElseGet(() -> getOrCreatePaymentForOrder(order, method != null ? method : "OTHER"));
 
-        payment.setStatus("COMPLETED");
+        if (RECEIVED_STATUS.equals(payment.getStatus()) || LEGACY_COMPLETED_STATUS.equals(payment.getStatus())) {
+            order.setStatus("PAID");
+            if (order.getPaidAt() == null) {
+                order.setPaidAt(OffsetDateTime.now());
+            }
+            orderRepo.save(order);
+            return payment;
+        }
+
+        payment.setStatus(RECEIVED_STATUS);
         if (method != null && !method.isBlank()) {
             payment.setMethod(method.toUpperCase());
         }
         payment.setReceivedAt(OffsetDateTime.now());
         payment = paymentRepo.save(payment);
 
-        order.setStatus("IN_PRODUCTION");
+        order.setStatus("PAID");
         order.setPaidAt(OffsetDateTime.now());
         orderRepo.save(order);
 

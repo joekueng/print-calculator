@@ -77,6 +77,11 @@
   gap: var(--space-3);
 }
 
+.social-link-row--company {
+  margin-bottom: var(--space-1);
+  font-weight: 700;
+}
+
 .social-name {
   color: var(--color-neutral-200);
   font-size: 0.875rem;

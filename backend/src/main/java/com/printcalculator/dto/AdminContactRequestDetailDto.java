@@ -18,6 +18,7 @@ public class AdminContactRequestDetailDto {
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private List<AdminContactRequestAttachmentDto> attachments;
+    private List<AdminEmailLogDto> emailLogs;
 
     public UUID getId() {
         return id;
@@ -121,5 +122,13 @@ public class AdminContactRequestDetailDto {
 
     public void setAttachments(List<AdminContactRequestAttachmentDto> attachments) {
         this.attachments = attachments;
+    }
+
+    public List<AdminEmailLogDto> getEmailLogs() {
+        return emailLogs;
+    }
+
+    public void setEmailLogs(List<AdminEmailLogDto> emailLogs) {
+        this.emailLogs = emailLogs;
     }
 }

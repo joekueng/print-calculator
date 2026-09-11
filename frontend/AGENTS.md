@@ -1,150 +1,68 @@
-# AGENTS.md
+# Frontend Guide for Coding Agents
 
-## Purpose
+## Application map
 
-This frontend already has a shared UI layer. Do not reintroduce parallel form controls, button styles, or admin-only fallback CSS.
+The Angular 19 application uses standalone components and a Core / Shared / Features structure:
 
-When changing UI, prefer extending the existing shared components and `ui-*` primitives instead of creating new variants ad hoc.
+- `src/app/core/` — singleton services, interceptors, i18n, layout, route concerns, and global utilities.
+- `src/app/shared/` — reusable presentational components, directives, and utilities. Keep these free of feature-specific business logic.
+- `src/app/features/` — routed product areas: `calculator`, `shop`, `checkout`, `order`, `contact`, `home`, `about`, `materials`, `legal`, and `admin`.
+- `src/styles/` — design tokens, theme, shared UI primitives, patterns, and admin styles.
+- `src/assets/i18n/` — the synchronized `de`, `en`, `fr`, and `it` locale catalogs.
 
-## Source Of Truth
+Routes start in `src/app/app.routes.ts`. Keep feature code within its feature folder; use `core` only for true application-wide concerns.
+
+## UI source of truth
+
+This project already has a shared UI layer. Do not create parallel form controls, button styles, or an admin-only fallback design system.
 
 Use these first:
 
-- Shared Angular controls in `src/app/shared/components/`
-  - `app-input`
-  - `app-select`
-  - `app-textarea`
-  - `app-checkbox`
-  - `app-button`
-  - `app-card`
-- Global UI primitives in `src/styles/_ui.scss`
-  - `ui-form-group`, `ui-form-label`, `ui-form-control`, `ui-form-error`
-  - `ui-button` and its variants
-  - `ui-carousel-indicators`, `ui-carousel-dot`
-  - `ui-checkbox`
-  - `ui-banner`
-  - `ui-subpanel`
-  - `ui-data-table`, `ui-table-wrap`
-  - `ui-language-toolbar`
-  - `ui-file-picker`
-
-For admin pages, the shared page shell is already established:
-
-- `section-card`
-- `section-header`
-- shared `ui-*` primitives above
-
-Component SCSS in admin pages should handle page-specific layout only, not redefine generic input/button/select/textarea styles.
-
-## Public UI Reuse
-
-Marketing/public pages must reuse the same visual primitives as the shop and calculator. Before adding a local class for a repeated pattern, search the frontend:
-
-```bash
-rg -n "ui-carousel|ui-section-display|ui-eyebrow|ui-button|app-button|ui-gallery" src
-```
-
-Carousel indicators are shared. Use:
-
-- `ui-carousel-indicators` on the indicator container
-- `ui-carousel-dot` on each indicator button
-- `--ui-carousel-duration` for autoplay progress timing
-
-Do not create page-local carousel dot/progress variants such as `shop-carousel-dot`, `home-project-dot`, or separate progress keyframes. If a carousel needs unique placement, keep only the positioning class local and reuse the shared indicator/dot classes for visuals.
-
-Hero and section text should use the existing typography primitives unless a deliberate redesign is requested:
-
-- `ui-eyebrow`
-- `ui-hero-display`
-- `ui-section-display-title`
-- `ui-section-display-subtitle`
-- `ui-copy-lead`
-- `ui-copy-subtitle`
-
-Avoid hardcoded one-off colors and font sizes in public page SCSS when a semantic token or `ui-*` text class exists.
-
-## Reuse Rules
+- Shared Angular controls in `src/app/shared/components/`: `app-input`, `app-select`, `app-textarea`, `app-checkbox`, `app-button`, and `app-card`.
+- Global primitives in `src/styles/_ui.scss`: `ui-form-group`, `ui-form-label`, `ui-form-control`, `ui-form-error`, `ui-button`, `ui-carousel-indicators`, `ui-carousel-dot`, `ui-checkbox`, `ui-banner`, `ui-subpanel`, `ui-data-table`, `ui-table-wrap`, `ui-language-toolbar`, and `ui-file-picker`.
+- Admin pages: the existing `section-card`, `section-header`, and shared `ui-*` primitives.
 
 Apply this order:
 
-1. If behavior and semantics match an existing shared component, reuse that component.
-2. If behavior is simple but markup differs, reuse the global `ui-*` primitive classes.
-3. Only create a new shared component if the same behavior/API will be reused in multiple places.
-4. Only add local component SCSS for layout or truly page-specific visual treatment.
+1. Reuse a shared component when its behavior and semantics match.
+2. Reuse a `ui-*` primitive when only markup/layout differs.
+3. Add a shared component only for behavior that will be reused in multiple places.
+4. Keep feature SCSS for layout or a genuinely page-specific treatment.
 
-Examples:
+Component HTML, SCSS, and TypeScript must remain in separate files. Use explicit TypeScript types; do not introduce `any`.
 
-- Standard text/number/search fields: use `app-input`.
-- Standard selects: use `app-select`.
-- Standard textareas: use `app-textarea`.
-- Standard boolean toggles/checkboxes: use `app-checkbox`.
-- Standard actions: use `app-button`.
-- Tables, banners, subpanels, language switchers, file pickers: use existing `ui-*` classes.
+## Styling rules
 
-## Explicitly Avoid
+- Prefer semantic tokens and existing typography classes (`ui-eyebrow`, `ui-hero-display`, `ui-section-display-title`, `ui-section-display-subtitle`, `ui-copy-lead`, `ui-copy-subtitle`) over one-off colors and font sizes.
+- Use the shared carousel indicator classes and `--ui-carousel-duration`; do not create feature-local dot/progress variants.
+- Do not use `::ng-deep`.
+- Do not add broad fallback selectors for raw `input`, `select`, `textarea`, or `button` in admin pages.
+- Native controls are acceptable only when inherently special-purpose, such as hidden file inputs with `ui-file-picker`, rich-text toolbars, navigation triggers, and custom expand/collapse controls.
+- Before creating a shared control, inspect the current control API. Extend it for a small generic capability instead of creating `app-admin-input`, `app-inline-button`, or similar duplicates.
 
-Do not do these unless the user explicitly asks for a redesign:
+## Data, API, and i18n rules
 
-- Do not add `::ng-deep`.
-- Do not add global fallback selectors that style raw `input`, `select`, `textarea`, or `button` inside admin pages.
-- Do not create page-local clones of shared controls.
-- Do not create a second admin-only design system on top of `_ui.scss`.
-- Do not duplicate classes like `section-card`, `section-header`, generic `error`/`success`, or button variants inside page SCSS when a shared version already exists.
+- Put API access in the relevant feature service; do not issue ad-hoc HTTP requests from presentational components.
+- Update strongly typed API models alongside backend contract changes. Keep public and admin behavior explicit.
+- Every new visible string requires matching keys and English translations in all locale catalogs. Do not use a translation fallback as a substitute for a missing locale key.
+- Use Angular forms and existing validation/error-display patterns. Do not bypass server-side validation.
 
-## Allowed Exceptions
+## Verification
 
-Raw native elements are acceptable when they are inherently special-purpose and already intentionally styled locally or with `ui-*` primitives, for example:
-
-- hidden file inputs paired with `ui-file-picker`
-- rich-text toolbar buttons
-- special navigation triggers such as media context buttons
-- highly custom toggles like expand/collapse affordances
-- `contenteditable` editors
-
-If a raw control starts being reused as a normal form/action pattern, convert it to a shared component or existing `ui-*` primitive.
-
-## Shared Component Guidance
-
-Before creating a new shared component, check whether one of these should simply be extended:
-
-- `app-input` already supports `label`, `name`, `compact`, `type`, `placeholder`, `required`, `autocomplete`, `autocapitalize`, `min`, `max`, `step`, `inputmode`, `spellcheck`, `readonly`, `disabled`.
-- `app-select` already supports `label`, `name`, `compact`, `options`, `required`, `disabled`, and projected `<option>` / `<optgroup>` content.
-- `app-textarea` already supports `label`, `name`, `compact`, `placeholder`, `rows`, `required`, `readonly`, `disabled`.
-- `app-checkbox` already supports `label`, `name`, `disabled`, and `variant="default|pill"`.
-- `app-button` already supports `variant="primary|secondary|outline|text|ghost|ghost-danger|danger"`, `size="md|sm"`, and `fullWidth`.
-
-If a page needs a small missing capability, extend the existing shared component instead of creating `app-admin-input`, `app-inline-button`, or similar duplicates.
-
-## Admin-Specific Notes
-
-- `admin-filament-stock`, `admin-home-media`, `admin-dashboard`, `admin-contact-requests`, `admin-sessions`, `admin-cad-invoices`, and `admin-login` were already normalized toward shared controls.
-- `admin-shop` is large and intentionally mixes shared controls with `ui-*` primitives. Preserve that structure unless you are doing a deliberate broader migration.
-- `admin-shell` must remain a thin shell. Do not put a large styling override layer back into it.
-
-## Verification Checklist
-
-After UI changes, run:
+From `frontend/`, run the checks relevant to the change:
 
 ```bash
 npx tsc -p tsconfig.app.json --noEmit
+npm run check:i18n
 npm run check:ui-reuse
+npm test
 ```
 
-When touching styles or admin pages, also check:
+When touching UI or admin pages, also inspect for prohibited patterns:
 
 ```bash
 rg -n "::ng-deep" src --glob '*.scss'
 rg -n "<(input|select|textarea|button)\\b" src/app/features/admin/pages --glob '*.html'
 ```
 
-Interpretation:
-
-- `::ng-deep` should stay absent.
-- Raw controls in admin pages are acceptable only for the explicit exceptions above.
-- If you add repeated raw controls for normal form usage, convert them to shared components before finishing.
-
-## Editing Policy For Future Agents
-
-If you are about to add duplicated UI code, stop and reuse or extend what exists.
-
-If you think a new component is necessary, document why the existing shared component API is insufficient in your final response.
+Raw controls found by the second command are allowed only for the special-purpose exceptions above. Verify responsive behavior for user-facing UI changes.

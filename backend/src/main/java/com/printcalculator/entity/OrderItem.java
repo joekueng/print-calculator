@@ -69,6 +69,10 @@ public class OrderItem {
     @Column(name = "supports_enabled")
     private Boolean supportsEnabled;
 
+    @ColumnDefault("false")
+    @Column(name = "requires_split_printing")
+    private Boolean requiresSplitPrinting = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "filament_variant_id")
     private FilamentVariant filamentVariant;
@@ -138,6 +142,9 @@ public class OrderItem {
         }
         if (itemType == null || itemType.isBlank()) {
             itemType = "PRINT_FILE";
+        }
+        if (requiresSplitPrinting == null) {
+            requiresSplitPrinting = false;
         }
         if ((displayName == null || displayName.isBlank()) && originalFilename != null && !originalFilename.isBlank()) {
             displayName = originalFilename;
@@ -280,6 +287,14 @@ public class OrderItem {
 
     public void setSupportsEnabled(Boolean supportsEnabled) {
         this.supportsEnabled = supportsEnabled;
+    }
+
+    public Boolean getRequiresSplitPrinting() {
+        return requiresSplitPrinting;
+    }
+
+    public void setRequiresSplitPrinting(Boolean requiresSplitPrinting) {
+        this.requiresSplitPrinting = requiresSplitPrinting;
     }
 
     public FilamentVariant getFilamentVariant() {

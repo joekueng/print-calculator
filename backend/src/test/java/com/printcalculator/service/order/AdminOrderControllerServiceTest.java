@@ -1,12 +1,16 @@
 package com.printcalculator.service.order;
 
 import com.printcalculator.dto.AdminOrderStatusUpdateRequest;
+import com.printcalculator.dto.AdminOrderStatisticsDto;
 import com.printcalculator.dto.OrderDto;
+import com.printcalculator.entity.EmailLog;
 import com.printcalculator.entity.FilamentVariant;
 import com.printcalculator.entity.Order;
 import com.printcalculator.entity.OrderItem;
 import com.printcalculator.entity.Payment;
 import com.printcalculator.event.OrderShippedEvent;
+import com.printcalculator.event.listener.OrderEmailListener;
+import com.printcalculator.repository.EmailLogRepository;
 import com.printcalculator.repository.OrderItemRepository;
 import com.printcalculator.repository.OrderRepository;
 import com.printcalculator.repository.PaymentRepository;
@@ -14,6 +18,7 @@ import com.printcalculator.repository.QuoteLineItemRepository;
 import com.printcalculator.service.payment.InvoicePdfRenderingService;
 import com.printcalculator.service.payment.PaymentService;
 import com.printcalculator.service.payment.QrBillService;
+import com.printcalculator.service.email.EmailAuditService;
 import com.printcalculator.service.storage.StorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,6 +53,8 @@ class AdminOrderControllerServiceTest {
     @Mock
     private PaymentRepository paymentRepo;
     @Mock
+    private EmailLogRepository emailLogRepo;
+    @Mock
     private QuoteLineItemRepository quoteLineItemRepo;
     @Mock
     private PaymentService paymentService;
@@ -59,9 +66,47 @@ class AdminOrderControllerServiceTest {
     private QrBillService qrBillService;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private OrderCadFileService orderCadFileService;
+    @Mock
+    private EmailAuditService emailAuditService;
+    @Mock
+    private OrderEmailListener orderEmailListener;
 
     @InjectMocks
     private AdminOrderControllerService service;
+
+    @Test
+    void confirmationDownloadRegeneratesPdfInsteadOfServingArchivedLogo() {
+        UUID id = UUID.randomUUID();
+        Order order = buildOrder(id, "PENDING_PAYMENT");
+        when(orderRepo.findById(id)).thenReturn(Optional.of(order));
+        when(orderItemRepo.findByOrder_Id(id)).thenReturn(List.of());
+        byte[] currentPdf = "current template".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        when(invoiceService.generateDocumentPdf(order, List.of(), true, qrBillService, null)).thenReturn(currentPdf);
+
+        var response = service.downloadOrderConfirmation(id);
+
+        org.junit.jupiter.api.Assertions.assertArrayEquals(currentPdf, response.getBody());
+        assertEquals("no-store", response.getHeaders().getCacheControl());
+        org.mockito.Mockito.verifyNoInteractions(storageService);
+        verify(invoiceService).generateDocumentPdf(order, List.of(), true, qrBillService, null);
+    }
+
+    @Test
+    void getStatistics_shouldReturnOnlyRepositoryAggregatesForPaidNonCancelledOrders() {
+        when(orderRepo.countPaidNonCancelledForStatistics()).thenReturn(2L);
+        when(orderRepo.sumPaidNonCancelledTotalsForStatistics()).thenReturn(new BigDecimal("240.00"));
+        when(orderRepo.averagePaidNonCancelledTotalsForStatistics()).thenReturn(120.0);
+        when(orderRepo.countUniquePaidNonCancelledCustomersForStatistics()).thenReturn(1L);
+
+        AdminOrderStatisticsDto dto = service.getStatistics();
+
+        assertEquals(2L, dto.getPaidOrderCount());
+        assertEquals(new BigDecimal("240.00"), dto.getRevenueChf());
+        assertEquals(new BigDecimal("120.00"), dto.getAverageOrderValueChf());
+        assertEquals(1L, dto.getUniqueCustomerCount());
+    }
 
     @Test
     void updatePaymentMethod_withBlankMethod_shouldReturnBadRequest() {
@@ -119,6 +164,27 @@ class AdminOrderControllerServiceTest {
     }
 
     @Test
+    void updateOrderStatus_toPaid_shouldConfirmPayment() {
+        UUID orderId = UUID.randomUUID();
+        Order order = buildOrder(orderId, "PENDING_PAYMENT");
+        Payment payment = new Payment();
+        payment.setMethod("TWINT");
+        payment.setStatus("PENDING");
+
+        when(orderRepo.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderItemRepo.findByOrder_Id(orderId)).thenReturn(List.of());
+        when(paymentRepo.findByOrder_Id(orderId)).thenReturn(Optional.of(payment));
+
+        AdminOrderStatusUpdateRequest payload = new AdminOrderStatusUpdateRequest();
+        payload.setStatus("PAID");
+
+        service.updateOrderStatus(orderId, payload);
+
+        verify(paymentService).confirmPayment(orderId, "TWINT");
+        verify(orderRepo, never()).save(order);
+    }
+
+    @Test
     void updateOrderStatus_fromShippedToShipped_shouldNotPublishEvent() {
         UUID orderId = UUID.randomUUID();
         Order order = buildOrder(orderId, "SHIPPED");
@@ -134,6 +200,27 @@ class AdminOrderControllerServiceTest {
         service.updateOrderStatus(orderId, payload);
 
         verify(eventPublisher, never()).publishEvent(any(OrderShippedEvent.class));
+    }
+
+    @Test
+    void resendEmail_withOrderEmailLog_shouldDelegateAndReturnUpdatedDto() {
+        UUID orderId = UUID.randomUUID();
+        UUID emailLogId = UUID.randomUUID();
+        Order order = buildOrder(orderId, "PAID");
+        EmailLog emailLog = new EmailLog();
+        emailLog.setId(emailLogId);
+        emailLog.setOrder(order);
+        emailLog.setEventType("ORDER_CONFIRMATION_CUSTOMER");
+
+        when(orderRepo.findById(orderId)).thenReturn(Optional.of(order));
+        when(emailLogRepo.findById(emailLogId)).thenReturn(Optional.of(emailLog));
+        when(orderItemRepo.findByOrder_Id(orderId)).thenReturn(List.of());
+        when(paymentRepo.findByOrder_Id(orderId)).thenReturn(Optional.empty());
+
+        OrderDto dto = service.resendEmail(orderId, emailLogId);
+
+        assertEquals(orderId, dto.getId());
+        verify(orderEmailListener).resendOrderEmail(order, emailLog);
     }
 
     @Test

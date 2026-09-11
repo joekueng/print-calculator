@@ -6,8 +6,10 @@ import com.printcalculator.model.QuoteResult;
 import com.printcalculator.repository.PrinterMachineRepository;
 import com.printcalculator.service.NozzleLayerHeightPolicyService;
 import com.printcalculator.service.QuoteCalculator;
+import com.printcalculator.service.QuoteRateLimitService;
 import com.printcalculator.service.SlicerService;
 import com.printcalculator.service.storage.ClamAVService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +33,7 @@ public class QuoteController {
     private final PrinterMachineRepository machineRepo;
     private final ClamAVService clamAVService;
     private final NozzleLayerHeightPolicyService nozzleLayerHeightPolicyService;
+    private final QuoteRateLimitService quoteRateLimitService;
 
     // Defaults (using aliases defined in ProfileManager)
     private static final String DEFAULT_FILAMENT = "pla_basic";
@@ -40,12 +43,14 @@ public class QuoteController {
                            QuoteCalculator quoteCalculator,
                            PrinterMachineRepository machineRepo,
                            ClamAVService clamAVService,
-                           NozzleLayerHeightPolicyService nozzleLayerHeightPolicyService) {
+                           NozzleLayerHeightPolicyService nozzleLayerHeightPolicyService,
+                           QuoteRateLimitService quoteRateLimitService) {
         this.slicerService = slicerService;
         this.quoteCalculator = quoteCalculator;
         this.machineRepo = machineRepo;
         this.clamAVService = clamAVService;
         this.nozzleLayerHeightPolicyService = nozzleLayerHeightPolicyService;
+        this.quoteRateLimitService = quoteRateLimitService;
     }
 
     @PostMapping("/api/quote")
@@ -59,8 +64,11 @@ public class QuoteController {
             @RequestParam(value = "infill_pattern", required = false) String infillPattern,
             @RequestParam(value = "layer_height", required = false) Double layerHeight,
             @RequestParam(value = "nozzle_diameter", required = false) Double nozzleDiameter,
-            @RequestParam(value = "support_enabled", required = false) Boolean supportEnabled
+            @RequestParam(value = "support_enabled", required = false) Boolean supportEnabled,
+            HttpServletRequest request
             ) throws IOException {
+
+        quoteRateLimitService.checkAllowed(request);
 
         // ... process selection logic ...
         String actualProcess = process;
@@ -113,8 +121,10 @@ public class QuoteController {
 
     @PostMapping("/calculate/stl")
     public ResponseEntity<QuoteResult> legacyCalculate(
-            @RequestParam("file") MultipartFile file
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest request
     ) throws IOException {
+        quoteRateLimitService.checkAllowed(request);
         // Legacy endpoint uses defaults
         return processRequest(file, DEFAULT_FILAMENT, DEFAULT_PROCESS, null, null);
     }

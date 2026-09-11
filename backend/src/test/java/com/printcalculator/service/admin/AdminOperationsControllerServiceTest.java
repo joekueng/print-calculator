@@ -3,13 +3,16 @@ package com.printcalculator.service.admin;
 import com.printcalculator.dto.AdminCadInvoiceCreateRequest;
 import com.printcalculator.dto.AdminCadInvoiceDto;
 import com.printcalculator.dto.AdminContactRequestDetailDto;
+import com.printcalculator.dto.AdminSessionStatisticsDto;
 import com.printcalculator.dto.AdminUpdateContactRequestStatusRequest;
 import com.printcalculator.entity.CustomQuoteRequest;
 import com.printcalculator.entity.CustomQuoteRequestAttachment;
+import com.printcalculator.entity.EmailLog;
 import com.printcalculator.entity.PricingPolicy;
 import com.printcalculator.entity.QuoteSession;
 import com.printcalculator.repository.CustomQuoteRequestAttachmentRepository;
 import com.printcalculator.repository.CustomQuoteRequestRepository;
+import com.printcalculator.repository.EmailLogRepository;
 import com.printcalculator.repository.FilamentVariantRepository;
 import com.printcalculator.repository.FilamentVariantStockKgRepository;
 import com.printcalculator.repository.OrderRepository;
@@ -18,6 +21,8 @@ import com.printcalculator.repository.QuoteLineItemRepository;
 import com.printcalculator.repository.QuoteSessionRepository;
 import com.printcalculator.service.QuoteSessionExpiryPolicy;
 import com.printcalculator.service.QuoteSessionTotalsService;
+import com.printcalculator.service.email.EmailAuditService;
+import com.printcalculator.service.request.CustomQuoteRequestNotificationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -53,6 +58,8 @@ class AdminOperationsControllerServiceTest {
     @Mock
     private CustomQuoteRequestAttachmentRepository customQuoteRequestAttachmentRepo;
     @Mock
+    private EmailLogRepository emailLogRepo;
+    @Mock
     private QuoteSessionRepository quoteSessionRepo;
     @Mock
     private QuoteLineItemRepository quoteLineItemRepo;
@@ -64,9 +71,37 @@ class AdminOperationsControllerServiceTest {
     private QuoteSessionTotalsService quoteSessionTotalsService;
     @Mock
     private QuoteSessionExpiryPolicy quoteSessionExpiryPolicy;
+    @Mock
+    private EmailAuditService emailAuditService;
+    @Mock
+    private CustomQuoteRequestNotificationService contactRequestNotificationService;
 
     @InjectMocks
     private AdminOperationsControllerService service;
+
+    @Test
+    void getSessionStatistics_shouldCalculateRatiosFromReadOnlyAggregates() {
+        when(quoteSessionRepo.countAllForStatistics()).thenReturn(6L);
+        when(quoteSessionRepo.countWithItemsForStatistics()).thenReturn(4L);
+        when(quoteSessionRepo.countLineItemsForStatistics()).thenReturn(7L);
+        when(quoteSessionRepo.countConvertedForStatistics()).thenReturn(3L);
+        when(quoteSessionRepo.countPaidConvertedForStatistics()).thenReturn(2L);
+        when(quoteSessionRepo.countModifiedForStatistics()).thenReturn(1L);
+        when(quoteSessionRepo.countExpiredWithoutPaidConversionForStatistics(any(OffsetDateTime.class)))
+                .thenReturn(2L);
+
+        AdminSessionStatisticsDto dto = service.getSessionStatistics();
+
+        assertEquals(6L, dto.getTotalSessionCount());
+        assertEquals(4L, dto.getSessionsWithItemsCount());
+        assertEquals(2L, dto.getEmptySessionCount());
+        assertEquals(3L, dto.getConvertedSessionCount());
+        assertEquals(2L, dto.getPaidConvertedSessionCount());
+        assertEquals(new BigDecimal("1.75"), dto.getAverageItemsPerActiveSession());
+        assertEquals(new BigDecimal("50.00"), dto.getPaidConversionRatePercent());
+        assertEquals(1L, dto.getModifiedSessionCount());
+        assertEquals(2L, dto.getExpiredAbandonedSessionCount());
+    }
 
     @Test
     void updateContactRequestStatus_withInvalidStatus_shouldReturnBadRequest() {
@@ -117,6 +152,31 @@ class AdminOperationsControllerServiceTest {
         assertNotNull(dto.getUpdatedAt());
         assertEquals(1, dto.getAttachments().size());
         verify(customQuoteRequestRepo).save(request);
+    }
+
+    @Test
+    void resendContactRequestEmail_withRequestEmailLog_shouldDelegateAndReturnDetail() {
+        UUID requestId = UUID.randomUUID();
+        UUID emailLogId = UUID.randomUUID();
+        CustomQuoteRequest request = new CustomQuoteRequest();
+        request.setId(requestId);
+        request.setStatus("PENDING");
+        request.setCreatedAt(OffsetDateTime.now());
+        request.setUpdatedAt(OffsetDateTime.now());
+
+        EmailLog emailLog = new EmailLog();
+        emailLog.setId(emailLogId);
+        emailLog.setContactRequest(request);
+        emailLog.setEventType("CONTACT_REQUEST_CUSTOMER");
+
+        when(customQuoteRequestRepo.findById(requestId)).thenReturn(Optional.of(request));
+        when(emailLogRepo.findById(emailLogId)).thenReturn(Optional.of(emailLog));
+        when(customQuoteRequestAttachmentRepo.findByRequest_IdOrderByCreatedAtAsc(requestId)).thenReturn(List.of());
+
+        AdminContactRequestDetailDto dto = service.resendContactRequestEmail(requestId, emailLogId);
+
+        assertEquals(requestId, dto.getId());
+        verify(contactRequestNotificationService).resendNotification(request, 0, emailLog);
     }
 
     @Test

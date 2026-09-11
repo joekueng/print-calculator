@@ -77,6 +77,23 @@ class AdminOrderControllerServiceTest {
     private AdminOrderControllerService service;
 
     @Test
+    void confirmationDownloadRegeneratesPdfInsteadOfServingArchivedLogo() {
+        UUID id = UUID.randomUUID();
+        Order order = buildOrder(id, "PENDING_PAYMENT");
+        when(orderRepo.findById(id)).thenReturn(Optional.of(order));
+        when(orderItemRepo.findByOrder_Id(id)).thenReturn(List.of());
+        byte[] currentPdf = "current template".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        when(invoiceService.generateDocumentPdf(order, List.of(), true, qrBillService, null)).thenReturn(currentPdf);
+
+        var response = service.downloadOrderConfirmation(id);
+
+        org.junit.jupiter.api.Assertions.assertArrayEquals(currentPdf, response.getBody());
+        assertEquals("no-store", response.getHeaders().getCacheControl());
+        org.mockito.Mockito.verifyNoInteractions(storageService);
+        verify(invoiceService).generateDocumentPdf(order, List.of(), true, qrBillService, null);
+    }
+
+    @Test
     void getStatistics_shouldReturnOnlyRepositoryAggregatesForPaidNonCancelledOrders() {
         when(orderRepo.countPaidNonCancelledForStatistics()).thenReturn(2L);
         when(orderRepo.sumPaidNonCancelledTotalsForStatistics()).thenReturn(new BigDecimal("240.00"));

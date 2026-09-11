@@ -13,8 +13,7 @@ table { width: 174mm; border-collapse: collapse; table-layout: fixed; }
 td { vertical-align: top; }
 .header { margin-bottom: 14mm; }
 .brand { width: 90mm; }
-.brand img { width: 58mm; height: 6.54mm; }
-.brand-name { margin-top: 3mm; font-size: 9pt; letter-spacing: 0.3pt; }
+.invoice-logo { display: block; width: 58mm; height: 7.07mm; }
 .seller { width: 84mm; text-align: right; font-size: 8.5pt; color: #555; line-height: 1.6; }
 .addresses { margin-bottom: 10mm; }
 .addresses td { padding-right: 6mm; }
@@ -23,7 +22,7 @@ td { vertical-align: top; }
 .title { border-bottom: 2pt solid #facf0c; padding-bottom: 4mm; margin-bottom: 5mm; }
 h1 { font-size: 26pt; letter-spacing: -0.5pt; margin: 0; font-weight: bold; }
 .reference { font-size: 10pt; color: #555; margin-top: 1mm; overflow-wrap: break-word; }
-.paid { font-size: 10pt; font-weight: bold; text-align: right; padding-top: 4mm; }
+.paid { font-size: 22pt; font-weight: bold; text-align: right; vertical-align: middle; white-space: nowrap; color: #17613a; }
 .meta { margin-bottom: 8mm; font-size: 9pt; }
 .meta td { padding-right: 3mm; }
 .meta-label { color: #646970; font-size: 8pt; margin-bottom: 1mm; }
@@ -56,14 +55,14 @@ h1 { font-size: 26pt; letter-spacing: -0.5pt; margin: 0; font-weight: bold; }
 <body>
 <div class="invoice-page">
 <table class="header"><colgroup><col style="width:90mm"/><col style="width:84mm"/></colgroup><tr>
-<td class="brand"><img src="invoice-logo.svg" alt="3D Fab"/><div class="brand-name">Küng Caletti</div></td>
+<td class="brand"><img class="invoice-logo" src="invoice-logo.svg" alt="3D Fab"/></td>
 <td class="seller"><strong th:text="${sellerDisplayName}"></strong><br/><span th:text="${sellerAddressLine1}"></span><br/><span th:text="${sellerAddressLine2}"></span><br/><span th:text="${sellerEmail}"></span></td>
 </tr></table>
 <table class="addresses"><colgroup><col style="width:87mm"/><col style="width:87mm"/></colgroup><tr>
 <td><div class="eyebrow" th:text="${labels.billing}"></div><div class="customer-name" th:text="${buyerDisplayName}"></div><div th:text="${buyerAddressLine1}"></div><div th:text="${buyerAddressLine2}"></div></td>
 <td><div th:if="${shippingDisplayName != null}"><div class="eyebrow" th:text="${labels.shipping}"></div><div class="customer-name" th:text="${shippingDisplayName}"></div><div th:text="${shippingAddressLine1}"></div><div th:text="${shippingAddressLine2}"></div></div></td>
 </tr></table>
-<table class="title"><tr><td style="width:80%"><h1 th:text="${labels.invoice}"></h1><div class="reference" th:text="${invoiceNumber}"></div></td><td class="paid" th:unless="${isConfirmation}" th:text="${labels.paid}"></td></tr></table>
+<table class="title"><tr><td style="width:65%"><h1 th:text="${labels.invoice}"></h1><div class="reference" th:text="${invoiceNumber}"></div></td><td class="paid" th:unless="${isConfirmation}" th:text="${labels.paid}"></td></tr></table>
 <table class="meta"><colgroup><col style="width:52mm"/><col style="width:52mm"/><col style="width:70mm"/></colgroup><tr>
 <td><div class="meta-label" th:text="${labels.date}"></div><span th:text="${invoiceDate}"></span></td>
 <td><div class="meta-label" th:text="${labels.due}"></div><span th:text="${dueDate}"></span></td>
@@ -82,7 +81,7 @@ h1 { font-size: 26pt; letter-spacing: -0.5pt; margin: 0; font-weight: bold; }
 </div>
 </div>
 <div class="qr-page" th:if="${qrBillSvg != null}">
-<div class="qr-heading"><img src="invoice-logo.svg" alt="3D Fab" style="width:58mm;height:6.54mm;margin-bottom:15mm;"/><h1 th:text="${labels.qrTitle}"></h1><div class="reference" th:text="${invoiceNumber}"></div><p class="qr-note" th:text="${labels.qrNote}"></p></div>
+<div class="qr-heading"><img class="invoice-logo" src="invoice-logo.svg" alt="3D Fab" style="margin-bottom:15mm;"/><h1 th:text="${labels.qrTitle}"></h1><div class="reference" th:text="${invoiceNumber}"></div><p class="qr-note" th:text="${labels.qrNote}"></p></div>
 <div class="qr-slip" th:utext="${qrBillSvg}"></div>
 </div>
 </body>
